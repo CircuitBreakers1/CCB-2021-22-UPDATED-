@@ -128,6 +128,8 @@ public class TeleOP extends LinearOpMode {
         boolean grabOpen = true;
         boolean triggerDown = false;
 
+        boolean manualControl = false;
+
 
         //Left 1 is down, right 0 is down
         //Start Open
@@ -210,9 +212,35 @@ public class TeleOP extends LinearOpMode {
             }
 
             if(gamepad2.x) {
-                //All the way down to prepare to collect another ball/block
-                rightArm.setTargetPosition(0);
-                leftArm.setTargetPosition(0);
+                //Coast all the way down to prepare to collect another ball/block
+                rightArm.setPower(0);
+                leftArm.setPower(0);
+
+                rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
+
+
+
+            /*
+            This block of code allows the stick to be used to adjust the position of the arm
+            even while it is running to a position. Once the desired position is reached, releasing
+            the stick will have it running to the position you left it to try and stay there.
+             */
+            if(gamepad2.left_stick_y != 0) {
+                if(!manualControl) {
+                    manualControl = true;
+                    rightArm.setPower(0);
+                    leftArm.setPower(0);
+                    rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                }
+                leftArm.setPower(-gamepad2.left_stick_y * .5);
+                rightArm.setPower(-gamepad2.left_stick_y * .5);
+            } else if(manualControl) {
+                manualControl = false;
+                rightArm.setTargetPosition(rightArm.getCurrentPosition());
+                leftArm.setTargetPosition(leftArm.getCurrentPosition());
 
                 rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -220,6 +248,7 @@ public class TeleOP extends LinearOpMode {
                 rightArm.setPower(1);
                 leftArm.setPower(1);
             }
+
 
             //A touch sensor located where the arm bottoms out allows the encoders to zero out and
             //ensure no encoder errors build up over time
