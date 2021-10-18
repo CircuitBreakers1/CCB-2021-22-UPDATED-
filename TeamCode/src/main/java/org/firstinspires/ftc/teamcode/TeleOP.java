@@ -50,7 +50,7 @@ import com.qualcomm.robotcore.hardware.Servo;
  * Encoder Arm Height:
  *      Bottom Level: 51
  *      Middle Level: 90
- *      Top Level: 133
+ *      Top Level: 140
  *
  * Notes:
  * Grabbing Servos:
@@ -201,8 +201,8 @@ public class TeleOP extends LinearOpMode {
 
             if(gamepad2.y) {
                 //Top Level
-                rightArm.setTargetPosition(133);
-                leftArm.setTargetPosition(133);
+                rightArm.setTargetPosition(140);
+                leftArm.setTargetPosition(140   );
 
                 rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
