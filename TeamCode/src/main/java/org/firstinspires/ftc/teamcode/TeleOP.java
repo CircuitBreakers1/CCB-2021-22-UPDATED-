@@ -48,20 +48,20 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 /**
  * Important Values:
  * Grabbing Servos:
- *      Closed: Left 1.0, Right 0.0
- *      Open: Left 0.7, Right 0.3
+ * Closed: Left 1.0, Right 0.0
+ * Open: Left 0.7, Right 0.3
  * Encoder Arm Height:
- *      Bottom Level: 51
- *      Middle Level: 90
- *      Top Level: 140
- *
+ * Bottom Level: 51
+ * Middle Level: 90
+ * Top Level: 140
+ * <p>
  * Notes:
  * Grabbing Servos:
- *      Open: LEDs Green
- *      Closed: LEDs Red
+ * Open: LEDs Green
+ * Closed: LEDs Red
  */
 
-@TeleOp(name="TeleOP", group="Linear Opmode")
+@TeleOp(name = "TeleOP", group = "Linear Opmode")
 public class TeleOP extends LinearOpMode {
 
     // Declare OpMode members.
@@ -84,12 +84,11 @@ public class TeleOP extends LinearOpMode {
 
     @Override
     public void runOpMode() {
-
-        //Set the hardware paths for all of our actuators, sensors, and other things connected to I/O
-        leftFront  = hardwareMap.dcMotor.get("leftFront");
-        rightFront  = hardwareMap.dcMotor.get("rightFront");
-        leftBack  = hardwareMap.dcMotor.get("leftBack");
-        rightBack  = hardwareMap.dcMotor.get("rightBack");
+        // Set the hardware paths for all of our actuators, sensors, and other things connected to I/O
+        leftFront = hardwareMap.dcMotor.get("leftFront");
+        rightFront = hardwareMap.dcMotor.get("rightFront");
+        leftBack = hardwareMap.dcMotor.get("leftBack");
+        rightBack = hardwareMap.dcMotor.get("rightBack");
         backSpinner = hardwareMap.dcMotor.get("backSpinner");
         leftArm = hardwareMap.dcMotor.get("leftArm");
         rightArm = hardwareMap.dcMotor.get("rightArm");
@@ -104,7 +103,7 @@ public class TeleOP extends LinearOpMode {
         rightLEDRed = hardwareMap.digitalChannel.get("rightLEDRed");
         distance = hardwareMap.get(DistanceSensor.class, "distance");
 
-        //The digital channel defaults to inputs, so we have to set the LEDs channels to outputs
+        // The digital channel defaults to inputs, so we have to set the LEDs channels to outputs
         leftLEDRed.setMode(DigitalChannel.Mode.OUTPUT);
         leftLEDGreen.setMode(DigitalChannel.Mode.OUTPUT);
         rightLEDRed.setMode(DigitalChannel.Mode.OUTPUT);
@@ -136,19 +135,18 @@ public class TeleOP extends LinearOpMode {
         boolean manualControl = false;
 
 
-        //Left 1 is down, right 0 is down
-        //Start Open
+        // Left 1 is down, right 0 is down
+        // Start Open
         rightGrabber.setPosition(0.3);
         leftGrabber.setPosition(0.7);
-        //Set the LEDs green to show the grabbing servos are open
+        // Set the LEDs green to show the grabbing servos are open
         setLEDs(false, true);
-
 
 
         waitForStart();
 
         while (opModeIsActive()) {
-            //Simple tank drive
+            // Simple tank drive
             leftFront.setPower(-gamepad1.left_stick_y);
             leftBack.setPower(-gamepad1.left_stick_y);
             rightBack.setPower(-gamepad1.right_stick_y);
@@ -167,12 +165,14 @@ public class TeleOP extends LinearOpMode {
                 setLEDs(true, false);
             }
 
-            //This block of code allows the A button on the driver controller to toggle the
-            //carousel spinner on and off.
-            if(gamepad1.a) {
-                if(!aDown) {
+            /*
+             * This block of code allows the A button on the driver controller to toggle the
+             * carousel spinner on and off.
+             */
+            if (gamepad1.a) {
+                if (!aDown) {
                     aDown = true;
-                    if(spinOn) {
+                    if (spinOn) {
                         backSpinner.setPower(0);
                         spinOn = false;
                     } else {
@@ -187,8 +187,8 @@ public class TeleOP extends LinearOpMode {
             /*
              * The next couple if blocks allow the arm to be easily set to
              */
-            if(gamepad2.a) {
-                //Bottom Level
+            if (gamepad2.a) {
+                // Bottom Level
                 rightArm.setTargetPosition(51);
                 leftArm.setTargetPosition(51);
 
@@ -199,8 +199,8 @@ public class TeleOP extends LinearOpMode {
                 leftArm.setPower(1);
             }
 
-            if(gamepad2.b) {
-                //Middle Level
+            if (gamepad2.b) {
+                // Middle Level
                 rightArm.setTargetPosition(90);
                 leftArm.setTargetPosition(90);
 
@@ -211,10 +211,10 @@ public class TeleOP extends LinearOpMode {
                 leftArm.setPower(1);
             }
 
-            if(gamepad2.y) {
-                //Top Level
+            if (gamepad2.y) {
+                // Top Level
                 rightArm.setTargetPosition(140);
-                leftArm.setTargetPosition(140   );
+                leftArm.setTargetPosition(140);
 
                 rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -223,8 +223,8 @@ public class TeleOP extends LinearOpMode {
                 leftArm.setPower(1);
             }
 
-            if(gamepad2.x) {
-                //Coast all the way down to prepare to collect another ball/block
+            if (gamepad2.x) {
+                // Coast all the way down to prepare to collect another ball/block
                 rightArm.setPower(0);
                 leftArm.setPower(0);
 
@@ -235,12 +235,12 @@ public class TeleOP extends LinearOpMode {
 
 
             /*
-            This block of code allows the stick to be used to adjust the position of the arm
-            even while it is running to a position. Once the desired position is reached, releasing
-            the stick will have it running to the position you left it to try and stay there.
+             * This block of code allows the stick to be used to adjust the position of the arm
+             * even while it is running to a position. Once the desired position is reached, releasing
+             * the stick will have it running to the position you left it to try and stay there.
              */
-            if(gamepad2.left_stick_y != 0) {
-                if(!manualControl) {
+            if (gamepad2.left_stick_y != 0) {
+                if (!manualControl) {
                     manualControl = true;
                     rightArm.setPower(0);
                     leftArm.setPower(0);
@@ -249,7 +249,7 @@ public class TeleOP extends LinearOpMode {
                 }
                 leftArm.setPower(-gamepad2.left_stick_y * .5);
                 rightArm.setPower(-gamepad2.left_stick_y * .5);
-            } else if(manualControl) {
+            } else if (manualControl) {
                 manualControl = false;
                 rightArm.setTargetPosition(rightArm.getCurrentPosition());
                 leftArm.setTargetPosition(leftArm.getCurrentPosition());
@@ -262,9 +262,9 @@ public class TeleOP extends LinearOpMode {
             }
 
 
-            //A touch sensor located where the arm bottoms out allows the encoders to zero out and
-            //ensure no encoder errors build up over time
-            if(!touchSensor.getState()) {
+            // A touch sensor located where the arm bottoms out allows the encoders to zero out and
+            // ensure no encoder errors build up over time
+            if (!touchSensor.getState()) {
                 rightArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 leftArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -272,18 +272,18 @@ public class TeleOP extends LinearOpMode {
                 leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
 
-            //Toggle code for grabbing blocks/balls
-            if(gamepad2.left_bumper) {
-                if(!triggerDown) {
+            // Toggle code for grabbing blocks/balls
+            if (gamepad2.left_bumper) {
+                if (!triggerDown) {
                     triggerDown = true;
-                    if(grabOpen) {
-                        //Close the grabbers and turn the LEDs red
+                    if (grabOpen) {
+                        // Close the grabbers and turn the LEDs red
                         rightGrabber.setPosition(0);
                         leftGrabber.setPosition(1);
                         grabOpen = false;
                         setLEDs(true, false);
                     } else {
-                        //Open the grabbers and turn the LEDs green
+                        // Open the grabbers and turn the LEDs green
                         rightGrabber.setPosition(0.3);
                         leftGrabber.setPosition(0.7);
                         grabOpen = true;
@@ -294,15 +294,16 @@ public class TeleOP extends LinearOpMode {
                 triggerDown = false;
             }
 
-            //Telemetry code for showing encoder values. Helpful during debugging.
+            // Telemetry code for showing encoder values. Helpful during debugging.
             telemetry.addData("Left Arm Position", leftArm.getCurrentPosition());
             telemetry.addData("Right Arm Position", rightArm.getCurrentPosition());
             telemetry.update();
 
         }
     }
+
     public void setLEDs(boolean red, boolean green) {
-        //This function serves as an easy way to set all the LED indicators
+        // This function serves as an easy way to set all the LED indicators
         leftLEDGreen.setState(green);
         leftLEDRed.setState(red);
         rightLEDGreen.setState(green);
