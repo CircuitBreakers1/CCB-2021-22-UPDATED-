@@ -34,7 +34,10 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 
 /**
@@ -76,6 +79,7 @@ public class TeleOP extends LinearOpMode {
     private DigitalChannel leftLEDRed;
     private DigitalChannel rightLEDGreen;
     private DigitalChannel rightLEDRed;
+    private DistanceSensor distance;
 
 
     @Override
@@ -98,6 +102,7 @@ public class TeleOP extends LinearOpMode {
         leftLEDRed = hardwareMap.digitalChannel.get("leftLEDRed");
         rightLEDGreen = hardwareMap.digitalChannel.get("rightLEDGreen");
         rightLEDRed = hardwareMap.digitalChannel.get("rightLEDRed");
+        distance = hardwareMap.get(DistanceSensor.class, "distance");
 
         //The digital channel defaults to inputs, so we have to set the LEDs channels to outputs
         leftLEDRed.setMode(DigitalChannel.Mode.OUTPUT);
@@ -154,6 +159,13 @@ public class TeleOP extends LinearOpMode {
             rightArm.setPower(-gamepad2.left_stick_y * .5);
             */
 
+            if(distance.getDistance(DistanceUnit.INCH) < 1.375 && grabOpen) {
+                setLEDs(false,true);
+            } else if (grabOpen) {
+                setLEDs(true, true);
+            } else {
+                setLEDs(true, false);
+            }
 
             //This block of code allows the A button on the driver controller to toggle the
             //carousel spinner on and off.
@@ -275,7 +287,7 @@ public class TeleOP extends LinearOpMode {
                         rightGrabber.setPosition(0.3);
                         leftGrabber.setPosition(0.7);
                         grabOpen = true;
-                        setLEDs(false, true);
+                        setLEDs(true, true);
                     }
                 }
             } else {
