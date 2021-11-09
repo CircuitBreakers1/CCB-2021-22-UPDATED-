@@ -55,6 +55,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.teamcode.TeleOP;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,7 +64,6 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGR
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
-
 
 
 @TeleOp(name="Vuforia Field Nav Webcam", group ="Concept")
@@ -134,6 +134,8 @@ public class MainAuto extends LinearOpMode {
         leftLEDGreen.setMode(DigitalChannel.Mode.OUTPUT);
         rightLEDRed.setMode(DigitalChannel.Mode.OUTPUT);
         rightLEDGreen.setMode(DigitalChannel.Mode.OUTPUT);
+
+
 
         /*
          * Some motors, due to positioning require to be reversed, in the case of the wheels, to
