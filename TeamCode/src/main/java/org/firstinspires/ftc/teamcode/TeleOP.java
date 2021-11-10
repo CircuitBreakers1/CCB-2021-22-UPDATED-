@@ -59,7 +59,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  *
  * Notes:
  * Grabbing Servos:
- * Open: LEDs Green
+ * Open: LEDs Amber
+ * Block Detected: LEDs Green
  * Closed: LEDs Red
  */
 

@@ -91,6 +91,7 @@ public class MainAuto extends LinearOpMode {
     private DistanceSensor distance;
 
     private static final String VUFORIA_KEY =
+
             "AWC3x6z/////AAABmVlXzJgJHEkClTfzpPhSQSAOSo2ALGWXmreVgLVShBXUJg8BGyNP06zZuMyV0UZUcxC2xqq5jFsSEg1V0yYBBfvKinPneqTDkbkGA1vDE18L884DGyo3awssbrJEnYxMlTYnqT6HAsQO1SQ+DiTDRJOkI2Bo8rmK2mXLXaZPApKXptVgvEFUds0cNi1DZX3d8BzNxmQuIgT9jY+4L5B0sUnEJyZEyiwKqUhpGDmWNQd3yzQcdI9vFyyX6/4FrK6GaT65uV5xW1v4dwvyZite2Fkd0/6J403Wyy3hXBBvsvUZLJvEMWa42Q31/RUDXbaJyric+SOOU1QGFOTEmN4yt7o3hgO4R/SoyWtadjNI0qx6";
 
     // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
@@ -335,7 +336,7 @@ public class MainAuto extends LinearOpMode {
     /**
      * Turn a specified number of degrees using the IMU
      * @param degrees Positive degrees moves in a clockwise direction
-     * @param speed Speed to run the motors at
+     * @param speed
      */
     public void gyroTurn(double degrees, double speed) {
         double startDegrees = angles.firstAngle;
@@ -362,6 +363,11 @@ public class MainAuto extends LinearOpMode {
         leftFront.setPower(0);
     }
 
+    /**
+     * Turns to a specified angle from any current angle
+     * @param targetAngle Angle to turn to
+     * @param speed
+     */
     public void turnToAngle(double targetAngle, double speed) {
         double startDegrees = angles.firstAngle;
         /*
@@ -383,6 +389,11 @@ public class MainAuto extends LinearOpMode {
         gyroTurn(angularMovement, speed);
     }
 
+    /**
+     * Moves a specified number of inches using the encoders
+     * @param inches
+     * @param speed
+     */
     public void moveIN(double inches, double speed) {
         double wheelCircumference = 4 * 3.14;
         double ticksPerRot = 537;
@@ -433,6 +444,17 @@ public class MainAuto extends LinearOpMode {
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
+    /**
+     * Goes to a target postion from current postion using encoders and the IMU. The current
+     * location is acquired using vuforia
+     * @param x X position to go to
+     * @param y Y position to go to
+     * @param speed
+     */
+    public void goToPosition(double x, double y, double speed) {
+
     }
 
 }
