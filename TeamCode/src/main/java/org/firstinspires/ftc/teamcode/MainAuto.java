@@ -64,10 +64,16 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
+/*
+ * TODO: Figure out how to obtain location
+ * TODO: Write goToPosition()
+ * TODO: Start machine learning
+ * TODO: Start writing actual auto
+ * TODO: Add code for both alliances
+ * TODO: Avoidance algorithm?
+ */
 
-
-@TeleOp(name="Vuforia Field Nav Webcam", group ="Concept")
-@Disabled
+@TeleOp(name="MainAuto", group ="Auto")
 public class MainAuto extends LinearOpMode {
 
     BNO055IMU imu;

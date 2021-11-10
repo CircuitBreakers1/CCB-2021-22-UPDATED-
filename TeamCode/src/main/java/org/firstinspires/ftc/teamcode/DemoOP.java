@@ -55,14 +55,14 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * Bottom Level: 51
  * Middle Level: 90
  * Top Level: 140
- * <p>
+ *
  * Notes:
  * Grabbing Servos:
  * Open: LEDs Green
  * Closed: LEDs Red
  */
 
-@TeleOp(name = "TeleOP", group = "Linear Opmode")
+@TeleOp(name = "DemoOP", group = "Linear Opmode")
 public class DemoOP extends LinearOpMode {
 
     // Declare OpMode members.
