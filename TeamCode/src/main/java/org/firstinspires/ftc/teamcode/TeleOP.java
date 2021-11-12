@@ -140,7 +140,7 @@ public class TeleOP extends LinearOpMode {
         rightGrabber.setPosition(0.3);
         leftGrabber.setPosition(0.7);
         // Set the LEDs green to show the grabbing servos are open
-        setLEDs(false, true);
+        setLEDs(true, true);
 
 
         waitForStart();
@@ -157,7 +157,7 @@ public class TeleOP extends LinearOpMode {
             rightArm.setPower(-gamepad2.left_stick_y * .5);
             */
 
-            if(distance.getDistance(DistanceUnit.INCH) < 1.375 && grabOpen) {
+            if(distance.getDistance(DistanceUnit.INCH) < 1.5 && grabOpen) {
                 setLEDs(false,true);
             } else if (grabOpen) {
                 setLEDs(true, true);
@@ -297,6 +297,7 @@ public class TeleOP extends LinearOpMode {
             // Telemetry code for showing encoder values. Helpful during debugging.
             telemetry.addData("Left Arm Position", leftArm.getCurrentPosition());
             telemetry.addData("Right Arm Position", rightArm.getCurrentPosition());
+            telemetry.addData("Distance reading", distance.getDistance(DistanceUnit.INCH));
             telemetry.update();
 
         }
