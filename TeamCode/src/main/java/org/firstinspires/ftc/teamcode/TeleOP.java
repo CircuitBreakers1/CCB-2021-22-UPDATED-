@@ -40,6 +40,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
+import org.firstinspires.ftc.teamcode.func;
+
 
 
 /**
@@ -95,10 +97,13 @@ public class TeleOP extends LinearOpMode {
 
         while (opModeIsActive()) {
             // Simple tank drive
+            /*
             robot.leftFront.setPower(-gamepad1.left_stick_y);
             robot.leftBack.setPower(-gamepad1.left_stick_y);
             robot.rightBack.setPower(-gamepad1.right_stick_y);
             robot.rightFront.setPower(-gamepad1.right_stick_y);
+            */
+            func.tankOn(-gamepad1.left_stick_y, -gamepad1.right_stick_y);
 
             /*
             leftArm.setPower(-gamepad2.left_stick_y * .5);

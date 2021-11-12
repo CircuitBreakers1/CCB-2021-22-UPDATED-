@@ -9,7 +9,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
  * This class is used for global functions for easy cross program adjustments
  */
 public class func /*extends LinearOpMode*/ {
-    HardwareInit robot = new HardwareInit();
+    public static HardwareInit robot = new HardwareInit();
 
     public void setLEDss(boolean red, boolean green) {
         robot.leftLEDGreen.setState(green);
@@ -17,7 +17,10 @@ public class func /*extends LinearOpMode*/ {
         robot.rightLEDGreen.setState(green);
         robot.rightLEDRed.setState(red);
     }
-    public static void tankOn() {
-
+    public static void tankOn(double left, double right) {
+        robot.leftBack.setPower(left);
+        robot.leftFront.setPower(left);
+        robot.rightBack.setPower(right);
+        robot.rightFront.setPower(right);
     }
 }
