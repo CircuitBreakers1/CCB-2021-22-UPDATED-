@@ -37,7 +37,9 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
+import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
 
 
 /**
@@ -54,76 +56,22 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  * Bottom Level: 51
  * Middle Level: 90
  * Top Level: 140
- * <p>
+ *
  * Notes:
  * Grabbing Servos:
- * Open: LEDs Green
+ * Open: LEDs Amber
+ * Block Detected: LEDs Green
  * Closed: LEDs Red
  */
 
 @TeleOp(name = "TeleOP", group = "Linear Opmode")
 public class TeleOP extends LinearOpMode {
 
-    // Declare OpMode members.
-    private DcMotor leftFront;
-    private DcMotor rightFront;
-    private DcMotor leftBack;
-    private DcMotor rightBack;
-    private DcMotor backSpinner;
-    private DcMotor leftArm;
-    private DcMotor rightArm;
-    private Servo leftGrabber;
-    private Servo rightGrabber;
-    private DigitalChannel touchSensor;
-    private DigitalChannel leftLEDGreen;
-    private DigitalChannel leftLEDRed;
-    private DigitalChannel rightLEDGreen;
-    private DigitalChannel rightLEDRed;
-    private DistanceSensor distance;
-
+    HardwareInit robot = new HardwareInit();
 
     @Override
     public void runOpMode() {
-        // Set the hardware paths for all of our actuators, sensors, and other things connected to I/O
-        leftFront = hardwareMap.dcMotor.get("leftFront");
-        rightFront = hardwareMap.dcMotor.get("rightFront");
-        leftBack = hardwareMap.dcMotor.get("leftBack");
-        rightBack = hardwareMap.dcMotor.get("rightBack");
-        backSpinner = hardwareMap.dcMotor.get("backSpinner");
-        leftArm = hardwareMap.dcMotor.get("leftArm");
-        rightArm = hardwareMap.dcMotor.get("rightArm");
-
-        rightGrabber = hardwareMap.servo.get("rightGrabber");
-        leftGrabber = hardwareMap.servo.get("leftGrabber");
-
-        touchSensor = hardwareMap.digitalChannel.get("touchSensor");
-        leftLEDGreen = hardwareMap.digitalChannel.get("leftLEDGreen");
-        leftLEDRed = hardwareMap.digitalChannel.get("leftLEDRed");
-        rightLEDGreen = hardwareMap.digitalChannel.get("rightLEDGreen");
-        rightLEDRed = hardwareMap.digitalChannel.get("rightLEDRed");
-        distance = hardwareMap.get(DistanceSensor.class, "distance");
-
-        // The digital channel defaults to inputs, so we have to set the LEDs channels to outputs
-        leftLEDRed.setMode(DigitalChannel.Mode.OUTPUT);
-        leftLEDGreen.setMode(DigitalChannel.Mode.OUTPUT);
-        rightLEDRed.setMode(DigitalChannel.Mode.OUTPUT);
-        rightLEDGreen.setMode(DigitalChannel.Mode.OUTPUT);
-
-        /*
-         * Some motors, due to positioning require to be reversed, in the case of the wheels, to
-         * make the wheels move forward when given positive power
-         */
-        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightArm.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        //Sets the zero power behavior of most motors to brake
-        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftArm.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.BRAKE));
+        robot.init(hardwareMap);
 
         //Various booleans used for toggle buttons
         boolean spinOn = false;
@@ -137,8 +85,8 @@ public class TeleOP extends LinearOpMode {
 
         // Left 1 is down, right 0 is down
         // Start Open
-        rightGrabber.setPosition(0.3);
-        leftGrabber.setPosition(0.7);
+        robot.rightGrabber.setPosition(0.3);
+        robot.leftGrabber.setPosition(0.7);
         // Set the LEDs green to show the grabbing servos are open
         setLEDs(true, true);
 
@@ -147,17 +95,18 @@ public class TeleOP extends LinearOpMode {
 
         while (opModeIsActive()) {
             // Simple tank drive
-            leftFront.setPower(-gamepad1.left_stick_y);
-            leftBack.setPower(-gamepad1.left_stick_y);
-            rightBack.setPower(-gamepad1.right_stick_y);
-            rightFront.setPower(-gamepad1.right_stick_y);
+            robot.leftFront.setPower(-gamepad1.left_stick_y);
+            robot.leftBack.setPower(-gamepad1.left_stick_y);
+            robot.rightBack.setPower(-gamepad1.right_stick_y);
+            robot.rightFront.setPower(-gamepad1.right_stick_y);
+
 
             /*
             leftArm.setPower(-gamepad2.left_stick_y * .5);
             rightArm.setPower(-gamepad2.left_stick_y * .5);
             */
 
-            if(distance.getDistance(DistanceUnit.INCH) < 1.5 && grabOpen) {
+            if(robot.distance.getDistance(DistanceUnit.INCH) < 1.5 && grabOpen) {
                 setLEDs(false,true);
             } else if (grabOpen) {
                 setLEDs(true, true);
@@ -173,10 +122,10 @@ public class TeleOP extends LinearOpMode {
                 if (!aDown) {
                     aDown = true;
                     if (spinOn) {
-                        backSpinner.setPower(0);
+                        robot.backSpinner.setPower(0);
                         spinOn = false;
                     } else {
-                        backSpinner.setPower(-0.65);
+                        robot.backSpinner.setPower(-0.65);
                         spinOn = true;
                     }
                 }
@@ -189,47 +138,47 @@ public class TeleOP extends LinearOpMode {
              */
             if (gamepad2.a) {
                 // Bottom Level
-                rightArm.setTargetPosition(51);
-                leftArm.setTargetPosition(51);
+                robot.rightArm.setTargetPosition(51);
+                robot.leftArm.setTargetPosition(51);
 
-                rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                rightArm.setPower(1);
-                leftArm.setPower(1);
+                robot.rightArm.setPower(1);
+                robot.leftArm.setPower(1);
             }
 
             if (gamepad2.b) {
                 // Middle Level
-                rightArm.setTargetPosition(90);
-                leftArm.setTargetPosition(90);
+                robot.rightArm.setTargetPosition(90);
+                robot.leftArm.setTargetPosition(90);
 
-                rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                rightArm.setPower(1);
-                leftArm.setPower(1);
+                robot.rightArm.setPower(1);
+                robot.leftArm.setPower(1);
             }
 
             if (gamepad2.y) {
                 // Top Level
-                rightArm.setTargetPosition(140);
-                leftArm.setTargetPosition(140);
+                robot.rightArm.setTargetPosition(140);
+                robot.leftArm.setTargetPosition(140);
 
-                rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                rightArm.setPower(1);
-                leftArm.setPower(1);
+                robot.rightArm.setPower(1);
+                robot.leftArm.setPower(1);
             }
 
             if (gamepad2.x) {
                 // Coast all the way down to prepare to collect another ball/block
-                rightArm.setPower(0);
-                leftArm.setPower(0);
+                robot.rightArm.setPower(0);
+                robot.leftArm.setPower(0);
 
-                rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
 
 
@@ -242,34 +191,34 @@ public class TeleOP extends LinearOpMode {
             if (gamepad2.left_stick_y != 0) {
                 if (!manualControl) {
                     manualControl = true;
-                    rightArm.setPower(0);
-                    leftArm.setPower(0);
-                    rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    robot.rightArm.setPower(0);
+                    robot.leftArm.setPower(0);
+                    robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 }
-                leftArm.setPower(-gamepad2.left_stick_y * .5);
-                rightArm.setPower(-gamepad2.left_stick_y * .5);
+                robot.leftArm.setPower(-gamepad2.left_stick_y * .5);
+                robot.rightArm.setPower(-gamepad2.left_stick_y * .5);
             } else if (manualControl) {
                 manualControl = false;
-                rightArm.setTargetPosition(rightArm.getCurrentPosition());
-                leftArm.setTargetPosition(leftArm.getCurrentPosition());
+                robot.rightArm.setTargetPosition(robot.rightArm.getCurrentPosition());
+                robot.leftArm.setTargetPosition(robot.leftArm.getCurrentPosition());
 
-                rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                rightArm.setPower(1);
-                leftArm.setPower(1);
+                robot.rightArm.setPower(1);
+                robot.leftArm.setPower(1);
             }
 
 
             // A touch sensor located where the arm bottoms out allows the encoders to zero out and
             // ensure no encoder errors build up over time
-            if (!touchSensor.getState()) {
-                rightArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                leftArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            if (!robot.touchSensor.getState()) {
+                robot.rightArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                robot.leftArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-                rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
 
             // Toggle code for grabbing blocks/balls
@@ -278,14 +227,14 @@ public class TeleOP extends LinearOpMode {
                     triggerDown = true;
                     if (grabOpen) {
                         // Close the grabbers and turn the LEDs red
-                        rightGrabber.setPosition(0);
-                        leftGrabber.setPosition(1);
+                        robot.rightGrabber.setPosition(0);
+                        robot.leftGrabber.setPosition(1);
                         grabOpen = false;
                         setLEDs(true, false);
                     } else {
                         // Open the grabbers and turn the LEDs green
-                        rightGrabber.setPosition(0.3);
-                        leftGrabber.setPosition(0.7);
+                        robot.rightGrabber.setPosition(0.3);
+                        robot.leftGrabber.setPosition(0.7);
                         grabOpen = true;
                         setLEDs(true, true);
                     }
@@ -295,19 +244,23 @@ public class TeleOP extends LinearOpMode {
             }
 
             // Telemetry code for showing encoder values. Helpful during debugging.
-            telemetry.addData("Left Arm Position", leftArm.getCurrentPosition());
-            telemetry.addData("Right Arm Position", rightArm.getCurrentPosition());
-            telemetry.addData("Distance reading", distance.getDistance(DistanceUnit.INCH));
+            telemetry.addData("Left Arm Position", robot.leftArm.getCurrentPosition());
+            telemetry.addData("Right Arm Position", robot.rightArm.getCurrentPosition());
+            telemetry.addData("Distance reading", robot.distance.getDistance(DistanceUnit.INCH));
             telemetry.update();
 
         }
     }
 
+    /**
+     * This function serves as an easy way to set all the LED indicators.
+     * @param red
+     * @param green
+     */
     public void setLEDs(boolean red, boolean green) {
-        // This function serves as an easy way to set all the LED indicators
-        leftLEDGreen.setState(green);
-        leftLEDRed.setState(red);
-        rightLEDGreen.setState(green);
-        rightLEDRed.setState(red);
+        robot.leftLEDGreen.setState(green);
+        robot.leftLEDRed.setState(red);
+        robot.rightLEDGreen.setState(green);
+        robot.rightLEDRed.setState(red);
     }
 }
