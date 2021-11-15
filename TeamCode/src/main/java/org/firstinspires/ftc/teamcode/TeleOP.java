@@ -77,7 +77,7 @@ public class TeleOP extends LinearOpMode {
     /**
      * Array for smoothing distance inputs. The smoothed value is stored at index 6
      */
-    double distance[] = new double[6];
+    double distance[] = new double[7];
 
     @Override
     public void runOpMode() {
@@ -92,6 +92,8 @@ public class TeleOP extends LinearOpMode {
 
         boolean manualControl = false;
 
+        double lastCheck = 0;
+
         // Left 1 is down, right 0 is down
         // Start Open
         robot.rightGrabber.setPosition(0.3);
@@ -103,6 +105,10 @@ public class TeleOP extends LinearOpMode {
         waitForStart();
 
         while (opModeIsActive()) {
+            if(System.currentTimeMillis() > lastCheck + 166) {
+                averageVal(robot.distance, 0.5);
+            }
+
             // Simple tank drive
             robot.leftFront.setPower(-gamepad1.left_stick_y);
             robot.leftBack.setPower(-gamepad1.left_stick_y);
@@ -115,7 +121,7 @@ public class TeleOP extends LinearOpMode {
             rightArm.setPower(-gamepad2.left_stick_y * .5);
             */
 
-            if(robot.distance.getDistance(DistanceUnit.INCH) < 1.5 && grabOpen) {
+            if(distance[6] < 1.5 && grabOpen) {
                 setLEDs(false,true);
             } else if (grabOpen) {
                 setLEDs(true, true);
@@ -255,7 +261,7 @@ public class TeleOP extends LinearOpMode {
             // Telemetry code for showing encoder values. Helpful during debugging.
             telemetry.addData("Left Arm Position", robot.leftArm.getCurrentPosition());
             telemetry.addData("Right Arm Position", robot.rightArm.getCurrentPosition());
-            telemetry.addData("Distance reading", robot.distance.getDistance(DistanceUnit.INCH));
+            telemetry.addData("Distance reading", distance[6]) ;
             telemetry.update();
 
         }

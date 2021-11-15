@@ -100,6 +100,7 @@ public class MainAuto extends LinearOpMode {
     private WebcamName webcamName       = null;
 
     private boolean targetVisible       = false;
+    private boolean lol = false;
 
     @Override public void runOpMode() {
         robot.init(hardwareMap);
@@ -202,7 +203,7 @@ public class MainAuto extends LinearOpMode {
 
         OpenGLMatrix cameraLocationOnRobot = OpenGLMatrix
                     .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
-                    .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XZY, DEGREES, 90, 90, 0));
+                    .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XZY, DEGREES, 0, 90, -90));
 
         /**  Let all the trackable listeners know where the camera is.  */
         for (VuforiaTrackable trackable : allTrackables) {
@@ -262,6 +263,11 @@ public class MainAuto extends LinearOpMode {
                 telemetry.addData("Visible Target", "none");
             }
             telemetry.update();
+            /*
+            if(!lol) {
+                gyroTurn(-  90, 0.5);
+                lol = true;
+            } */
         }
 
         // Disable Tracking when we are done;
@@ -385,5 +391,19 @@ public class MainAuto extends LinearOpMode {
         robot.rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+    public void goToPosition(double targetX, double targetY, double speed) {
+        double currentX = 0;
+        double currentY = 0;
 
+        double deltaX = targetX - currentX;
+        double deltaY = targetY - currentY;
+
+        double targetRad = Math.atan(deltaX/deltaY);
+        double targetDegrees = Math.toDegrees(targetRad);
+
+        turnToAngle(targetDegrees, speed);
+
+        double z = Math.sqrt(((deltaX * deltaX) + (deltaY * deltaY)));
+        moveIN(z,speed);
+    }
 }

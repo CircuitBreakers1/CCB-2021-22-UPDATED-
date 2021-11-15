@@ -80,7 +80,7 @@ public class HardwareInit
         leftFront  = hwMap.get(DcMotor.class, "leftFront");
         rightFront  = hwMap.get(DcMotor.class, "rightFront");
         leftBack  = hwMap.get(DcMotor.class, "leftBack");
-        rightBack  = hwMap.get(DcMotor.class, "leftFront");
+        rightBack  = hwMap.get(DcMotor.class, "rightBack");
         backSpinner  = hwMap.get(DcMotor.class, "backSpinner");
         leftArm  = hwMap.get(DcMotor.class, "leftArm");
         rightArm  = hwMap.get(DcMotor.class, "rightArm");
@@ -102,7 +102,7 @@ public class HardwareInit
         leftGrabber  = hwMap.get(Servo.class, "leftGrabber");
         rightGrabber = hwMap.get(Servo.class, "rightGrabber");
 
-        // Define and initalize all digital devices
+        // Define and initialize all digital devices
         distance = hwMap.get(DistanceSensor.class, "distance");
         touchSensor = hwMap.get(DigitalChannel.class, "touchSensor");
         leftLEDGreen = hwMap.get(DigitalChannel.class, "leftLEDGreen");
