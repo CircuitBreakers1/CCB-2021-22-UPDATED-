@@ -67,7 +67,8 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
 
 /*
  * TODO: Figure out how to obtain location
- * TODO: Write goToPosition()
+ * TODO: Figure out camera orientation
+ * TODO: Test goToPosition()
  * TODO: Start machine learning
  * TODO: Start writing actual auto
  * TODO: Add code for both alliances
@@ -209,14 +210,6 @@ public class MainAuto extends LinearOpMode {
         for (VuforiaTrackable trackable : allTrackables) {
             ((VuforiaTrackableDefaultListener) trackable.getListener()).setCameraLocationOnRobot(parameters.cameraName, cameraLocationOnRobot);
         }
-
-        /*
-         * WARNING:
-         * In this sample, we do not wait for PLAY to be pressed.  Target Tracking is started immediately when INIT is pressed.
-         * This sequence is used to enable the new remote DS Camera Preview feature to be used with this sample.
-         * CONSEQUENTLY do not put any driving commands in this loop.
-         * To restore the normal opmode structure, just un-comment the following line:
-         */
 
         waitForStart();
 

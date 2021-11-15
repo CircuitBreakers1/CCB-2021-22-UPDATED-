@@ -49,10 +49,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
  */
 
 /*
- * TODO: Smooth out the Distance values
- */
-
-/*
  * Important Values:
  * Grabbing Servos:
  * Closed: Left 1.0, Right 0.0
@@ -75,7 +71,7 @@ public class TeleOP extends LinearOpMode {
     HardwareInit robot = new HardwareInit();
 
     /**
-     * Array for smoothing distance inputs. The smoothed value is stored at index 6
+     * Array for smoothing distance inputs. The smoothed value is stored at index <b>6</b>
      */
     double distance[] = new double[7];
 
