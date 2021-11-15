@@ -80,22 +80,7 @@ public class MainAuto extends LinearOpMode {
     BNO055IMU imu;
     Orientation angles;
 
-    // Declare OpMode members.
-    private DcMotor leftFront;
-    private DcMotor rightFront;
-    private DcMotor leftBack;
-    private DcMotor rightBack;
-    private DcMotor backSpinner;
-    private DcMotor leftArm;
-    private DcMotor rightArm;
-    private Servo leftGrabber;
-    private Servo rightGrabber;
-    private DigitalChannel touchSensor;
-    private DigitalChannel leftLEDGreen;
-    private DigitalChannel leftLEDRed;
-    private DigitalChannel rightLEDGreen;
-    private DigitalChannel rightLEDRed;
-    private DistanceSensor distance;
+    HardwareInit robot = new HardwareInit();
 
     private static final String VUFORIA_KEY =
             "AWC3x6z/////AAABmVlXzJgJHEkClTfzpPhSQSAOSo2ALGWXmreVgLVShBXUJg8BGyNP06zZuMyV0UZUcxC2xqq5jFsSEg1V0yYBBfvKinPneqTDkbkGA1vDE18L884DGyo3awssbrJEnYxMlTYnqT6HAsQO1SQ+DiTDRJOkI2Bo8rmK2mXLXaZPApKXptVgvEFUds0cNi1DZX3d8BzNxmQuIgT9jY+4L5B0sUnEJyZEyiwKqUhpGDmWNQd3yzQcdI9vFyyX6/4FrK6GaT65uV5xW1v4dwvyZite2Fkd0/6J403Wyy3hXBBvsvUZLJvEMWa42Q31/RUDXbaJyric+SOOU1QGFOTEmN4yt7o3hgO4R/SoyWtadjNI0qx6";
@@ -117,46 +102,7 @@ public class MainAuto extends LinearOpMode {
     private boolean targetVisible       = false;
 
     @Override public void runOpMode() {
-        //Set the hardware paths for all of our actuators, sensors, and other things connected to I/O
-        leftFront  = hardwareMap.dcMotor.get("leftFront");
-        rightFront  = hardwareMap.dcMotor.get("rightFront");
-        leftBack  = hardwareMap.dcMotor.get("leftBack");
-        rightBack  = hardwareMap.dcMotor.get("rightBack");
-        backSpinner = hardwareMap.dcMotor.get("backSpinner");
-        leftArm = hardwareMap.dcMotor.get("leftArm");
-        rightArm = hardwareMap.dcMotor.get("rightArm");
-
-        rightGrabber = hardwareMap.servo.get("rightGrabber");
-        leftGrabber = hardwareMap.servo.get("leftGrabber");
-
-        touchSensor = hardwareMap.digitalChannel.get("touchSensor");
-        leftLEDGreen = hardwareMap.digitalChannel.get("leftLEDGreen");
-        leftLEDRed = hardwareMap.digitalChannel.get("leftLEDRed");
-        rightLEDGreen = hardwareMap.digitalChannel.get("rightLEDGreen");
-        rightLEDRed = hardwareMap.digitalChannel.get("rightLEDRed");
-        distance = hardwareMap.get(DistanceSensor.class, "distance");
-
-        //The digital channel defaults to inputs, so we have to set the LEDs channels to outputs
-        leftLEDRed.setMode(DigitalChannel.Mode.OUTPUT);
-        leftLEDGreen.setMode(DigitalChannel.Mode.OUTPUT);
-        rightLEDRed.setMode(DigitalChannel.Mode.OUTPUT);
-        rightLEDGreen.setMode(DigitalChannel.Mode.OUTPUT);
-
-        /*
-         * Some motors, due to positioning require to be reversed, in the case of the wheels, to
-         * make the wheels move forward when given positive power
-         */
-        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-        rightArm.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        //Sets the zero power behavior of most motors to brake
-        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        rightArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        leftArm.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.BRAKE));
+        robot.init(hardwareMap);
 
         BNO055IMU.Parameters Parameters = new BNO055IMU.Parameters();
         Parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
@@ -346,25 +292,25 @@ public class MainAuto extends LinearOpMode {
         double startDegrees = angles.firstAngle;
         double targetDegrees = startDegrees - degrees;
         if(degrees < 0) {
-            rightBack.setPower(speed);
-            rightFront.setPower(speed);
-            leftBack.setPower(-speed);
-            leftFront.setPower(-speed);
+            robot.rightBack.setPower(speed);
+            robot.rightFront.setPower(speed);
+            robot.leftBack.setPower(-speed);
+            robot.leftFront.setPower(-speed);
         } else {
-            rightBack.setPower(-speed);
-            rightFront.setPower(-speed);
-            leftBack.setPower(speed);
-            leftFront.setPower(speed);
+            robot.rightBack.setPower(-speed);
+            robot.rightFront.setPower(-speed);
+            robot.leftBack.setPower(speed);
+            robot.leftFront.setPower(speed);
         }
         while(!(angles.firstAngle + 3 > targetDegrees && angles.firstAngle - 3 < targetDegrees)) {
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             sleep(10);
         }
 
-        rightBack.setPower(0);
-        rightFront.setPower(0);
-        leftBack.setPower(0);
-        leftFront.setPower(0);
+        robot.rightBack.setPower(0);
+        robot.rightFront.setPower(0);
+        robot.leftBack.setPower(0);
+        robot.leftFront.setPower(0);
     }
 
     public void turnToAngle(double targetAngle, double speed) {
@@ -394,30 +340,30 @@ public class MainAuto extends LinearOpMode {
         double rotations = inches / wheelCircumference;
         double ticks = ticksPerRot * rotations;
 
-        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
 
-        leftFront.setTargetPosition((int) ticks);
-        rightFront.setTargetPosition((int) ticks);
-        leftBack.setTargetPosition((int) ticks);
-        rightBack.setTargetPosition((int) ticks);
+        robot.leftFront.setTargetPosition((int) ticks);
+        robot.rightFront.setTargetPosition((int) ticks);
+        robot.leftBack.setTargetPosition((int) ticks);
+        robot.rightBack.setTargetPosition((int) ticks);
 
-        rightBack.setPower(speed);
-        rightFront.setPower(speed);
-        leftBack.setPower(speed);
-        leftFront.setPower(speed);
+        robot.rightBack.setPower(speed);
+        robot.rightFront.setPower(speed);
+        robot.leftBack.setPower(speed);
+        robot.leftFront.setPower(speed);
 
-        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        while((leftBack.isBusy() || leftFront.isBusy() || rightBack.isBusy() || rightFront.isBusy()) && opModeIsActive()) {
+        while((robot.leftBack.isBusy() || robot.leftFront.isBusy() || robot.rightBack.isBusy() || robot.rightFront.isBusy()) && opModeIsActive()) {
             /**
-             * Robot gets some free time.
+             * <i>Robot gets some free time.
              * What does it do during it's free time?
              * No one knows.
              * Maybe it's one of those chess bots
@@ -425,19 +371,19 @@ public class MainAuto extends LinearOpMode {
              * through a harsh yet effective process of generational evolution.
              * It probably just naps. It works pretty hard.
              * Even though we might not know what it does, all that matters to us is that it comes
-             * back when the motors are done.
+             * back when the motors are done.<i/>
              */
         }
 
-        rightBack.setPower(0);
-        rightFront.setPower(0);
-        leftBack.setPower(0);
-        leftFront.setPower(0);
+        robot.rightBack.setPower(0);
+        robot.rightFront.setPower(0);
+        robot.leftBack.setPower(0);
+        robot.leftFront.setPower(0);
 
-        leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
 }
