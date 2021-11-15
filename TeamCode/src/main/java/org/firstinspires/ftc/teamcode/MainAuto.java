@@ -32,20 +32,13 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
 import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
-import org.firstinspires.ftc.robotcore.external.navigation.Acceleration;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -66,9 +59,9 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
 /*
- * TODO: Figure out how to obtain location
  * TODO: Figure out camera orientation
  * TODO: Test goToPosition()
+ * TODO: Write update location for linear auto?
  * TODO: Start machine learning
  * TODO: Start writing actual auto
  * TODO: Add code for both alliances
@@ -94,6 +87,10 @@ public class MainAuto extends LinearOpMode {
     private static final float halfTile         = 12 * mmPerInch;
     private static final float oneAndHalfTile   = 36 * mmPerInch;
 
+    private float posX = 0;
+    private float posY = 0;
+    private float posAngle = 0;
+
     // Class Members
     private OpenGLMatrix lastLocation   = null;
     private VuforiaLocalizer vuforia    = null;
@@ -105,25 +102,10 @@ public class MainAuto extends LinearOpMode {
 
     @Override public void runOpMode() {
         robot.init(hardwareMap);
-
-        BNO055IMU.Parameters Parameters = new BNO055IMU.Parameters();
-        Parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        Parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
-        Parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        Parameters.loggingEnabled      = true;
-        Parameters.loggingTag          = "IMU";
-        Parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
-
-        imu = hardwareMap.get(BNO055IMU.class, "imu");
-        imu.initialize(Parameters);
-
-
-        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        imuInit();
 
         // Connect to the camera we are to use.  This name must match what is set up in Robot Configuration
         webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
-
-        imu.startAccelerationIntegration(new Position(), new Velocity(), 100);
 
         /*
          * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
@@ -204,7 +186,7 @@ public class MainAuto extends LinearOpMode {
 
         OpenGLMatrix cameraLocationOnRobot = OpenGLMatrix
                     .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
-                    .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XZY, DEGREES, 0, 90, -90));
+                    .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XZY, DEGREES, 90, 0, 90));
 
         /**  Let all the trackable listeners know where the camera is.  */
         for (VuforiaTrackable trackable : allTrackables) {
@@ -261,6 +243,11 @@ public class MainAuto extends LinearOpMode {
                 gyroTurn(-  90, 0.5);
                 lol = true;
             } */
+
+            float[] coords = lastLocation.getTranslation().getData();
+            posX = coords[0];
+            posY = coords[1];
+            posAngle = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES).thirdAngle;
         }
 
         // Disable Tracking when we are done;
@@ -281,6 +268,22 @@ public class MainAuto extends LinearOpMode {
                 .multiplied(Orientation.getRotationMatrix(EXTRINSIC, XYZ, DEGREES, rx, ry, rz)));
     }
 
+    public void imuInit() {
+        BNO055IMU.Parameters Parameters = new BNO055IMU.Parameters();
+        Parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
+        Parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        Parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
+        Parameters.loggingEnabled      = true;
+        Parameters.loggingTag          = "IMU";
+        Parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
+
+        imu = hardwareMap.get(BNO055IMU.class, "imu");
+        imu.initialize(Parameters);
+
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+
+        imu.startAccelerationIntegration(new Position(), new Velocity(), 100);
+    }
 
     /**
      * Turn a specified number of degrees using the IMU
@@ -361,8 +364,8 @@ public class MainAuto extends LinearOpMode {
         robot.rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         while((robot.leftBack.isBusy() || robot.leftFront.isBusy() || robot.rightBack.isBusy() || robot.rightFront.isBusy()) && opModeIsActive()) {
-            /**
-             * <i>Robot gets some free time.
+            /*
+             * Robot gets some free time.
              * What does it do during it's free time?
              * No one knows.
              * Maybe it's one of those chess bots
@@ -370,7 +373,7 @@ public class MainAuto extends LinearOpMode {
              * through a harsh yet effective process of generational evolution.
              * It probably just naps. It works pretty hard.
              * Even though we might not know what it does, all that matters to us is that it comes
-             * back when the motors are done.<i/>
+             * back when the motors are done.
              */
         }
 
@@ -385,8 +388,8 @@ public class MainAuto extends LinearOpMode {
         robot.leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
     public void goToPosition(double targetX, double targetY, double speed) {
-        double currentX = 0;
-        double currentY = 0;
+        double currentX = posX;
+        double currentY = posY;
 
         double deltaX = targetX - currentX;
         double deltaY = targetY - currentY;
@@ -399,4 +402,6 @@ public class MainAuto extends LinearOpMode {
         double z = Math.sqrt(((deltaX * deltaX) + (deltaY * deltaY)));
         moveIN(z,speed);
     }
+
+    public void updateLocation() {}
 }
