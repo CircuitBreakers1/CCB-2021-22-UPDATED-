@@ -59,13 +59,46 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
 /*
+ * General Todos
  * TODO: Figure out camera orientation
- * TODO: Test goToPosition()
+ * TODO: Absolute goToAngle();
+ * TODO: Test goToPosition();
+ * TODO: Add positional matrix updating to end of goToPosition() in case we cannot see our position
+ *       before our next movement
  * TODO: Write update location for linear auto?
  * TODO: Start machine learning
  * TODO: Start writing actual auto
  * TODO: Add code for both alliances
  * TODO: Avoidance algorithm?
+ *
+ * Caleb Todos (Just put done when you complete one of these, I don't expect you to complete all of
+ *              these, especially if you do runs, but do what you can and text me if you need help)
+ *              Feel free to update the general todos above if you think of something we need to do
+ * COMMIT AND PUSH WHEN DONE PLEASE FOR THE LOVE OF GOD IT MESSES THINGS UP IF YOU DON'T AND I WANNA
+ * WORK ON IT
+ *
+ * TODO: Double check camera is orientated right.
+ *      Start by building and deploying the code (green play) and running the main auto, then
+ *      checking the colors of the axis against the ones in the video (go to the part with the
+ *      actual target, not the straws). I think the reason the camera is sideways is because the
+ *      camera is outputting horizontal video so the phone just rotates it for the preview. Just
+ *      make sure the Z axis is upright. I think I already have this value set, but if it doesn't
+ *      work, mess with the rotation values somewhere around line 217 and the values should have
+ *      first/second/third angle next to them. Remember the right hand rule. (It's in the video if
+ *      you don't know what that is)
+ * TODO: Test absolute goToAngle();
+ *      I realised that for the goToPosition() to work properly we need to go to an absolute angle
+ *      based on the field instead of the relative rotational one we were using. I have written code
+ *      in the loop (hopefully) that you should be able to test and just uncomment. It will try and
+ *      point to 0  degrees (no idea which way that actually is but it's probably centered on one of the walls,
+ *      just as long as it points the same way regardless of initial start rotation or position),
+ *      as long as it can see a target.
+ * TODO: Test goToPosition();
+ *      The glorious moment of fucking truth. If you made it this far then congrats, you have almost
+ *      completed all the vuforia stuff. There's more commented code in the loop. Comment or delete
+ *      the code from the goToAngle() and deploy. If the robot can see a target, it will try and go
+ *      to 0,0, wherever that is (maybe the middle? or directly centered IN the red wall, in which case
+ *      change the values). If it goes anywhere specific I'll be happy and you can go play pool.
  */
 
 @Autonomous(name="MainAuto", group ="Auto")
