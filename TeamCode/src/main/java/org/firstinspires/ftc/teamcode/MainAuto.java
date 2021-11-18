@@ -64,7 +64,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
  * TODO: Absolute goToAngle();
  * TODO: Test goToPosition();
  * TODO: Add positional matrix updating to end of goToPosition() in case we cannot see our position
- *       before our next movement
+ *       before our next movement (updatePosition())
  * TODO: Write update location for linear auto?
  * TODO: Start machine learning
  * TODO: Start writing actual auto
@@ -348,6 +348,21 @@ public class MainAuto extends LinearOpMode {
         robot.leftFront.setPower(0);
     }
 
+    /**
+     * Turns to a direction based on the field itself
+     * @param degrees Absolute direction
+     * @param speed
+     * @param absolute Passing false runs relative gyro turn and turns a number of degrees
+     */
+    public void gyroTurn(double degrees, double speed, boolean absolute) {
+        if(!absolute) {
+            gyroTurn(degrees, speed);
+            return;
+        }
+        double turnAmount = posAngle - degrees;
+        gyroTurn(turnAmount, speed);
+    }
+
     public void turnToAngle(double targetAngle, double speed) {
         double startDegrees = angles.firstAngle;
         /*
@@ -369,6 +384,11 @@ public class MainAuto extends LinearOpMode {
         gyroTurn(angularMovement, speed);
     }
 
+    /**
+     * Moves a distance using encoders
+     * @param inches
+     * @param speed
+     */
     public void moveIN(double inches, double speed) {
         double wheelCircumference = 4 * 3.14;
         double ticksPerRot = 537;
@@ -420,6 +440,13 @@ public class MainAuto extends LinearOpMode {
         robot.rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
+
+    /**
+     * Goes to a position on the field
+     * @param targetX X coord to go to
+     * @param targetY Y coord to go to
+     * @param speed
+     */
     public void goToPosition(double targetX, double targetY, double speed) {
         double currentX = posX;
         double currentY = posY;
@@ -430,11 +457,41 @@ public class MainAuto extends LinearOpMode {
         double targetRad = Math.atan(deltaX/deltaY);
         double targetDegrees = Math.toDegrees(targetRad);
 
-        turnToAngle(targetDegrees, speed);
+        gyroTurn(targetDegrees, speed, true);
 
         double z = Math.sqrt(((deltaX * deltaX) + (deltaY * deltaY)));
         moveIN(z,speed);
     }
 
-    public void updateLocation() {}
+    /**
+     * Updates location
+     */
+    private void updateLocation() {
+        targetVisible = false;
+        for (VuforiaTrackable trackable : allTrackables) {
+            if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
+                telemetry.addData("Visible Target", trackable.getName());
+                targetVisible = true;
+
+                // getUpdatedRobotLocation() will return null if no new information is available since
+                // the last time that call was made, or if the trackable is not currently visible.
+                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
+                if (robotLocationTransform != null) {
+                    lastLocation = robotLocationTransform;
+                }
+                break;
+            }
+        }
+    }
+
+    //TODO: Automatic angle estimation?
+    /**
+     * Updates location. If you know some values you can set them if no target is visible
+     * @param estX
+     * @param estY
+     * @param estAngle
+     */
+    public void updateLocation(double estX, double estY, double estAngle) {
+
+    }
 }
