@@ -38,7 +38,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -62,14 +61,12 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
  * General Todos
  * TODO: Figure out camera orientation
  * TODO: Test goToPosition();
- * TODO: Add positional matrix updating to end of goToPosition() in case we cannot see our position
- *       before our next movement (updatePosition())
- * TODO: Write update location for linear auto?
  * TODO: Start machine learning
  * TODO: Start writing actual auto
  * TODO: Add code for both alliances
  * TODO: Avoidance algorithm?
- *
+ */
+/*
  * Caleb Todos (Just put done when you complete one of these, I don't expect you to complete all of
  *              these, especially if you do runs, but do what you can and text me if you need help)
  *              Feel free to update the general todos above if you think of something we need to do
@@ -143,6 +140,7 @@ public class MainAuto extends LinearOpMode {
         waitForStart();
 
         targets.activate();
+        /*
         while (!isStopRequested()) {
             angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
@@ -178,17 +176,18 @@ public class MainAuto extends LinearOpMode {
                 telemetry.addData("Visible Target", "none");
             }
             telemetry.update();
-            /*
+
             if(!lol) {
                 gyroTurn(-  90, 0.5);
                 lol = true;
-            } */
+            }
 
             float[] coords = lastLocation.getTranslation().getData();
             posX = coords[0];
             posY = coords[1];
             posAngle = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES).thirdAngle;
         }
+        */
 
         // Disable Tracking when we are done;
         targets.deactivate();
@@ -354,12 +353,14 @@ public class MainAuto extends LinearOpMode {
      * @param targetY Y coord to go to
      * @param speed
      */
-    public void goToPosition(double targetX, double targetY, double speed) {
-        double currentX = posX;
-        double currentY = posY;
+    public void goToPosition(float targetX, float targetY, double speed) {
+        updateLocation();
 
-        double deltaX = targetX - currentX;
-        double deltaY = targetY - currentY;
+        float currentX = posX;
+        float currentY = posY;
+
+        float deltaX = targetX - currentX;
+        float deltaY = targetY - currentY;
 
         double targetRad = Math.atan(deltaX/deltaY);
         double targetDegrees = Math.toDegrees(targetRad);
@@ -368,6 +369,8 @@ public class MainAuto extends LinearOpMode {
 
         double z = Math.sqrt(((deltaX * deltaX) + (deltaY * deltaY)));
         moveIN(z,speed);
+
+        updateLocation(targetX, targetY, (float)targetDegrees);
     }
 
     /**
@@ -389,17 +392,55 @@ public class MainAuto extends LinearOpMode {
                 break;
             }
         }
+        float[] coords = lastLocation.getTranslation().getData();
+        posX = coords[0];
+        posY = coords[1];
+        posAngle = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES).thirdAngle;
     }
 
     //TODO: Automatic angle estimation?
     /**
-     * Updates location. If you know some values you can set them if no target is visible
-     * @param estX
-     * @param estY
-     * @param estAngle
+     * Updates location. If you know some values you can set them, however they will be overridden
+     * if a target is visible. If no target is visible and a zero is passed the value will not be
+     * updated.
+     * @param estX Input a exact zero if no value is known, regularly generated numbers shouldn't
+     *             be affected due to the decimal precision making it nearly impossible to be zero
+     * @param estY Same as estX
+     * @param estAngle Same as estX
      */
-    public void updateLocation(double estX, double estY, double estAngle) {
+    public void updateLocation(float estX, float estY, float estAngle) {
+        targetVisible = false;
+        for (VuforiaTrackable trackable : allTrackables) {
+            if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
+                telemetry.addData("Visible Target", trackable.getName());
+                targetVisible = true;
 
+                // getUpdatedRobotLocation() will return null if no new information is available since
+                // the last time that call was made, or if the trackable is not currently visible.
+                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
+                if (robotLocationTransform != null) {
+                    lastLocation = robotLocationTransform;
+
+                }
+                break;
+            }
+        }
+        float[] coords = lastLocation.getTranslation().getData();
+        if (targetVisible) {
+            posX = coords[0];
+            posY = coords[1];
+            posAngle = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES).thirdAngle;
+            return;
+        }
+        if(estX != 0) {
+            posX = estX;
+        }
+        if(estY != 0) {
+            posY = estY;
+        }
+        if(estAngle != 0) {
+            posAngle = estAngle;
+        }
     }
 
     public void initVuforia() {
