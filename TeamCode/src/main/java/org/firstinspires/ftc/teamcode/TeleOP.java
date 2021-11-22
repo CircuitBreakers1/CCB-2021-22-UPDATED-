@@ -129,7 +129,7 @@ public class TeleOP extends LinearOpMode {
              * This block of code allows the A button on the driver controller to toggle the
              * carousel spinner on and off.
              */
-            if (gamepad1.a) {
+            if (gamepad2.right_bumper) {
                 if (!aDown) {
                     aDown = true;
                     if (spinOn) {
