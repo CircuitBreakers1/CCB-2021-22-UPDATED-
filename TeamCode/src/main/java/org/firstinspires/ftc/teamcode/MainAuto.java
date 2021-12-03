@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -139,7 +140,52 @@ public class MainAuto extends LinearOpMode {
 
         waitForStart();
 
-        targets.activate();
+        //targets.activate();
+        waitForStart();
+        robot.rightGrabber.setPosition(0);
+        robot.leftGrabber.setPosition(1);
+        telemetry.addData("Status", "Moving off wall...");
+        telemetry.update();
+        moveIN(6,0.5);
+        gyroTurn(20,0.5);
+        robot.rightArm.setTargetPosition(51);
+        robot.leftArm.setTargetPosition(51);
+
+        robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        robot.rightArm.setPower(1);
+        robot.leftArm.setPower(1);
+
+        moveIN(17, 0.5);
+        robot.rightGrabber.setPosition(0.3);
+        robot.leftGrabber.setPosition(0.7);
+
+        robot.rightArm.setPower(0);
+        robot.leftArm.setPower(0);
+
+        robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        moveIN(-10, 0.25);
+        gyroTurn(50, 0.5);
+        robot.backSpinner.setPower(-0.65);
+        moveIN(-27.5, 0.25, 6000);
+        telemetry.addData("Status", "duck");
+        telemetry.update();
+        sleep(3000);
+        robot.backSpinner.setPower(0);
+
+        moveIN(105, 1);
+
+
+
+        /*
+        while (!isStopRequested()) {
+            //updateLocation();
+            idle();
+        }
+        */
         /*
         while (!isStopRequested()) {
             angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
@@ -167,10 +213,15 @@ public class MainAuto extends LinearOpMode {
                 VectorF translation = lastLocation.getTranslation();
                 telemetry.addData("Pos (inches)", "{X, Y, Z} = %.1f, %.1f, %.1f",
                         translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
-
+                posX = translation.get(0) / mmPerInch;
+                posY = translation.get(1) / mmPerInch;
                 // express the rotation of the robot in degrees.
                 Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
                 telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
+                posAngle = rotation.thirdAngle;
+                telemetry.addData("Pos X", posX);
+                telemetry.addData("Pos Y", posY);
+                telemetry.addData("Angle", posAngle);
             }
             else {
                 telemetry.addData("Visible Target", "none");
@@ -178,19 +229,20 @@ public class MainAuto extends LinearOpMode {
             telemetry.update();
 
             if(!lol) {
-                gyroTurn(-  90, 0.5);
-                lol = true;
+                lol=true;
+                goToPosition(0,0,0.5);
             }
 
-            float[] coords = lastLocation.getTranslation().getData();
-            posX = coords[0];
-            posY = coords[1];
-            posAngle = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES).thirdAngle;
+
+            //float[] coords = lastLocation.getTranslation().getData();
+            //posX = coords[0];
+            //posY = coords[1];
+            //posAngle = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES).thirdAngle;
         }
-        */
+
 
         // Disable Tracking when we are done;
-        targets.deactivate();
+        targets.deactivate(); */
     }
 
     /***
@@ -347,6 +399,52 @@ public class MainAuto extends LinearOpMode {
         robot.leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
+    public void moveIN(double inches, double speed, float timeoutMillis) {
+        double wheelCircumference = 4 * 3.14;
+        double ticksPerRot = 537;
+        double rotations = inches / wheelCircumference;
+        double ticks = ticksPerRot * rotations;
+
+        robot.leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        robot.leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+
+        robot.leftFront.setTargetPosition((int) ticks);
+        robot.rightFront.setTargetPosition((int) ticks);
+        robot.leftBack.setTargetPosition((int) ticks);
+        robot.rightBack.setTargetPosition((int) ticks);
+
+        robot.rightBack.setPower(speed);
+        robot.rightFront.setPower(speed);
+        robot.leftBack.setPower(speed);
+        robot.leftFront.setPower(speed);
+
+        robot.leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        float startMillis = System.currentTimeMillis();
+
+        while((robot.leftBack.isBusy() || robot.leftFront.isBusy() || robot.rightBack.isBusy() || robot.rightFront.isBusy()) && opModeIsActive()) {
+            if(System.currentTimeMillis() >= (startMillis + timeoutMillis)) {
+                break;
+            }
+        }
+
+        robot.rightBack.setPower(0);
+        robot.rightFront.setPower(0);
+        robot.leftBack.setPower(0);
+        robot.leftFront.setPower(0);
+
+        robot.leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    }
+
     /**
      * Goes to a position on the field
      * @param targetX X coord to go to
@@ -392,11 +490,35 @@ public class MainAuto extends LinearOpMode {
                 break;
             }
         }
+
+        // Provide feedback as to where the robot is located (if we know).
+        if (targetVisible) {
+            // express position (translation) of robot in inches.
+            VectorF translation = lastLocation.getTranslation();
+            telemetry.addData("Pos (inches)", "{X, Y, Z} = %.1f, %.1f, %.1f",
+                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
+            posX = translation.get(0) / mmPerInch;
+            posY = translation.get(1) / mmPerInch;
+            // express the rotation of the robot in degrees.
+            Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
+            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
+            posAngle = rotation.thirdAngle;
+            telemetry.addData("Pos X", posX);
+            telemetry.addData("Pos Y", posY);
+            telemetry.addData("Angle", posAngle);
+        }
+        else {
+            telemetry.addData("Visible Target", "none");
+        }
+        telemetry.update();
+        /*
         float[] coords = lastLocation.getTranslation().getData();
         posX = coords[0];
         posY = coords[1];
         posAngle = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES).thirdAngle;
+        */
     }
+
 
     //TODO: Automatic angle estimation?
     /**
