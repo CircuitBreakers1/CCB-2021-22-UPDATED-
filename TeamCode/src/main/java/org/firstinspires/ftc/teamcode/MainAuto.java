@@ -427,10 +427,13 @@ public class MainAuto extends LinearOpMode {
         robot.rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         float startMillis = System.currentTimeMillis();
+        boolean haveTime = true;
 
-        while((robot.leftBack.isBusy() || robot.leftFront.isBusy() || robot.rightBack.isBusy() || robot.rightFront.isBusy()) && opModeIsActive()) {
-            if(System.currentTimeMillis() >= (startMillis + timeoutMillis)) {
-                break;
+        while
+        ((robot.leftBack.isBusy() || robot.leftFront.isBusy() || robot.rightBack.isBusy() || robot.rightFront.isBusy()) && opModeIsActive() && haveTime) {
+            sleep(10);
+            if(System.currentTimeMillis() >   (startMillis + timeoutMillis)) {
+                haveTime = false;
             }
         }
 
