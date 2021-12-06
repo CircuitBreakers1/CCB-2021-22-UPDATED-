@@ -50,6 +50,7 @@ public class HardwareInit
     public DcMotor leftBack;
     public DcMotor rightBack;
     public DcMotor backSpinner;
+    public DcMotor backSpinner2;
     public DcMotor leftArm;
     public DcMotor rightArm;
     public Servo leftGrabber;
@@ -82,6 +83,7 @@ public class HardwareInit
         leftBack  = hwMap.get(DcMotor.class, "leftBack");
         rightBack  = hwMap.get(DcMotor.class, "rightBack");
         backSpinner  = hwMap.get(DcMotor.class, "backSpinner");
+        backSpinner2  = hwMap.get(DcMotor.class, "backSpinner2");
         leftArm  = hwMap.get(DcMotor.class, "leftArm");
         rightArm  = hwMap.get(DcMotor.class, "rightArm");
 
@@ -89,6 +91,8 @@ public class HardwareInit
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightArm.setDirection(DcMotorSimple.Direction.REVERSE);
+        backSpinner2.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
         // Sets the zero power behavior to brake
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

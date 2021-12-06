@@ -98,8 +98,8 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.
  *      change the values). If it goes anywhere specific I'll be happy and you can go play pool.
  */
 
-@Autonomous(name="MainAuto", group ="Auto")
-public class MainAuto extends LinearOpMode {
+@Autonomous(name="RedParkAuto", group ="Red")
+public class RedParkAuto extends LinearOpMode {
 
     BNO055IMU imu;
     Orientation angles;
@@ -147,7 +147,7 @@ public class MainAuto extends LinearOpMode {
         telemetry.addData("Status", "Moving off wall...");
         telemetry.update();
         moveIN(6,0.5);
-        gyroTurn(20,0.5);
+        gyroTurn(-20,0.5);
         robot.rightArm.setTargetPosition(51);
         robot.leftArm.setTargetPosition(51);
 
@@ -167,17 +167,9 @@ public class MainAuto extends LinearOpMode {
         robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        moveIN(-10, 0.25);
-        gyroTurn(50, 0.5);
-        robot.backSpinner.setPower(-0.65);
-        moveIN(-27.5, 0.25, 6000);
-        telemetry.addData("Status", "duck");
-        telemetry.update();
-        sleep(3000);
-        robot.backSpinner.setPower(0);
-
-        moveIN(105, 1);
-
+        moveIN(-5, 0.25);
+        gyroTurn(-70, 0.5);
+        moveIN(-56, 1);
 
 
         /*
