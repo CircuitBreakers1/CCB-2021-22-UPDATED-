@@ -134,11 +134,9 @@ public class TeleOP extends LinearOpMode {
                     aDown = true;
                     if (spinOn) {
                         robot.backSpinner.setPower(0);
-                        robot.backSpinner2.setPower(0);
                         spinOn = false;
                     } else {
                         robot.backSpinner.setPower(-0.65);
-                        robot.backSpinner2.setPower(-0.65);
                         spinOn = true;
                     }
                 }
