@@ -49,6 +49,8 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.robotcore.external.tfod.Recognition;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -117,6 +119,8 @@ public class RedParkAuto extends LinearOpMode {
     private static final float halfTile         = 12 * mmPerInch;
     private static final float oneAndHalfTile   = 36 * mmPerInch;
 
+    private float Xline = 100;
+
     private float posX = 0;
     private float posY = 0;
     private float posAngle = 0;
@@ -128,28 +132,114 @@ public class RedParkAuto extends LinearOpMode {
     private VuforiaTrackables targets   = null;
     private WebcamName webcamName       = null;
     private List<VuforiaTrackable> allTrackables = null;
+    private static final String TFOD_MODEL_ASSET = "CcbBee.tflite";
+    private static final String[] LABELS = {"Bee"};
+    private TFObjectDetector tfod;
 
 
-    private boolean targetVisible       = false;
-    private boolean lol = false;
+    private boolean targetVisible = false;
+    private int scanCount = 0; //Used to remove unneeded checks when play is pressed
+    private int targetLevel;
+    private float beeLeft;
 
     @Override public void runOpMode() {
         robot.init(hardwareMap);
         initImu();
         initVuforia();
+        initTfod();
+
+        if (tfod != null) {
+            tfod.activate();
+            tfod.setZoom(1, 16.0/9.0);
+        }
+
+        while (!isStarted()) {
+            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+            if (updatedRecognitions != null) {
+                telemetry.addData("# Object Detected", updatedRecognitions.size());
+                // step through the list of recognitions and display boundary info.
+                int i = 0;
+                for (Recognition recognition : updatedRecognitions) {
+                    telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
+                    telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+                            recognition.getLeft(), recognition.getTop());
+                    telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+                            recognition.getRight(), recognition.getBottom());
+                    beeLeft = recognition.getLeft();
+                    i++;
+                }
+
+            }
+            scanCount++;
+            if(updatedRecognitions.size() == 0) {
+               telemetry.addData("Target Guess:", "Left");
+               telemetry.addData("Target Level:", "Bottom");
+               targetLevel = 1;
+            } else if(beeLeft > Xline) {
+                telemetry.addData("Target Guess:", "Right");
+                telemetry.addData("Target Level:", "Top");
+                targetLevel = 3;
+            } else {
+                telemetry.addData("Target Guess:", "Middle");
+                telemetry.addData("Target Level:", "Bottom");
+                targetLevel = 2;
+            }
+            telemetry.update();
+        }
 
         waitForStart();
 
-        //targets.activate();
-        waitForStart();
+        if(scanCount < 5) {
+            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+            if (updatedRecognitions != null) {
+                telemetry.addData("# Object Detected", updatedRecognitions.size());
+                // step through the list of recognitions and display boundary info.
+                int i = 0;
+                for (Recognition recognition : updatedRecognitions) {
+                    telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
+                    telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+                            recognition.getLeft(), recognition.getTop());
+                    telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+                            recognition.getRight(), recognition.getBottom());
+                    beeLeft = recognition.getLeft();
+                    i++;
+                }
+
+            }
+            scanCount++;
+            if(updatedRecognitions.size() == 0) {
+                telemetry.addData("Target Guess:", "Left");
+                telemetry.addData("Target Level:", "Bottom");
+                targetLevel = 1;
+            } else if(beeLeft > Xline) {
+                telemetry.addData("Target Guess:", "Right");
+                telemetry.addData("Target Level:", "Top");
+                targetLevel = 3;
+            } else {
+                telemetry.addData("Target Guess:", "Middle");
+                telemetry.addData("Target Level:", "Bottom");
+                targetLevel = 2;
+            }
+            telemetry.update();
+        }
+
         robot.rightGrabber.setPosition(0);
         robot.leftGrabber.setPosition(1);
         telemetry.addData("Status", "Moving off wall...");
         telemetry.update();
         moveIN(6,0.5);
         gyroTurn(-20,0.5);
-        robot.rightArm.setTargetPosition(51);
-        robot.leftArm.setTargetPosition(51);
+
+        if(targetLevel == 1) {
+            robot.rightArm.setTargetPosition(51);
+            robot.leftArm.setTargetPosition(51);
+        } else if(targetLevel == 2) {
+            robot.rightArm.setTargetPosition(90);
+            robot.leftArm.setTargetPosition(90);
+        } else {
+            robot.rightArm.setTargetPosition(140);
+            robot.leftArm.setTargetPosition(140);
+        }
 
         robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -158,6 +248,9 @@ public class RedParkAuto extends LinearOpMode {
         robot.leftArm.setPower(1);
 
         moveIN(17, 0.5);
+
+        sleep(1000);
+
         robot.rightGrabber.setPosition(0.3);
         robot.leftGrabber.setPosition(0.7);
 
@@ -266,6 +359,17 @@ public class RedParkAuto extends LinearOpMode {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
         imu.startAccelerationIntegration(new Position(), new Velocity(), 100);
+    }
+
+    private void initTfod() {
+        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfodParameters.minResultConfidence = 0.8f;
+        tfodParameters.isModelTensorFlow2 = true;
+        tfodParameters.inputSize = 320;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABELS);
     }
 
     /**
