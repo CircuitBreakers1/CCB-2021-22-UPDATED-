@@ -49,6 +49,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.VuforiaLocalizer;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackable;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackableDefaultListener;
 import org.firstinspires.ftc.robotcore.external.navigation.VuforiaTrackables;
+import org.firstinspires.ftc.robotcore.external.tfod.TFObjectDetector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,46 +58,6 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AngleUnit.DEGR
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
-
-/*
- * General Todos
- * TODO: Figure out camera orientation
- * TODO: Test goToPosition();
- * TODO: Start machine learning
- * TODO: Start writing actual auto
- * TODO: Add code for both alliances
- * TODO: Avoidance algorithm?
- */
-/*
- * Caleb Todos (Just put done when you complete one of these, I don't expect you to complete all of
- *              these, especially if you do runs, but do what you can and text me if you need help)
- *              Feel free to update the general todos above if you think of something we need to do
- * COMMIT AND PUSH WHEN DONE PLEASE FOR THE LOVE OF GOD IT MESSES THINGS UP IF YOU DON'T AND I WANNA
- * WORK ON IT
- *
- * TODO: Double check camera is orientated right.
- *      Start by building and deploying the code (green play) and running the main auto, then
- *      checking the colors of the axis against the ones in the video (go to the part with the
- *      actual target, not the straws). I think the reason the camera is sideways is because the
- *      camera is outputting horizontal video so the phone just rotates it for the preview. Just
- *      make sure the Z axis is upright. I think I already have this value set, but if it doesn't
- *      work, mess with the rotation values somewhere around line 217 and the values should have
- *      first/second/third angle next to them. Remember the right hand rule. (It's in the video if
- *      you don't know what that is)
- * TODO: Test absolute goToAngle();
- *      I realised that for the goToPosition() to work properly we need to go to an absolute angle
- *      based on the field instead of the relative rotational one we were using. I have written code
- *      in the loop (hopefully) that you should be able to test and just uncomment. It will try and
- *      point to 0  degrees (no idea which way that actually is but it's probably centered on one of the walls,
- *      just as long as it points the same way regardless of initial start rotation or position),
- *      as long as it can see a target.
- * TODO: Test goToPosition();
- *      The glorious moment of fucking truth. If you made it this far then congrats, you have almost
- *      completed all the vuforia stuff. There's more commented code in the loop. Comment or delete
- *      the code from the goToAngle() and deploy. If the robot can see a target, it will try and go
- *      to 0,0, wherever that is (maybe the middle? or directly centered IN the red wall, in which case
- *      change the values). If it goes anywhere specific I'll be happy and you can go play pool.
- */
 
 @Autonomous(name="RedDucksAuto", group ="Red")
 public class RedDucksAuto extends LinearOpMode {
@@ -128,6 +89,14 @@ public class RedDucksAuto extends LinearOpMode {
     private VuforiaTrackables targets   = null;
     private WebcamName webcamName       = null;
     private List<VuforiaTrackable> allTrackables = null;
+    private static final String TFOD_MODEL_ASSET = "FreightFrenzy_BCDM.tflite";
+    private static final String[] LABELS = {
+            "Ball",
+            "Cube",
+            "Duck",
+            "Marker"
+    };
+    private TFObjectDetector tfod;
 
 
     private boolean targetVisible       = false;
@@ -137,10 +106,13 @@ public class RedDucksAuto extends LinearOpMode {
         robot.init(hardwareMap);
         initImu();
         initVuforia();
+        initTfod();
 
-        waitForStart();
+        if (tfod != null) {
+            tfod.activate();
+            tfod.setZoom(1, 16.0/9.0);
+        }
 
-        //targets.activate();
         waitForStart();
         robot.rightGrabber.setPosition(0);
         robot.leftGrabber.setPosition(1);
@@ -274,6 +246,17 @@ public class RedDucksAuto extends LinearOpMode {
         angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
         imu.startAccelerationIntegration(new Position(), new Velocity(), 100);
+    }
+
+    private void initTfod() {
+        int tfodMonitorViewId = hardwareMap.appContext.getResources().getIdentifier(
+                "tfodMonitorViewId", "id", hardwareMap.appContext.getPackageName());
+        TFObjectDetector.Parameters tfodParameters = new TFObjectDetector.Parameters(tfodMonitorViewId);
+        tfodParameters.minResultConfidence = 0.8f;
+        tfodParameters.isModelTensorFlow2 = true;
+        tfodParameters.inputSize = 320;
+        tfod = ClassFactory.getInstance().createTFObjectDetector(tfodParameters, vuforia);
+        tfod.loadModelFromAsset(TFOD_MODEL_ASSET, LABELS);
     }
 
     /**
