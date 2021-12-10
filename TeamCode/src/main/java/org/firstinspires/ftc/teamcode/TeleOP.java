@@ -90,6 +90,8 @@ public class TeleOP extends LinearOpMode {
 
         double lastCheck = 0;
 
+        robot.rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         // Left 1 is down, right 0 is down
         // Start Open
         robot.rightGrabber.setPosition(0.3);

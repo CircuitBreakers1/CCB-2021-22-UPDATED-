@@ -60,8 +60,8 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
-@Autonomous(name="RedDucksAuto", group ="Red")
-public class RedDucksAuto extends LinearOpMode {
+@Autonomous(name="BlueDucksAuto", group ="Blue")
+public class BlueDucksAuto extends LinearOpMode {
 
     BNO055IMU imu;
     Orientation angles;
@@ -79,7 +79,8 @@ public class RedDucksAuto extends LinearOpMode {
     private static final float halfTile         = 12 * mmPerInch;
     private static final float oneAndHalfTile   = 36 * mmPerInch;
 
-    private float Xline = 100;
+    private float Xline = 165;
+    private int labelCount;
 
     private float posX = 0;
     private float posY = 0;
@@ -108,6 +109,11 @@ public class RedDucksAuto extends LinearOpMode {
         initVuforia();
         initTfod();
 
+        robot.leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         if (tfod != null) {
             tfod.activate();
             tfod.setZoom(1, 16.0/9.0);
@@ -117,6 +123,7 @@ public class RedDucksAuto extends LinearOpMode {
             List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
             if (updatedRecognitions != null) {
                 telemetry.addData("# Object Detected", updatedRecognitions.size());
+                labelCount = updatedRecognitions.size();
                 // step through the list of recognitions and display boundary info.
                 int i = 0;
                 for (Recognition recognition : updatedRecognitions) {
@@ -131,7 +138,7 @@ public class RedDucksAuto extends LinearOpMode {
 
             }
             scanCount++;
-            if(updatedRecognitions.size() == 0) {
+            if(labelCount == 0) {
                 telemetry.addData("Target Guess:", "Left");
                 telemetry.addData("Target Level:", "Bottom");
                 targetLevel = 1;
@@ -153,6 +160,8 @@ public class RedDucksAuto extends LinearOpMode {
             List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
             if (updatedRecognitions != null) {
                 telemetry.addData("# Object Detected", updatedRecognitions.size());
+                labelCount = updatedRecognitions.size();
+
                 // step through the list of recognitions and display boundary info.
                 int i = 0;
                 for (Recognition recognition : updatedRecognitions) {
@@ -167,7 +176,7 @@ public class RedDucksAuto extends LinearOpMode {
 
             }
             scanCount++;
-            if(updatedRecognitions.size() == 0) {
+            if(labelCount == 0) {
                 telemetry.addData("Target Guess:", "Left");
                 telemetry.addData("Target Level:", "Bottom");
                 targetLevel = 1;
@@ -188,7 +197,9 @@ public class RedDucksAuto extends LinearOpMode {
         telemetry.addData("Status", "Moving off wall...");
         telemetry.update();
         moveIN(6,0.5);
-        gyroTurn(20,0.5);
+        telemetry.addData("Status:", "Turning");
+        telemetry.update();
+        gyroTurn(-20,0.5);
 
         if(targetLevel == 1) {
             robot.rightArm.setTargetPosition(51);
@@ -221,7 +232,7 @@ public class RedDucksAuto extends LinearOpMode {
         robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         moveIN(-10, 0.25);
-        gyroTurn(50, 0.5);
+        gyroTurn(-50, 0.5);
         robot.backSpinner.setPower(-0.65);
         moveIN(-27.5, 0.25, 6000);
         telemetry.addData("Status", "duck");
@@ -438,7 +449,7 @@ public class RedDucksAuto extends LinearOpMode {
         robot.leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         robot.rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        while((robot.leftBack.isBusy() || robot.leftFront.isBusy() || robot.rightBack.isBusy() || robot.rightFront.isBusy()) && opModeIsActive()) {
+        while(((robot.leftBack.isBusy() && robot.leftFront.isBusy()) || (robot.rightBack.isBusy() && robot.rightFront.isBusy())) && opModeIsActive()) {
             /*
              * Robot gets some free time.
              * What does it do during it's free time?
@@ -494,7 +505,7 @@ public class RedDucksAuto extends LinearOpMode {
         boolean haveTime = true;
 
         while
-        ((robot.leftBack.isBusy() || robot.leftFront.isBusy() || robot.rightBack.isBusy() || robot.rightFront.isBusy()) && opModeIsActive() && haveTime) {
+        (((robot.leftBack.isBusy() && robot.leftFront.isBusy()) || (robot.rightBack.isBusy() && robot.rightFront.isBusy())) && opModeIsActive() && haveTime) {
             sleep(10);
             if(System.currentTimeMillis() >   (startMillis + timeoutMillis)) {
                 haveTime = false;
