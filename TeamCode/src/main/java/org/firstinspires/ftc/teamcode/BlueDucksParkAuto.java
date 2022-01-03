@@ -60,8 +60,8 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
-@Autonomous(name="BlueDucksAuto", group ="Blue")
-public class BlueDucksAuto extends LinearOpMode {
+@Autonomous(name="BlueDucksParkAuto", group ="Red")
+public class BlueDucksParkAuto extends LinearOpMode {
 
     BNO055IMU imu;
     Orientation angles;
@@ -102,6 +102,7 @@ public class BlueDucksAuto extends LinearOpMode {
     private int scanCount = 0; //Used to remove unneeded checks when play is pressed
     private int targetLevel;
     private float beeLeft;
+    private boolean isBee = false;
 
     @Override public void runOpMode() {
         robot.init(hardwareMap);
@@ -132,7 +133,13 @@ public class BlueDucksAuto extends LinearOpMode {
                             recognition.getLeft(), recognition.getTop());
                     telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
                             recognition.getRight(), recognition.getBottom());
-                    beeLeft = recognition.getLeft();
+
+                    //if(recognition.getBottom() < 480) {
+                        beeLeft = recognition.getLeft();
+                        //isBee = true;
+
+                    //}
+
                     i++;
                 }
 
@@ -171,6 +178,7 @@ public class BlueDucksAuto extends LinearOpMode {
                     telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
                             recognition.getRight(), recognition.getBottom());
                     beeLeft = recognition.getLeft();
+
                     i++;
                 }
 
@@ -233,14 +241,15 @@ public class BlueDucksAuto extends LinearOpMode {
 
         moveIN(-10, 0.25);
         gyroTurn(-50, 0.5);
-        //robot.backSpinner2.setPower(-0.4);
+        robot.backSpinner.setPower(-0.4);
         moveIN(-27.5, 0.25, 6000);
         telemetry.addData("Status", "duck");
         telemetry.update();
         sleep(3000);
         robot.backSpinner.setPower(0);
+        gyroTurn(40, 0.5);
 
-        moveIN(105, 1);
+        moveIN(20, 1);
 
 
 

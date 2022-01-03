@@ -84,7 +84,7 @@ public class TeleOP extends LinearOpMode {
         boolean aDown = false;
 
         boolean grabOpen = true;
-        boolean triggerDown = false;
+        boolean intakeOn = false;
 
         boolean manualControl = false;
 
@@ -233,27 +233,19 @@ public class TeleOP extends LinearOpMode {
                 robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
-
-            // Toggle code for grabbing blocks/balls
-            if (gamepad2.left_bumper) {
-                if (!triggerDown) {
-                    triggerDown = true;
-                    if (grabOpen) {
-                        // Close the grabbers and turn the LEDs red
-                        robot.rightGrabber.setPosition(0);
-                        robot.leftGrabber.setPosition(1);
-                        grabOpen = false;
-                        setLEDs(true, false);
-                    } else {
-                        // Open the grabbers and turn the LEDs green
-                        robot.rightGrabber.setPosition(0.3);
-                        robot.leftGrabber.setPosition(0.7);
-                        grabOpen = true;
-                        setLEDs(true, true);
-                    }
-                }
-            } else {
-                triggerDown = false;
+            if(gamepad2.dpad_up) {
+                robot.intake.setPower(-1);
+                intakeOn = true;
+            }
+            if(intakeOn && !robot.cargoDetector.getState()) {
+                robot.intake.setPower(0);
+                intakeOn = false;
+            }
+            if(gamepad2.dpad_down) {
+                robot.intake.setPower(1);
+            }
+            if(gamepad2.left_bumper) {
+                robot.intake.setPower(0);
             }
 
             // Telemetry code for showing encoder values. Helpful during debugging.

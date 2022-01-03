@@ -50,11 +50,13 @@ public class HardwareInit
     public DcMotor leftBack;
     public DcMotor rightBack;
     public DcMotor backSpinner;
+    public DcMotor intake;
     public DcMotor leftArm;
     public DcMotor rightArm;
     public Servo leftGrabber;
     public Servo rightGrabber;
     public DigitalChannel touchSensor;
+    public DigitalChannel cargoDetector;
     public DigitalChannel leftLEDGreen;
     public DigitalChannel leftLEDRed;
     public DigitalChannel rightLEDGreen;
@@ -82,6 +84,7 @@ public class HardwareInit
         leftBack  = hwMap.get(DcMotor.class, "leftBack");
         rightBack  = hwMap.get(DcMotor.class, "rightBack");
         backSpinner  = hwMap.get(DcMotor.class, "backSpinner");
+        intake  = hwMap.get(DcMotor.class, "intake");
         leftArm  = hwMap.get(DcMotor.class, "leftArm");
         rightArm  = hwMap.get(DcMotor.class, "rightArm");
 
@@ -89,6 +92,7 @@ public class HardwareInit
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         rightArm.setDirection(DcMotorSimple.Direction.REVERSE);
+
 
         // Sets the zero power behavior to brake
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
@@ -105,6 +109,7 @@ public class HardwareInit
         // Define and initialize all digital devices
         distance = hwMap.get(DistanceSensor.class, "distance");
         touchSensor = hwMap.get(DigitalChannel.class, "touchSensor");
+        cargoDetector = hwMap.get(DigitalChannel.class, "cargoDetector");
         leftLEDGreen = hwMap.get(DigitalChannel.class, "leftLEDGreen");
         rightLEDGreen = hwMap.get(DigitalChannel.class, "rightLEDGreen");
         leftLEDRed = hwMap.get(DigitalChannel.class, "leftLEDRed");

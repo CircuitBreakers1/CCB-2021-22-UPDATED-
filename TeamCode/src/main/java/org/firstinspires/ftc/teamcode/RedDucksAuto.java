@@ -102,6 +102,7 @@ public class RedDucksAuto extends LinearOpMode {
     private int scanCount = 0; //Used to remove unneeded checks when play is pressed
     private int targetLevel;
     private float beeLeft;
+    private boolean isBee = false;
 
     @Override public void runOpMode() {
         robot.init(hardwareMap);
@@ -132,7 +133,13 @@ public class RedDucksAuto extends LinearOpMode {
                             recognition.getLeft(), recognition.getTop());
                     telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
                             recognition.getRight(), recognition.getBottom());
-                    beeLeft = recognition.getLeft();
+
+                    //if(recognition.getBottom() < 480) {
+                        beeLeft = recognition.getLeft();
+                        //isBee = true;
+
+                    //}
+
                     i++;
                 }
 
@@ -171,6 +178,7 @@ public class RedDucksAuto extends LinearOpMode {
                     telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
                             recognition.getRight(), recognition.getBottom());
                     beeLeft = recognition.getLeft();
+
                     i++;
                 }
 
@@ -233,7 +241,7 @@ public class RedDucksAuto extends LinearOpMode {
 
         moveIN(-10, 0.25);
         gyroTurn(50, 0.5);
-        robot.backSpinner.setPower(-0.65);
+        robot.backSpinner.setPower(-0.4);
         moveIN(-27.5, 0.25, 6000);
         telemetry.addData("Status", "duck");
         telemetry.update();
