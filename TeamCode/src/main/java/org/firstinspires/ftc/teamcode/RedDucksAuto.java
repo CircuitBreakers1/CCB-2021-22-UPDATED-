@@ -93,8 +93,8 @@ public class RedDucksAuto extends LinearOpMode {
     private VuforiaTrackables targets   = null;
     private WebcamName webcamName       = null;
     private List<VuforiaTrackable> allTrackables = null;
-    private static final String TFOD_MODEL_ASSET = "CcbBee.tflite";
-    private static final String[] LABELS = {"Bee"};
+    private static final String TFOD_MODEL_ASSET = "Bee 2.0.tflite";
+    private static final String[] LABELS = {"Bee 2.0"};
     private TFObjectDetector tfod;
 
 
@@ -200,8 +200,10 @@ public class RedDucksAuto extends LinearOpMode {
             telemetry.update();
         }
 
-        robot.rightGrabber.setPosition(0);
-        robot.leftGrabber.setPosition(1);
+        robot.intake.setPower(-1);
+        while(robot.cargoDetector.getState()) {
+            idle();
+        }
         telemetry.addData("Status", "Moving off wall...");
         telemetry.update();
         moveIN(6,0.5);
