@@ -101,8 +101,12 @@ public class RedDucksAuto extends LinearOpMode {
     private boolean targetVisible       = false;
     private int scanCount = 0; //Used to remove unneeded checks when play is pressed
     private int targetLevel;
-    private float beeLeft;
+    private float beeLeft[] = new float[2];
+    private float beeTop[] = new float[2];
+    private int recCount = 0;
+    private int screenHeight;
     private boolean isBee = false;
+    private boolean actualBee = false;
 
     @Override public void runOpMode() {
         robot.init(hardwareMap);
@@ -123,6 +127,7 @@ public class RedDucksAuto extends LinearOpMode {
         while (!isStarted()) {
             List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
             if (updatedRecognitions != null) {
+                recCount = 0;
                 telemetry.addData("# Object Detected", updatedRecognitions.size());
                 labelCount = updatedRecognitions.size();
                 // step through the list of recognitions and display boundary info.
@@ -135,7 +140,10 @@ public class RedDucksAuto extends LinearOpMode {
                             recognition.getRight(), recognition.getBottom());
 
                     //if(recognition.getBottom() < 480) {
-                        beeLeft = recognition.getLeft();
+                        screenHeight = recognition.getImageHeight();
+                        beeLeft[recCount] = recognition.getLeft();
+                        beeTop[recCount] = recognition.getTop();
+                        recCount++;
                         //isBee = true;
 
                     //}
@@ -145,19 +153,37 @@ public class RedDucksAuto extends LinearOpMode {
 
             }
             scanCount++;
-            if(labelCount == 0) {
+
+            if(!(labelCount == 0)) {
+                int j;
+                for(j = 0; j<recCount; j++) {
+                    if(!(beeTop[j] < (0.25 * screenHeight))) {
+                        actualBee = true;
+                        if(beeLeft[j] > Xline) {
+                            telemetry.addData("Target Guess:", "Right");
+                            telemetry.addData("Target Level:", "Top");
+                            targetLevel = 3;
+                        } else {
+                            telemetry.addData("Target Guess:", "Middle");
+                            telemetry.addData("Target Level:", "Middle");
+                            targetLevel = 2;
+                        }
+                    }
+
+                }
+                if(!actualBee) {
+                    telemetry.addData("Target Guess:", "Left");
+                    telemetry.addData("Target Level:", "Bottom");
+                    targetLevel = 1;
+
+                }
+            } else {
                 telemetry.addData("Target Guess:", "Left");
                 telemetry.addData("Target Level:", "Bottom");
                 targetLevel = 1;
-            } else if(beeLeft > Xline) {
-                telemetry.addData("Target Guess:", "Right");
-                telemetry.addData("Target Level:", "Top");
-                targetLevel = 3;
-            } else {
-                telemetry.addData("Target Guess:", "Middle");
-                telemetry.addData("Target Level:", "Bottom");
-                targetLevel = 2;
             }
+
+
             telemetry.update();
         }
 
@@ -177,13 +203,14 @@ public class RedDucksAuto extends LinearOpMode {
                             recognition.getLeft(), recognition.getTop());
                     telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
                             recognition.getRight(), recognition.getBottom());
-                    beeLeft = recognition.getLeft();
+                    //beeLeft = recognition.getLeft();
 
                     i++;
                 }
 
             }
             scanCount++;
+            /*
             if(labelCount == 0) {
                 telemetry.addData("Target Guess:", "Left");
                 telemetry.addData("Target Level:", "Bottom");
@@ -197,13 +224,10 @@ public class RedDucksAuto extends LinearOpMode {
                 telemetry.addData("Target Level:", "Bottom");
                 targetLevel = 2;
             }
-            telemetry.update();
+            telemetry.update(); */
         }
 
-        robot.intake.setPower(-1);
-        while(robot.cargoDetector.getState()) {
-            idle();
-        }
+
         telemetry.addData("Status", "Moving off wall...");
         telemetry.update();
         moveIN(6,0.5);
@@ -228,12 +252,15 @@ public class RedDucksAuto extends LinearOpMode {
         robot.rightArm.setPower(1);
         robot.leftArm.setPower(1);
 
-        moveIN(17, 0.5);
+        moveIN(15, 0.5);
 
         sleep(1000);
 
-        robot.rightGrabber.setPosition(0.3);
-        robot.leftGrabber.setPosition(0.7);
+        robot.intake.setPower(0.5);
+        sleep(2000);
+        robot.intake.setPower(0);
+
+        moveIN(-2, 0.25);
 
         robot.rightArm.setPower(0);
         robot.leftArm.setPower(0);
@@ -241,13 +268,13 @@ public class RedDucksAuto extends LinearOpMode {
         robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        moveIN(-10, 0.25);
+        moveIN(-7, 0.25);
         gyroTurn(50, 0.5);
         robot.backSpinner.setPower(-0.4);
         moveIN(-27.5, 0.25, 6000);
         telemetry.addData("Status", "duck");
         telemetry.update();
-        sleep(3000);
+        sleep(4000);
         robot.backSpinner.setPower(0);
 
         moveIN(105, 1);

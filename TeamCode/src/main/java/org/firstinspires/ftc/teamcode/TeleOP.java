@@ -34,12 +34,8 @@ import androidx.annotation.NonNull;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.robotcontroller.external.samples.HardwarePushbot;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 
@@ -85,6 +81,7 @@ public class TeleOP extends LinearOpMode {
 
         boolean grabOpen = true;
         boolean intakeOn = false;
+        boolean outputOn = false;
 
         boolean manualControl = false;
 
@@ -138,7 +135,7 @@ public class TeleOP extends LinearOpMode {
                         robot.backSpinner.setPower(0);
                         spinOn = false;
                     } else {
-                        robot.backSpinner.setPower(-0.65);
+                        robot.backSpinner.setPower(-0.8);
                         spinOn = true;
                     }
                 }
@@ -235,17 +232,57 @@ public class TeleOP extends LinearOpMode {
             }
             if(gamepad2.dpad_up) {
                 robot.intake.setPower(-1);
+                robot.rightArm.setTargetPosition(0);
+                robot.leftArm.setTargetPosition(0);
+
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                robot.rightArm.setPower(1);
+                robot.leftArm.setPower(1);
                 intakeOn = true;
+                outputOn = false;
             }
-            if(intakeOn && !robot.cargoDetector.getState()) {
+            if(intakeOn && !robot.cargoTouch.getState()) {
                 robot.intake.setPower(0);
+
+                robot.rightArm.setPower(0);
+                robot.leftArm.setPower(0);
+
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
                 intakeOn = false;
+                outputOn = false;
             }
             if(gamepad2.dpad_down) {
                 robot.intake.setPower(1);
+                intakeOn = false;
+                outputOn = true;
             }
             if(gamepad2.left_bumper) {
                 robot.intake.setPower(0);
+
+                robot.rightArm.setPower(0);
+                robot.leftArm.setPower(0);
+
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+                intakeOn = false;
+                outputOn = false;
+            }
+
+            if(intakeOn) {
+                if(!robot.cargoTouch.getState()) {
+                    setLEDs(true, true);
+                } else {
+                    setLEDs(false, true);
+                }
+            } else if(outputOn) {
+                setLEDs(true, false);
+            } else {
+                setLEDs(false, false);
             }
 
             // Telemetry code for showing encoder values. Helpful during debugging.

@@ -56,7 +56,7 @@ public class HardwareInit
     public Servo leftGrabber;
     public Servo rightGrabber;
     public DigitalChannel touchSensor;
-    public DigitalChannel cargoDetector;
+    public DigitalChannel cargoTouch;
     public DigitalChannel leftLEDGreen;
     public DigitalChannel leftLEDRed;
     public DigitalChannel rightLEDGreen;
@@ -109,7 +109,7 @@ public class HardwareInit
         // Define and initialize all digital devices
         distance = hwMap.get(DistanceSensor.class, "distance");
         touchSensor = hwMap.get(DigitalChannel.class, "touchSensor");
-        cargoDetector = hwMap.get(DigitalChannel.class, "cargoDetector");
+        cargoTouch = hwMap.get(DigitalChannel.class, "cargoTouch");
         leftLEDGreen = hwMap.get(DigitalChannel.class, "leftLEDGreen");
         rightLEDGreen = hwMap.get(DigitalChannel.class, "rightLEDGreen");
         leftLEDRed = hwMap.get(DigitalChannel.class, "leftLEDRed");
