@@ -81,10 +81,6 @@ public class DemoOP extends LinearOpMode {
         double demoSpeed = 0.5; //Max movement speed in demo
 
 
-        // Left 1 is down, right 0 is down
-        // Start Open
-        robot.rightGrabber.setPosition(0.3);
-        robot.leftGrabber.setPosition(0.7);
         // Set the LEDs green to show the grabbing servos are open
         setLEDs(false, true);
 
@@ -102,15 +98,6 @@ public class DemoOP extends LinearOpMode {
             leftArm.setPower(-gamepad2.left_stick_y * .5);
             rightArm.setPower(-gamepad2.left_stick_y * .5);
             */
-
-            if(robot.distance.getDistance(DistanceUnit.INCH) < 1.375 && grabOpen) {
-                setLEDs(false,true);
-            } else if (grabOpen) {
-                setLEDs(true, true);
-            } else {
-                setLEDs(true, false);
-            }
-
             /*
              * This block of code allows the A button on the driver controller to toggle the
              * carousel spinner on and off.
@@ -227,15 +214,7 @@ public class DemoOP extends LinearOpMode {
                     triggerDown = true;
                     if (grabOpen) {
                         // Close the grabbers and turn the LEDs red
-                        robot.rightGrabber.setPosition(0);
-                        robot.leftGrabber.setPosition(1);
-                        grabOpen = false;
-                        setLEDs(true, false);
-                    } else {
-                        // Open the grabbers and turn the LEDs green
-                        robot.rightGrabber.setPosition(0.3);
-                        robot.leftGrabber.setPosition(0.7);
-                        grabOpen = true;
+
                         setLEDs(true, true);
                     }
                 }

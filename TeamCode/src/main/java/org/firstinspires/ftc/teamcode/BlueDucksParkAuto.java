@@ -60,7 +60,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
-@Autonomous(name="BlueDucksParkAuto", group ="Red")
+@Autonomous(name="BlueDucksParkAuto", group ="Blue")
 public class BlueDucksParkAuto extends LinearOpMode {
 
     BNO055IMU imu;
@@ -71,38 +71,37 @@ public class BlueDucksParkAuto extends LinearOpMode {
     private static final String VUFORIA_KEY =
             "AWC3x6z/////AAABmVlXzJgJHEkClTfzpPhSQSAOSo2ALGWXmreVgLVShBXUJg8BGyNP06zZuMyV0UZUcxC2xqq5jFsSEg1V0yYBBfvKinPneqTDkbkGA1vDE18L884DGyo3awssbrJEnYxMlTYnqT6HAsQO1SQ+DiTDRJOkI2Bo8rmK2mXLXaZPApKXptVgvEFUds0cNi1DZX3d8BzNxmQuIgT9jY+4L5B0sUnEJyZEyiwKqUhpGDmWNQd3yzQcdI9vFyyX6/4FrK6GaT65uV5xW1v4dwvyZite2Fkd0/6J403Wyy3hXBBvsvUZLJvEMWa42Q31/RUDXbaJyric+SOOU1QGFOTEmN4yt7o3hgO4R/SoyWtadjNI0qx6";
 
-    // Since ImageTarget trackables use mm to specifiy their dimensions, we must use mm for all the physical dimension.
-    // We will define some constants and conversions here
     private static final float mmPerInch        = 25.4f;
-    private static final float mmTargetHeight   = 6 * mmPerInch;          // the height of the center of the target image above the floor
+    private static final float mmTargetHeight   = 6 * mmPerInch;
     private static final float halfField        = 72 * mmPerInch;
     private static final float halfTile         = 12 * mmPerInch;
     private static final float oneAndHalfTile   = 36 * mmPerInch;
 
-    private float Xline = 165;
+    private final float Xline = 165;
     private int labelCount;
 
-    private float posX = 0;
-    private float posY = 0;
-    private float posAngle = 0;
+    private final float posX = 0;
+    private final float posY = 0;
+    private final float posAngle = 0;
 
-    // Class Members
-    private OpenGLMatrix lastLocation   = null;
     private VuforiaLocalizer vuforia    = null;
     private VuforiaLocalizer.Parameters parameters = null;
     private VuforiaTrackables targets   = null;
     private WebcamName webcamName       = null;
     private List<VuforiaTrackable> allTrackables = null;
-    private static final String TFOD_MODEL_ASSET = "CcbBee.tflite";
-    private static final String[] LABELS = {"Bee"};
+    private static final String TFOD_MODEL_ASSET = "Bee 2.0.tflite";
+    private static final String[] LABELS = {"Bee 2.0"};
     private TFObjectDetector tfod;
 
 
-    private boolean targetVisible       = false;
     private int scanCount = 0; //Used to remove unneeded checks when play is pressed
     private int targetLevel;
-    private float beeLeft;
-    private boolean isBee = false;
+    private final float[] beeLeft = new float[2];
+    private final float[] beeTop = new float[2];
+    private int recCount = 0;
+    private int screenHeight;
+    private final boolean isBee = false;
+    private boolean actualBee = false;
 
     @Override public void runOpMode() {
         robot.init(hardwareMap);
@@ -123,6 +122,7 @@ public class BlueDucksParkAuto extends LinearOpMode {
         while (!isStarted()) {
             List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
             if (updatedRecognitions != null) {
+                recCount = 0;
                 telemetry.addData("# Object Detected", updatedRecognitions.size());
                 labelCount = updatedRecognitions.size();
                 // step through the list of recognitions and display boundary info.
@@ -135,8 +135,11 @@ public class BlueDucksParkAuto extends LinearOpMode {
                             recognition.getRight(), recognition.getBottom());
 
                     //if(recognition.getBottom() < 480) {
-                        beeLeft = recognition.getLeft();
-                        //isBee = true;
+                    screenHeight = recognition.getImageHeight();
+                    beeLeft[recCount] = recognition.getLeft();
+                    beeTop[recCount] = recognition.getTop();
+                    recCount++;
+                    //isBee = true;
 
                     //}
 
@@ -145,19 +148,37 @@ public class BlueDucksParkAuto extends LinearOpMode {
 
             }
             scanCount++;
-            if(labelCount == 0) {
+
+            if(!(labelCount == 0)) {
+                int j;
+                for(j = 0; j<recCount; j++) {
+                    if(!(beeTop[j] < (0.25 * screenHeight))) {
+                        actualBee = true;
+                        if(beeLeft[j] > Xline) {
+                            telemetry.addData("Target Guess:", "Right");
+                            telemetry.addData("Target Level:", "Top");
+                            targetLevel = 3;
+                        } else {
+                            telemetry.addData("Target Guess:", "Middle");
+                            telemetry.addData("Target Level:", "Middle");
+                            targetLevel = 2;
+                        }
+                    }
+
+                }
+                if(!actualBee) {
+                    telemetry.addData("Target Guess:", "Left");
+                    telemetry.addData("Target Level:", "Bottom");
+                    targetLevel = 1;
+
+                }
+            } else {
                 telemetry.addData("Target Guess:", "Left");
                 telemetry.addData("Target Level:", "Bottom");
                 targetLevel = 1;
-            } else if(beeLeft > Xline) {
-                telemetry.addData("Target Guess:", "Right");
-                telemetry.addData("Target Level:", "Top");
-                targetLevel = 3;
-            } else {
-                telemetry.addData("Target Guess:", "Middle");
-                telemetry.addData("Target Level:", "Bottom");
-                targetLevel = 2;
             }
+
+
             telemetry.update();
         }
 
@@ -166,9 +187,9 @@ public class BlueDucksParkAuto extends LinearOpMode {
         if(scanCount < 5) {
             List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
             if (updatedRecognitions != null) {
+                recCount = 0;
                 telemetry.addData("# Object Detected", updatedRecognitions.size());
                 labelCount = updatedRecognitions.size();
-
                 // step through the list of recognitions and display boundary info.
                 int i = 0;
                 for (Recognition recognition : updatedRecognitions) {
@@ -177,31 +198,50 @@ public class BlueDucksParkAuto extends LinearOpMode {
                             recognition.getLeft(), recognition.getTop());
                     telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
                             recognition.getRight(), recognition.getBottom());
-                    beeLeft = recognition.getLeft();
+
+                    screenHeight = recognition.getImageHeight();
+                    beeLeft[recCount] = recognition.getLeft();
+                    beeTop[recCount] = recognition.getTop();
+                    recCount++;
 
                     i++;
                 }
-
             }
-            scanCount++;
-            if(labelCount == 0) {
+
+            if(!(labelCount == 0)) {
+                int j;
+                for(j = 0; j<recCount; j++) {
+                    if(!(beeTop[j] < (0.25 * screenHeight))) {
+                        actualBee = true;
+                        if(beeLeft[j] > Xline) {
+                            telemetry.addData("Target Guess:", "Right");
+                            telemetry.addData("Target Level:", "Top");
+                            targetLevel = 3;
+                        } else {
+                            telemetry.addData("Target Guess:", "Middle");
+                            telemetry.addData("Target Level:", "Middle");
+                            targetLevel = 2;
+                        }
+                    }
+
+                }
+                if(!actualBee) {
+                    telemetry.addData("Target Guess:", "Left");
+                    telemetry.addData("Target Level:", "Bottom");
+                    targetLevel = 1;
+
+                }
+            } else {
                 telemetry.addData("Target Guess:", "Left");
                 telemetry.addData("Target Level:", "Bottom");
                 targetLevel = 1;
-            } else if(beeLeft > Xline) {
-                telemetry.addData("Target Guess:", "Right");
-                telemetry.addData("Target Level:", "Top");
-                targetLevel = 3;
-            } else {
-                telemetry.addData("Target Guess:", "Middle");
-                telemetry.addData("Target Level:", "Bottom");
-                targetLevel = 2;
             }
+
+
             telemetry.update();
         }
 
-        robot.rightGrabber.setPosition(0);
-        robot.leftGrabber.setPosition(1);
+
         telemetry.addData("Status", "Moving off wall...");
         telemetry.update();
         moveIN(6,0.5);
@@ -230,8 +270,9 @@ public class BlueDucksParkAuto extends LinearOpMode {
 
         sleep(1000);
 
-        robot.rightGrabber.setPosition(0.3);
-        robot.leftGrabber.setPosition(0.7);
+        robot.intake.setPower(0.5);
+        sleep(2000);
+        robot.intake.setPower(0);
 
         robot.rightArm.setPower(0);
         robot.leftArm.setPower(0);
@@ -250,72 +291,6 @@ public class BlueDucksParkAuto extends LinearOpMode {
         gyroTurn(40, 0.5);
 
         moveIN(20, 1);
-
-
-
-        /*
-        while (!isStopRequested()) {
-            //updateLocation();
-            idle();
-        }
-        */
-        /*
-        while (!isStopRequested()) {
-            angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
-
-            // check all the trackable targets to see which one (if any) is visible.
-            targetVisible = false;
-            for (VuforiaTrackable trackable : allTrackables) {
-                if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
-                    telemetry.addData("Visible Target", trackable.getName());
-                    targetVisible = true;
-
-                    // getUpdatedRobotLocation() will return null if no new information is available since
-                    // the last time that call was made, or if the trackable is not currently visible.
-                    OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
-                    if (robotLocationTransform != null) {
-                        lastLocation = robotLocationTransform;
-                    }
-                    break;
-                }
-            }
-
-            // Provide feedback as to where the robot is located (if we know).
-            if (targetVisible) {
-                // express position (translation) of robot in inches.
-                VectorF translation = lastLocation.getTranslation();
-                telemetry.addData("Pos (inches)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                        translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
-                posX = translation.get(0) / mmPerInch;
-                posY = translation.get(1) / mmPerInch;
-                // express the rotation of the robot in degrees.
-                Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-                telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-                posAngle = rotation.thirdAngle;
-                telemetry.addData("Pos X", posX);
-                telemetry.addData("Pos Y", posY);
-                telemetry.addData("Angle", posAngle);
-            }
-            else {
-                telemetry.addData("Visible Target", "none");
-            }
-            telemetry.update();
-
-            if(!lol) {
-                lol=true;
-                goToPosition(0,0,0.5);
-            }
-
-
-            //float[] coords = lastLocation.getTranslation().getData();
-            //posX = coords[0];
-            //posY = coords[1];
-            //posAngle = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES).thirdAngle;
-        }
-
-
-        // Disable Tracking when we are done;
-        targets.deactivate(); */
     }
 
     /***
@@ -366,6 +341,10 @@ public class BlueDucksParkAuto extends LinearOpMode {
      * @param speed Speed to run the motors at
      */
     public void gyroTurn(double degrees, double speed) {
+        if(!opModeIsActive()) {
+            return;
+        }
+
         double startDegrees = angles.firstAngle;
         double targetDegrees = startDegrees - degrees;
         if(degrees < 0) {
@@ -391,47 +370,15 @@ public class BlueDucksParkAuto extends LinearOpMode {
     }
 
     /**
-     * Turns to a direction based on the field itself
-     * @param degrees Absolute direction
-     * @param speed
-     * @param absolute Passing false runs relative gyro turn and turns a number of degrees
-     */
-    public void gyroTurn(double degrees, double speed, boolean absolute) {
-        if(!absolute) {
-            gyroTurn(degrees, speed);
-            return;
-        }
-        double turnAmount = posAngle - degrees;
-        gyroTurn(turnAmount, speed);
-    }
-
-    public void turnToAngle(double targetAngle, double speed) {
-        double startDegrees = angles.firstAngle;
-        /*
-        double zeroedTarget = targetAngle - startDegrees;
-        boolean turnRight;
-        if(zeroedTarget > 0) {
-            turnRight = false;
-        } else {
-            turnRight = true;
-        }
-        if(Math.abs(zeroedTarget) > 180) {
-            turnRight = !turnRight;
-        } */
-
-        double angularMovement = targetAngle + startDegrees;
-        if(Math.abs(angularMovement) > 180) {
-
-        }
-        gyroTurn(angularMovement, speed);
-    }
-
-    /**
      * Moves a distance using encoders
      * @param inches
      * @param speed
      */
     public void moveIN(double inches, double speed) {
+        if(!opModeIsActive()) {
+            return;
+        }
+
         double wheelCircumference = 4 * 3.14;
         double ticksPerRot = 537;
         double rotations = inches / wheelCircumference;
@@ -484,6 +431,10 @@ public class BlueDucksParkAuto extends LinearOpMode {
     }
 
     public void moveIN(double inches, double speed, float timeoutMillis) {
+        if(!opModeIsActive()) {
+            return;
+        }
+
         double wheelCircumference = 4 * 3.14;
         double ticksPerRot = 537;
         double rotations = inches / wheelCircumference;
@@ -532,136 +483,10 @@ public class BlueDucksParkAuto extends LinearOpMode {
         robot.leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    /**
-     * Goes to a position on the field
-     * @param targetX X coord to go to
-     * @param targetY Y coord to go to
-     * @param speed
-     */
-    public void goToPosition(float targetX, float targetY, double speed) {
-        updateLocation();
-
-        float currentX = posX;
-        float currentY = posY;
-
-        float deltaX = targetX - currentX;
-        float deltaY = targetY - currentY;
-
-        double targetRad = Math.atan(deltaX/deltaY);
-        double targetDegrees = Math.toDegrees(targetRad);
-
-        gyroTurn(targetDegrees, speed, true);
-
-        double z = Math.sqrt(((deltaX * deltaX) + (deltaY * deltaY)));
-        moveIN(z,speed);
-
-        updateLocation(targetX, targetY, (float)targetDegrees);
-    }
-
-    /**
-     * Updates location
-     */
-    private void updateLocation() {
-        targetVisible = false;
-        for (VuforiaTrackable trackable : allTrackables) {
-            if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
-                telemetry.addData("Visible Target", trackable.getName());
-                targetVisible = true;
-
-                // getUpdatedRobotLocation() will return null if no new information is available since
-                // the last time that call was made, or if the trackable is not currently visible.
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
-                if (robotLocationTransform != null) {
-                    lastLocation = robotLocationTransform;
-                }
-                break;
-            }
-        }
-
-        // Provide feedback as to where the robot is located (if we know).
-        if (targetVisible) {
-            // express position (translation) of robot in inches.
-            VectorF translation = lastLocation.getTranslation();
-            telemetry.addData("Pos (inches)", "{X, Y, Z} = %.1f, %.1f, %.1f",
-                    translation.get(0) / mmPerInch, translation.get(1) / mmPerInch, translation.get(2) / mmPerInch);
-            posX = translation.get(0) / mmPerInch;
-            posY = translation.get(1) / mmPerInch;
-            // express the rotation of the robot in degrees.
-            Orientation rotation = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES);
-            telemetry.addData("Rot (deg)", "{Roll, Pitch, Heading} = %.0f, %.0f, %.0f", rotation.firstAngle, rotation.secondAngle, rotation.thirdAngle);
-            posAngle = rotation.thirdAngle;
-            telemetry.addData("Pos X", posX);
-            telemetry.addData("Pos Y", posY);
-            telemetry.addData("Angle", posAngle);
-        }
-        else {
-            telemetry.addData("Visible Target", "none");
-        }
-        telemetry.update();
-        /*
-        float[] coords = lastLocation.getTranslation().getData();
-        posX = coords[0];
-        posY = coords[1];
-        posAngle = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES).thirdAngle;
-        */
-    }
-
-
-    //TODO: Automatic angle estimation?
-    /**
-     * Updates location. If you know some values you can set them, however they will be overridden
-     * if a target is visible. If no target is visible and a zero is passed the value will not be
-     * updated.
-     * @param estX Input a exact zero if no value is known, regularly generated numbers shouldn't
-     *             be affected due to the decimal precision making it nearly impossible to be zero
-     * @param estY Same as estX
-     * @param estAngle Same as estX
-     */
-    public void updateLocation(float estX, float estY, float estAngle) {
-        targetVisible = false;
-        for (VuforiaTrackable trackable : allTrackables) {
-            if (((VuforiaTrackableDefaultListener)trackable.getListener()).isVisible()) {
-                telemetry.addData("Visible Target", trackable.getName());
-                targetVisible = true;
-
-                // getUpdatedRobotLocation() will return null if no new information is available since
-                // the last time that call was made, or if the trackable is not currently visible.
-                OpenGLMatrix robotLocationTransform = ((VuforiaTrackableDefaultListener)trackable.getListener()).getUpdatedRobotLocation();
-                if (robotLocationTransform != null) {
-                    lastLocation = robotLocationTransform;
-
-                }
-                break;
-            }
-        }
-        float[] coords = lastLocation.getTranslation().getData();
-        if (targetVisible) {
-            posX = coords[0];
-            posY = coords[1];
-            posAngle = Orientation.getOrientation(lastLocation, EXTRINSIC, XYZ, DEGREES).thirdAngle;
-            return;
-        }
-        if(estX != 0) {
-            posX = estX;
-        }
-        if(estY != 0) {
-            posY = estY;
-        }
-        if(estAngle != 0) {
-            posAngle = estAngle;
-        }
-    }
-
     public void initVuforia() {
         // Connect to the camera we are to use.  This name must match what is set up in Robot Configuration
         webcamName = hardwareMap.get(WebcamName.class, "Webcam 1");
 
-        /*
-         * Configure Vuforia by creating a Parameter object, and passing it to the Vuforia engine.
-         * We can pass Vuforia the handle to a camera preview resource (on the RC screen);
-         * If no camera-preview is desired, use the parameter-less constructor instead (commented out below).
-         * Note: A preview window is required if you want to view the camera stream on the Driver Station Phone.
-         */
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         parameters = new VuforiaLocalizer.Parameters(cameraMonitorViewId);
         // VuforiaLocalizer.Parameters parameters = new VuforiaLocalizer.Parameters();
@@ -685,49 +510,12 @@ public class BlueDucksParkAuto extends LinearOpMode {
         allTrackables = new ArrayList<VuforiaTrackable>();
         allTrackables.addAll(targets);
 
-        /**
-         * In order for localization to work, we need to tell the system where each target is on the field, and
-         * where the phone resides on the robot.  These specifications are in the form of <em>transformation matrices.</em>
-         * Transformation matrices are a central, important concept in the math here involved in localization.
-         * See <a href="https://en.wikipedia.org/wiki/Transformation_matrix">Transformation Matrix</a>
-         * for detailed information. Commonly, you'll encounter transformation matrices as instances
-         * of the {@link OpenGLMatrix} class.
-         *
-         * If you are standing in the Red Alliance Station looking towards the center of the field,
-         *     - The X axis runs from your left to the right. (positive from the center to the right)
-         *     - The Y axis runs from the Red Alliance Station towards the other side of the field
-         *       where the Blue Alliance Station is. (Positive is from the center, towards the BlueAlliance station)
-         *     - The Z axis runs from the floor, upwards towards the ceiling.  (Positive is above the floor)
-         *
-         * Before being transformed, each target image is conceptually located at the origin of the field's
-         *  coordinate system (the center of the field), facing up.
-         */
 
         // Name and locate each trackable object
         identifyTarget(0, "Blue Storage",       -halfField,  oneAndHalfTile, mmTargetHeight, 90, 0, 90);
         identifyTarget(1, "Blue Alliance Wall",  halfTile,   halfField,      mmTargetHeight, 90, 0, 0);
         identifyTarget(2, "Red Storage",        -halfField, -oneAndHalfTile, mmTargetHeight, 90, 0, 90);
         identifyTarget(3, "Red Alliance Wall",   halfTile,  -halfField,      mmTargetHeight, 90, 0, 180);
-
-        /*
-         * Create a transformation matrix describing where the camera is on the robot.
-         *
-         * Info:  The coordinate frame for the robot looks the same as the field.
-         * The robot's "forward" direction is facing out along X axis, with the LEFT side facing out along the Y axis.
-         * Z is UP on the robot.  This equates to a bearing angle of Zero degrees.
-         *
-         * For a WebCam, the default starting orientation of the camera is looking UP (pointing in the Z direction),
-         * with the wide (horizontal) axis of the camera aligned with the X axis, and
-         * the Narrow (vertical) axis of the camera aligned with the Y axis
-         *
-         * But, this example assumes that the camera is actually facing forward out the front of the robot.
-         * So, the "default" camera position requires two rotations to get it oriented correctly.
-         * 1) First it must be rotated +90 degrees around the X axis to get it horizontal (its now facing out the right side of the robot)
-         * 2) Next it must be be rotated +90 degrees (counter-clockwise) around the Z axis to face forward.
-         *
-         * Finally the camera can be translated to its actual mounting position on the robot.
-         *      In this example, it is centered on the robot (left-to-right and front-to-back), and 6 inches above ground level.
-         */
 
         final float CAMERA_FORWARD_DISPLACEMENT  = 4.375f * mmPerInch;   // eg: Enter the forward distance from the center of the robot to the camera lens
         final float CAMERA_VERTICAL_DISPLACEMENT = 10.0f * mmPerInch;   // eg: Camera is 6 Inches above ground

@@ -53,20 +53,17 @@ public class HardwareInit
     public DcMotor intake;
     public DcMotor leftArm;
     public DcMotor rightArm;
-    public Servo leftGrabber;
-    public Servo rightGrabber;
     public DigitalChannel touchSensor;
     public DigitalChannel cargoTouch;
     public DigitalChannel leftLEDGreen;
     public DigitalChannel leftLEDRed;
     public DigitalChannel rightLEDGreen;
     public DigitalChannel rightLEDRed;
-    public DistanceSensor distance;
 
 
     /* local OpMode members. */
     HardwareMap hwMap           =  null;
-    private ElapsedTime period  = new ElapsedTime();
+    private final ElapsedTime period  = new ElapsedTime();
 
     /* Constructor */
     public HardwareInit(){
@@ -102,12 +99,6 @@ public class HardwareInit
         rightArm.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         leftArm.setZeroPowerBehavior((DcMotor.ZeroPowerBehavior.BRAKE));
 
-        // Define and initialize ALL installed servos.
-        leftGrabber  = hwMap.get(Servo.class, "leftGrabber");
-        rightGrabber = hwMap.get(Servo.class, "rightGrabber");
-
-        // Define and initialize all digital devices
-        distance = hwMap.get(DistanceSensor.class, "distance");
         touchSensor = hwMap.get(DigitalChannel.class, "touchSensor");
         cargoTouch = hwMap.get(DigitalChannel.class, "cargoTouch");
         leftLEDGreen = hwMap.get(DigitalChannel.class, "leftLEDGreen");

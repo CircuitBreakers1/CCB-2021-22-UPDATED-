@@ -29,36 +29,13 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import androidx.annotation.NonNull;
-
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DistanceSensor;
-
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
 
 
 /**
  * This file is the main code for our TeleOP
- */
-
-/*
- * Important Values:
- * Grabbing Servos:
- * Closed: Left 1.0, Right 0.0
- * Open: Left 0.7, Right 0.3
- * Encoder Arm Height:
- * Bottom Level: 51
- * Middle Level: 90
- * Top Level: 140
- *
- * Notes:
- * Grabbing Servos:
- * Open: LEDs Amber
- * Block Detected: LEDs Green
- * Closed: LEDs Red
  */
 
 @TeleOp(name = "TeleOP", group = "Linear Opmode")
@@ -66,71 +43,32 @@ public class TeleOP extends LinearOpMode {
 
     HardwareInit robot = new HardwareInit();
 
-    /**
-     * Array for smoothing distance inputs. The smoothed value is stored at index <b>6</b>
-     */
-    double distance[] = new double[7];
-
     @Override
     public void runOpMode() {
         robot.init(hardwareMap);
 
         //Various booleans used for toggle buttons
         boolean spinOn = false;
-        boolean aDown = false;
+        boolean rightBumperDown = false;
+        boolean leftBumperDown = false;
 
-        boolean grabOpen = true;
         boolean intakeOn = false;
         boolean outputOn = false;
 
         boolean manualControl = false;
 
-        double lastCheck = 0;
-
-        robot.rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        // Left 1 is down, right 0 is down
-        // Start Open
-        robot.rightGrabber.setPosition(0.3);
-        robot.leftGrabber.setPosition(0.7);
-        // Set the LEDs green to show the grabbing servos are open
-        setLEDs(true, true);
-
-
         waitForStart();
 
         while (opModeIsActive()) {
-            if(System.currentTimeMillis() > lastCheck + 166) {
-                averageVal(robot.distance, 0.5);
-            }
-
             // Simple tank drive
             robot.leftFront.setPower(-gamepad1.left_stick_y);
             robot.leftBack.setPower(-gamepad1.left_stick_y);
             robot.rightBack.setPower(-gamepad1.right_stick_y);
             robot.rightFront.setPower(-gamepad1.right_stick_y);
 
-
-            /*
-            leftArm.setPower(-gamepad2.left_stick_y * .5);
-            rightArm.setPower(-gamepad2.left_stick_y * .5);
-            */
-
-            if(distance[6] < 1.5 && grabOpen) {
-                setLEDs(false,true);
-            } else if (grabOpen) {
-                setLEDs(true, true);
-            } else {
-                setLEDs(true, false);
-            }
-
-            /*
-             * This block of code allows the A button on the driver controller to toggle the
-             * carousel spinner on and off.
-             */
             if (gamepad2.right_bumper) {
-                if (!aDown) {
-                    aDown = true;
+                if (!rightBumperDown) {
+                    rightBumperDown = true;
                     if (spinOn) {
                         robot.backSpinner.setPower(0);
                         spinOn = false;
@@ -140,11 +78,26 @@ public class TeleOP extends LinearOpMode {
                     }
                 }
             } else {
-                aDown = false;
+                rightBumperDown = false;
+            }
+
+            if (gamepad2.left_bumper) {
+                if (!leftBumperDown) {
+                    leftBumperDown = true;
+                    if (spinOn) {
+                        robot.backSpinner.setPower(0);
+                        spinOn = false;
+                    } else {
+                        robot.backSpinner.setPower(-0.8);
+                        spinOn = true;
+                    }
+                }
+            } else {
+                leftBumperDown = false;
             }
 
             /*
-             * The next couple if blocks allow the arm to be easily set to
+             * The next couple if blocks allow the arm to be easily set to each level
              */
             if (gamepad2.a) {
                 // Bottom Level
@@ -190,8 +143,6 @@ public class TeleOP extends LinearOpMode {
                 robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
-
-
 
             /*
              * This block of code allows the stick to be used to adjust the position of the arm
@@ -260,7 +211,7 @@ public class TeleOP extends LinearOpMode {
                 intakeOn = false;
                 outputOn = true;
             }
-            if(gamepad2.left_bumper) {
+            if(gamepad2.dpad_left) {
                 robot.intake.setPower(0);
 
                 robot.rightArm.setPower(0);
@@ -274,21 +225,12 @@ public class TeleOP extends LinearOpMode {
             }
 
             if(intakeOn) {
-                if(!robot.cargoTouch.getState()) {
-                    setLEDs(true, true);
-                } else {
-                    setLEDs(false, true);
-                }
-            } else if(outputOn) {
-                setLEDs(true, false);
-            } else {
-                setLEDs(false, false);
-            }
+                setLEDs(!robot.cargoTouch.getState(), true);
+            } else setLEDs(outputOn, false);
 
             // Telemetry code for showing encoder values. Helpful during debugging.
             telemetry.addData("Left Arm Position", robot.leftArm.getCurrentPosition());
             telemetry.addData("Right Arm Position", robot.rightArm.getCurrentPosition());
-            telemetry.addData("Distance reading", distance[6]) ;
             telemetry.update();
 
         }
@@ -302,46 +244,5 @@ public class TeleOP extends LinearOpMode {
         robot.leftLEDRed.setState(red);
         robot.rightLEDGreen.setState(green);
         robot.rightLEDRed.setState(red);
-    }
-
-    /**
-     * This function is ran to attempt to make the values of the distance sensor smoother. This function should only be ran at max every 100 millis,
-     * which will store the last second of values. The value is stored in distance[6] and all other
-     * stored values can be checked in the program, including the most recent check, which can reduce
-     * processing on pulling the distance
-     * @param distanceSensor Distance sensor to use. Throws an error if null for obvious reasons
-     * @param discardDifference If a value is further away from the most recent input than this number
-     *                          in inches it is discarded, and all other values after it are discarded too.
-     */
-    public void averageVal(@NonNull DistanceSensor distanceSensor, double discardDifference) {
-        double mostRecent = distanceSensor.getDistance(DistanceUnit.INCH);
-        double avgHelp = 0;
-        double avgCount = 0;
-        boolean discardRest = false;
-        //Shift the array
-        for (int i = distance.length - 2; i >= 0; i--){
-            distance[i + 1] = distance[i];
-        }
-
-        //Add the new value
-        distance[0] = mostRecent;
-
-        //Check values to throw out
-        for (int i = 1; i < distance.length - 1; i++) {
-            if ((Math.abs(mostRecent - distance[i]) > discardDifference) || discardRest) {
-                distance[i] = 0;
-                discardRest = true;
-            }
-        }
-
-        //Calcuate and store the average
-        for (int i = 0; i < distance.length - 1; i++) {
-            if (distance[i] == 0) {
-                break;
-            }
-            avgHelp = avgHelp + distance[i];
-            avgCount++;
-        }
-        distance[6] = avgHelp / avgCount;
     }
 }
