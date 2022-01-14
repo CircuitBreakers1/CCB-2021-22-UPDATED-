@@ -73,7 +73,7 @@ public class TeleOP extends LinearOpMode {
                         robot.backSpinner.setPower(0);
                         spinOn = false;
                     } else {
-                        robot.backSpinner.setPower(-0.8);
+                        robot.backSpinner.setPower(-0.7);
                         spinOn = true;
                     }
                 }
@@ -88,7 +88,7 @@ public class TeleOP extends LinearOpMode {
                         robot.backSpinner.setPower(0);
                         spinOn = false;
                     } else {
-                        robot.backSpinner.setPower(0.8);
+                        robot.backSpinner.setPower(0.7);
                         spinOn = true;
                     }
                 }

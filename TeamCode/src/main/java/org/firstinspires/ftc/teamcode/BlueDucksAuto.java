@@ -247,7 +247,7 @@ public class BlueDucksAuto extends LinearOpMode {
         moveIN(6,0.5);
         telemetry.addData("Status:", "Turning");
         telemetry.update();
-        gyroTurn(20,0.5);
+        gyroTurn(-20,0.5);
 
         if(targetLevel == 1) {
             robot.rightArm.setTargetPosition(51);
@@ -283,8 +283,8 @@ public class BlueDucksAuto extends LinearOpMode {
         robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         moveIN(-7, 0.25);
-        gyroTurn(50, 0.5);
-        robot.backSpinner.setPower(-0.4);
+        gyroTurn(-50, 0.5);
+        robot.backSpinner.setPower(0.4);
         moveIN(-27.5, 0.25, 6000);
         telemetry.addData("Status", "duck");
         telemetry.update();

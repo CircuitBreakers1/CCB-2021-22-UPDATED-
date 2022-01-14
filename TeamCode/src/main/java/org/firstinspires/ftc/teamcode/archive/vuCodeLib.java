@@ -62,7 +62,7 @@ import org.firstinspires.ftc.teamcode.HardwareInit;
 import java.util.ArrayList;
 import java.util.List;
 @Disabled
-@Autonomous(name="RedDucksAuto", group ="Red")
+@Autonomous(name="ttttttrt ", group ="Red")
 public class vuCodeLib extends LinearOpMode {
 
     BNO055IMU imu;
