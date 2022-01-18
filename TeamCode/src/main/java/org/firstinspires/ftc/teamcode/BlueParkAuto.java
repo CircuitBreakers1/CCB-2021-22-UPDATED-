@@ -264,7 +264,7 @@ public class BlueParkAuto extends LinearOpMode {
         robot.rightArm.setPower(1);
         robot.leftArm.setPower(1);
 
-        moveIN(17, 0.5);
+        moveIN(15, 0.5);
 
         sleep(1000);
 
@@ -272,13 +272,14 @@ public class BlueParkAuto extends LinearOpMode {
         sleep(2000);
         robot.intake.setPower(0);
 
+        moveIN(-3, 0.25);
+
         robot.rightArm.setPower(0);
         robot.leftArm.setPower(0);
 
         robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        moveIN(-5, 0.25);
         gyroTurn(70, 0.5);
         moveIN(-56, 1);
     }
