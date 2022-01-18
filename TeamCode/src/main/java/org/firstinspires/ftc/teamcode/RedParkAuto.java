@@ -38,7 +38,6 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -60,7 +59,7 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
-@Autonomous(name="RedParkAuto", group ="Red")
+@Autonomous(name = "RedParkAuto", group = "Red")
 public class RedParkAuto extends LinearOpMode {
 
     BNO055IMU imu;
@@ -71,11 +70,11 @@ public class RedParkAuto extends LinearOpMode {
     private static final String VUFORIA_KEY =
             "AWC3x6z/////AAABmVlXzJgJHEkClTfzpPhSQSAOSo2ALGWXmreVgLVShBXUJg8BGyNP06zZuMyV0UZUcxC2xqq5jFsSEg1V0yYBBfvKinPneqTDkbkGA1vDE18L884DGyo3awssbrJEnYxMlTYnqT6HAsQO1SQ+DiTDRJOkI2Bo8rmK2mXLXaZPApKXptVgvEFUds0cNi1DZX3d8BzNxmQuIgT9jY+4L5B0sUnEJyZEyiwKqUhpGDmWNQd3yzQcdI9vFyyX6/4FrK6GaT65uV5xW1v4dwvyZite2Fkd0/6J403Wyy3hXBBvsvUZLJvEMWa42Q31/RUDXbaJyric+SOOU1QGFOTEmN4yt7o3hgO4R/SoyWtadjNI0qx6";
 
-    private static final float mmPerInch        = 25.4f;
-    private static final float mmTargetHeight   = 6 * mmPerInch;
-    private static final float halfField        = 72 * mmPerInch;
-    private static final float halfTile         = 12 * mmPerInch;
-    private static final float oneAndHalfTile   = 36 * mmPerInch;
+    private static final float mmPerInch = 25.4f;
+    private static final float mmTargetHeight = 6 * mmPerInch;
+    private static final float halfField = 72 * mmPerInch;
+    private static final float halfTile = 12 * mmPerInch;
+    private static final float oneAndHalfTile = 36 * mmPerInch;
 
     private final float Xline = 165;
     private int labelCount;
@@ -84,13 +83,13 @@ public class RedParkAuto extends LinearOpMode {
     private final float posY = 0;
     private final float posAngle = 0;
 
-    private VuforiaLocalizer vuforia    = null;
+    private VuforiaLocalizer vuforia = null;
     private VuforiaLocalizer.Parameters parameters = null;
-    private VuforiaTrackables targets   = null;
-    private WebcamName webcamName       = null;
+    private VuforiaTrackables targets = null;
+    private WebcamName webcamName = null;
     private List<VuforiaTrackable> allTrackables = null;
-    private static final String TFOD_MODEL_ASSET = "Bee 2.0.tflite";
-    private static final String[] LABELS = {"Bee 2.0"};
+    private static String TFOD_MODEL_ASSET = "Bee 2.0.tflite";
+    private static String[] LABELS = {"Bee 2.0"};
     private TFObjectDetector tfod;
 
 
@@ -102,8 +101,10 @@ public class RedParkAuto extends LinearOpMode {
     private int screenHeight;
     private final boolean isBee = false;
     private boolean actualBee = false;
+    private float timeSinceStart;
 
-    @Override public void runOpMode() {
+    @Override
+    public void runOpMode() {
         robot.init(hardwareMap);
         initImu();
         initVuforia();
@@ -116,7 +117,7 @@ public class RedParkAuto extends LinearOpMode {
 
         if (tfod != null) {
             tfod.activate();
-            tfod.setZoom(1, 16.0/9.0);
+            tfod.setZoom(1, 16.0 / 9.0);
         }
 
         while (!isStarted()) {
@@ -149,12 +150,12 @@ public class RedParkAuto extends LinearOpMode {
             }
             scanCount++;
 
-            if(!(labelCount == 0)) {
+            if (!(labelCount == 0)) {
                 int j;
-                for(j = 0; j<recCount; j++) {
-                    if(!(beeTop[j] < (0.25 * screenHeight))) {
+                for (j = 0; j < recCount; j++) {
+                    if (!(beeTop[j] < (0.25 * screenHeight))) {
                         actualBee = true;
-                        if(beeLeft[j] > Xline) {
+                        if (beeLeft[j] > Xline) {
                             telemetry.addData("Target Guess:", "Right");
                             telemetry.addData("Target Level:", "Top");
                             targetLevel = 3;
@@ -166,7 +167,7 @@ public class RedParkAuto extends LinearOpMode {
                     }
 
                 }
-                if(!actualBee) {
+                if (!actualBee) {
                     telemetry.addData("Target Guess:", "Left");
                     telemetry.addData("Target Level:", "Bottom");
                     targetLevel = 1;
@@ -183,8 +184,9 @@ public class RedParkAuto extends LinearOpMode {
         }
 
         waitForStart();
+        timeSinceStart = System.currentTimeMillis();
 
-        if(scanCount < 5) {
+        if (scanCount < 5) {
             List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
             if (updatedRecognitions != null) {
                 recCount = 0;
@@ -208,12 +210,12 @@ public class RedParkAuto extends LinearOpMode {
                 }
             }
 
-            if(!(labelCount == 0)) {
+            if (!(labelCount == 0)) {
                 int j;
-                for(j = 0; j<recCount; j++) {
-                    if(!(beeTop[j] < (0.25 * screenHeight))) {
+                for (j = 0; j < recCount; j++) {
+                    if (!(beeTop[j] < (0.25 * screenHeight))) {
                         actualBee = true;
-                        if(beeLeft[j] > Xline) {
+                        if (beeLeft[j] > Xline) {
                             telemetry.addData("Target Guess:", "Right");
                             telemetry.addData("Target Level:", "Top");
                             targetLevel = 3;
@@ -225,7 +227,7 @@ public class RedParkAuto extends LinearOpMode {
                     }
 
                 }
-                if(!actualBee) {
+                if (!actualBee) {
                     telemetry.addData("Target Guess:", "Left");
                     telemetry.addData("Target Level:", "Bottom");
                     targetLevel = 1;
@@ -241,15 +243,26 @@ public class RedParkAuto extends LinearOpMode {
             telemetry.update();
         }
 
+        //Switch to the other models
+        tfod.deactivate();
+        tfod.shutdown();
+        vuforia.close();
+        TFOD_MODEL_ASSET = "FreightFrenzy_BC.tflite";
+        LABELS[1] = "Ball";
+        LABELS[2] = "Cube";
+        initVuforia();
+        initTfod();
+
+
         telemetry.addData("Status", "Moving off wall...");
         telemetry.update();
-        moveIN(6,0.5);
-        gyroTurn(-20,0.5);
+        moveIN(6, 0.5);
+        gyroTurn(-20, 0.5);
 
-        if(targetLevel == 1) {
+        if (targetLevel == 1) {
             robot.rightArm.setTargetPosition(51);
             robot.leftArm.setTargetPosition(51);
-        } else if(targetLevel == 2) {
+        } else if (targetLevel == 2) {
             robot.rightArm.setTargetPosition(90);
             robot.leftArm.setTargetPosition(90);
         } else {
@@ -280,6 +293,231 @@ public class RedParkAuto extends LinearOpMode {
         moveIN(-5, 0.25);
         gyroTurn(-70, 0.5);
         moveIN(-56, 1);
+        gyroTurn(180, 0.5);
+
+
+        boolean linedUpWithBlock = false;
+        boolean turningRight = true;
+        boolean haveTime = true;
+        boolean haveCargo = false;
+        int cubeCount = 0;
+        int ballCount = 0;
+        int screenWidth = 0;
+        angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+        float gyroPoint = angles.firstAngle;
+        float cubeTop[] = new float[30];
+        float cubeLeft[] = new float[30];
+        float cubeRight[] = new float[30];
+        float ballTop[] = new float[12];
+        float ballLeft[] = new float[12];
+        float ballRight[] = new float[12];
+
+
+        //Begin trying to find a block to line up with
+        robot.rightBack.setPower(-0.25);
+        robot.rightFront.setPower(-0.25);
+        robot.leftBack.setPower(0.25);
+        robot.leftFront.setPower(0.25);
+        while (opModeIsActive()) {
+            //Check if we still have enough time, otherwise just stay put to keep parking points
+            if (System.currentTimeMillis() < timeSinceStart + 20000) {
+                haveTime = false;
+                break;
+            }
+            //Update arrays to store cube and ball data
+            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+            if (updatedRecognitions != null) {
+                cubeCount = 0;
+                ballCount = 0;
+                telemetry.addData("# Object Detected", updatedRecognitions.size());
+                labelCount = updatedRecognitions.size();
+                for (Recognition recognition : updatedRecognitions) {
+                    if (recognition.getLabel() == "Cube") {
+                        cubeLeft[cubeCount] = recognition.getLeft();
+                        cubeTop[cubeCount] = recognition.getTop();
+                        cubeRight[cubeCount] = recognition.getRight();
+                        cubeCount++;
+                    } else if (recognition.getLabel() == "Ball") {
+                        ballLeft[ballCount] = recognition.getLeft();
+                        ballTop[ballCount] = recognition.getTop();
+                        ballRight[ballCount] = recognition.getRight();
+                        ballCount++;
+                    }
+                    screenWidth = recognition.getImageWidth();
+                }
+
+                //Check if we are lined up with a block since the updated data
+                for (int i = 0; i < cubeCount; i++) {
+                    if (cubeLeft[i] > (3 / 8 * screenWidth) && cubeLeft[i] < (5 / 8 * screenWidth) && cubeRight[i] > (3 / 8 * screenWidth) && cubeRight[i] < (5 / 8 * screenWidth)) {
+                        //Check if there are any blocks or balls in the way
+                        linedUpWithBlock = true;
+                        for (int j = 0; j < cubeCount; j++) {
+                            //Check if any blocks are in front of the block, which would make it difficult to grab
+                            //Also skip checking the block we are currently determining, or if it is behind the block
+                            if (j == i || cubeTop[j] > cubeTop[i]) {
+                                continue;
+                            }
+                            if ((cubeLeft[j] > cubeLeft[i] && cubeLeft[j] < cubeRight[i]) || (cubeRight[j] > cubeLeft[j] && cubeRight[j] < cubeLeft[i])) {
+                                linedUpWithBlock = false;
+                                break;
+                            }
+                        }
+                        if (!linedUpWithBlock) break;
+                        for (int j = 0; j < ballCount; j++) {
+                            //Check if any balls are in front of the block, which would make it difficult to grab
+                            //Also skip checking if it is behind the block
+                            if (ballTop[j] > cubeTop[i]) {
+                                continue;
+                            }
+                            if ((ballLeft[j] > cubeLeft[i] && ballLeft[j] < cubeRight[i]) || (ballRight[j] > cubeLeft[j] && ballRight[j] < cubeLeft[i])) {
+                                linedUpWithBlock = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            if (linedUpWithBlock) {
+                break;
+            }
+
+            //Check if we need to change turning directions
+            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            if (turningRight && (angles.firstAngle >= gyroPoint + 45)) {
+                turningRight = false;
+                robot.rightBack.setPower(0.25);
+                robot.rightFront.setPower(0.25);
+                robot.leftBack.setPower(-0.25);
+                robot.leftFront.setPower(-0.25);
+            } else if (!turningRight && (angles.firstAngle <= gyroPoint - 45)) {
+                turningRight = true;
+                robot.rightBack.setPower(-0.25);
+                robot.rightFront.setPower(-0.25);
+                robot.leftBack.setPower(0.25);
+                robot.leftFront.setPower(0.25);
+            }
+        }
+        robot.rightBack.setPower(0);
+        robot.rightFront.setPower(0);
+        robot.leftBack.setPower(0);
+        robot.leftFront.setPower(0);
+
+        //Assuming we still have time, drive in and attempt to grab the block.
+        if (haveTime && opModeIsActive() && linedUpWithBlock) {
+            robot.intake.setPower(-1);
+
+            robot.rightArm.setTargetPosition(0);
+            robot.leftArm.setTargetPosition(0);
+            robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.rightArm.setPower(1);
+            robot.leftArm.setPower(1);
+
+            double maxDriveIn = 24;
+            double wheelCircumference = 4 * 3.14;
+            double ticksPerRot = 537;
+            double rotations = maxDriveIn / wheelCircumference;
+            double ticks = ticksPerRot * rotations;
+
+            robot.leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            robot.rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            robot.rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            robot.leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            robot.leftFront.setTargetPosition((int) ticks);
+            robot.rightFront.setTargetPosition((int) ticks);
+            robot.leftBack.setTargetPosition((int) ticks);
+            robot.rightBack.setTargetPosition((int) ticks);
+
+            robot.rightBack.setPower(0.25);
+            robot.rightFront.setPower(0.25);
+            robot.leftBack.setPower(0.25);
+            robot.leftFront.setPower(0.25);
+
+            robot.leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            while (((robot.leftBack.isBusy() && robot.leftFront.isBusy()) || (robot.rightBack.isBusy() && robot.rightFront.isBusy())) && opModeIsActive() && haveTime) {
+                if (!robot.cargoTouch.getState()) {
+                    haveCargo = true;
+                    break;
+                }
+                haveTime = (System.currentTimeMillis() < timeSinceStart + 22000);
+            }
+            robot.rightBack.setPower(0);
+            robot.rightFront.setPower(0);
+            robot.leftBack.setPower(0);
+            robot.leftFront.setPower(0);
+
+            robot.leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        }
+
+        //Now that we have cargo, return to our original positioning.
+        if (haveCargo && haveTime && opModeIsActive()) {
+            robot.leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            robot.rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            robot.rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            robot.leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+            robot.leftFront.setTargetPosition(0);
+            robot.rightFront.setTargetPosition(0);
+            robot.leftBack.setTargetPosition(0);
+            robot.rightBack.setTargetPosition(0);
+
+            robot.rightBack.setPower(0.75);
+            robot.rightFront.setPower(0.75);
+            robot.leftBack.setPower(0.75);
+            robot.leftFront.setPower(0.75);
+
+            robot.leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            while (((robot.leftBack.isBusy() && robot.leftFront.isBusy()) || (robot.rightBack.isBusy() && robot.rightFront.isBusy())) && opModeIsActive() && haveTime) {
+
+            }
+            robot.rightBack.setPower(0);
+            robot.rightFront.setPower(0);
+            robot.leftBack.setPower(0);
+            robot.leftFront.setPower(0);
+
+            robot.leftFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            robot.leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            gyroTurn(angles.firstAngle - gyroPoint, 0.5);
+
+            haveTime = (System.currentTimeMillis() < timeSinceStart + 24000);
+        }
+        if (haveTime && haveCargo && opModeIsActive()) {
+            //Last time checks done, time to commit to placing block. Most of these values are random guesses and need to be tuned.
+            gyroTurn(180, 0.75);
+            //Goes to bottom level because in auto it doesn't matter
+            robot.rightArm.setTargetPosition(51);
+            robot.leftArm.setTargetPosition(51);
+
+            robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            robot.rightArm.setPower(1);
+            robot.leftArm.setPower(1);
+
+            moveIN(36, 0.75);
+            robot.intake.setPower(1);
+            sleep(1000);
+            robot.intake.setPower(0);
+            moveIN(-36, 1);
+        }
     }
 
     /***
@@ -289,7 +527,7 @@ public class RedParkAuto extends LinearOpMode {
      * @param dx, dy, dz  Target offsets in x,y,z axes
      * @param rx, ry, rz  Target rotations in x,y,z axes
      */
-    void    identifyTarget(int targetIndex, String targetName, float dx, float dy, float dz, float rx, float ry, float rz) {
+    void identifyTarget(int targetIndex, String targetName, float dx, float dy, float dz, float rx, float ry, float rz) {
         VuforiaTrackable aTarget = targets.get(targetIndex);
         aTarget.setName(targetName);
         aTarget.setLocation(OpenGLMatrix.translation(dx, dy, dz)
@@ -298,11 +536,11 @@ public class RedParkAuto extends LinearOpMode {
 
     public void initImu() {
         BNO055IMU.Parameters Parameters = new BNO055IMU.Parameters();
-        Parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
-        Parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        Parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
+        Parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         Parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        Parameters.loggingEnabled      = true;
-        Parameters.loggingTag          = "IMU";
+        Parameters.loggingEnabled = true;
+        Parameters.loggingTag = "IMU";
         Parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
@@ -326,17 +564,18 @@ public class RedParkAuto extends LinearOpMode {
 
     /**
      * Turn a specified number of degrees using the IMU
+     *
      * @param degrees Positive degrees moves in a clockwise direction
-     * @param speed Speed to run the motors at
+     * @param speed   Speed to run the motors at
      */
     public void gyroTurn(double degrees, double speed) {
-        if(!opModeIsActive()) {
+        if (!opModeIsActive()) {
             return;
         }
 
         double startDegrees = angles.firstAngle;
         double targetDegrees = startDegrees - degrees;
-        if(degrees < 0) {
+        if (degrees < 0) {
             robot.rightBack.setPower(speed);
             robot.rightFront.setPower(speed);
             robot.leftBack.setPower(-speed);
@@ -347,7 +586,7 @@ public class RedParkAuto extends LinearOpMode {
             robot.leftBack.setPower(speed);
             robot.leftFront.setPower(speed);
         }
-        while(!(angles.firstAngle + 3 > targetDegrees && angles.firstAngle - 3 < targetDegrees)) {
+        while (!(angles.firstAngle + 3 > targetDegrees && angles.firstAngle - 3 < targetDegrees)) {
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             sleep(10);
         }
@@ -360,11 +599,12 @@ public class RedParkAuto extends LinearOpMode {
 
     /**
      * Moves a distance using encoders
+     *
      * @param inches
      * @param speed
      */
     public void moveIN(double inches, double speed) {
-        if(!opModeIsActive()) {
+        if (!opModeIsActive()) {
             return;
         }
 
@@ -394,7 +634,7 @@ public class RedParkAuto extends LinearOpMode {
         robot.leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         robot.rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        while(((robot.leftBack.isBusy() && robot.leftFront.isBusy()) || (robot.rightBack.isBusy() && robot.rightFront.isBusy())) && opModeIsActive()) {
+        while (((robot.leftBack.isBusy() && robot.leftFront.isBusy()) || (robot.rightBack.isBusy() && robot.rightFront.isBusy())) && opModeIsActive()) {
             /*
              * Robot gets some free time.
              * What does it do during it's free time?
@@ -420,7 +660,7 @@ public class RedParkAuto extends LinearOpMode {
     }
 
     public void moveIN(double inches, double speed, float timeoutMillis) {
-        if(!opModeIsActive()) {
+        if (!opModeIsActive()) {
             return;
         }
 
@@ -456,7 +696,7 @@ public class RedParkAuto extends LinearOpMode {
         while
         (((robot.leftBack.isBusy() && robot.leftFront.isBusy()) || (robot.rightBack.isBusy() && robot.rightFront.isBusy())) && opModeIsActive() && haveTime) {
             sleep(10);
-            if(System.currentTimeMillis() >   (startMillis + timeoutMillis)) {
+            if (System.currentTimeMillis() > (startMillis + timeoutMillis)) {
                 haveTime = false;
             }
         }
@@ -501,14 +741,14 @@ public class RedParkAuto extends LinearOpMode {
 
 
         // Name and locate each trackable object
-        identifyTarget(0, "Blue Storage",       -halfField,  oneAndHalfTile, mmTargetHeight, 90, 0, 90);
-        identifyTarget(1, "Blue Alliance Wall",  halfTile,   halfField,      mmTargetHeight, 90, 0, 0);
-        identifyTarget(2, "Red Storage",        -halfField, -oneAndHalfTile, mmTargetHeight, 90, 0, 90);
-        identifyTarget(3, "Red Alliance Wall",   halfTile,  -halfField,      mmTargetHeight, 90, 0, 180);
+        identifyTarget(0, "Blue Storage", -halfField, oneAndHalfTile, mmTargetHeight, 90, 0, 90);
+        identifyTarget(1, "Blue Alliance Wall", halfTile, halfField, mmTargetHeight, 90, 0, 0);
+        identifyTarget(2, "Red Storage", -halfField, -oneAndHalfTile, mmTargetHeight, 90, 0, 90);
+        identifyTarget(3, "Red Alliance Wall", halfTile, -halfField, mmTargetHeight, 90, 0, 180);
 
-        final float CAMERA_FORWARD_DISPLACEMENT  = 4.375f * mmPerInch;   // eg: Enter the forward distance from the center of the robot to the camera lens
+        final float CAMERA_FORWARD_DISPLACEMENT = 4.375f * mmPerInch;   // eg: Enter the forward distance from the center of the robot to the camera lens
         final float CAMERA_VERTICAL_DISPLACEMENT = 10.0f * mmPerInch;   // eg: Camera is 6 Inches above ground
-        final float CAMERA_LEFT_DISPLACEMENT     = -8.0f * mmPerInch;   // eg: Enter the left distance from the center of the robot to the camera lens
+        final float CAMERA_LEFT_DISPLACEMENT = -8.0f * mmPerInch;   // eg: Enter the left distance from the center of the robot to the camera lens
 
         OpenGLMatrix cameraLocationOnRobot = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
