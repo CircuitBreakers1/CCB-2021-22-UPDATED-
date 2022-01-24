@@ -89,8 +89,8 @@ public class RedDucksParkAuto extends LinearOpMode {
     private VuforiaTrackables targets   = null;
     private WebcamName webcamName       = null;
     private List<VuforiaTrackable> allTrackables = null;
-    private static final String TFOD_MODEL_ASSET = "Bee 2.0.tflite";
-    private static final String[] LABELS = {"Bee 2.0"};
+    private static final String TFOD_MODEL_ASSET = "CcbBee.tflite";
+    private static final String[] LABELS = {"Bee"};
     private TFObjectDetector tfod;
 
 
@@ -241,7 +241,6 @@ public class RedDucksParkAuto extends LinearOpMode {
             telemetry.update();
         }
 
-
         telemetry.addData("Status", "Moving off wall...");
         telemetry.update();
         moveIN(6,0.5);
@@ -250,14 +249,14 @@ public class RedDucksParkAuto extends LinearOpMode {
         gyroTurn(20,0.5);
 
         if(targetLevel == 1) {
-            robot.rightArm.setTargetPosition(51);
-            robot.leftArm.setTargetPosition(51);
+            robot.rightArm.setTargetPosition(97);
+            robot.leftArm.setTargetPosition(97);
         } else if(targetLevel == 2) {
-            robot.rightArm.setTargetPosition(90);
-            robot.leftArm.setTargetPosition(90);
+            robot.rightArm.setTargetPosition(206);
+            robot.leftArm.setTargetPosition(206);
         } else {
-            robot.rightArm.setTargetPosition(140);
-            robot.leftArm.setTargetPosition(140);
+            robot.rightArm.setTargetPosition(318);
+            robot.leftArm.setTargetPosition(318);
         }
 
         robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -274,15 +273,18 @@ public class RedDucksParkAuto extends LinearOpMode {
         sleep(2000);
         robot.intake.setPower(0);
 
-        moveIN(-2, 0.5);
+        moveIN(-4, 0.5);
 
-        robot.rightArm.setPower(0);
-        robot.leftArm.setPower(0);
+        robot.rightArm.setTargetPosition(0);
+        robot.leftArm.setTargetPosition(0);
 
-        robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        moveIN(-7, 0.25);
+        robot.rightArm.setPower(0.25);
+        robot.leftArm.setPower(0.25);
+
+        moveIN(-5, 0.25);
         gyroTurn(50, 0.5);
         robot.backSpinner.setPower(-0.4);
         moveIN(-27.5, 0.25, 6000);
@@ -290,9 +292,9 @@ public class RedDucksParkAuto extends LinearOpMode {
         telemetry.update();
         sleep(3000);
         robot.backSpinner.setPower(0);
-        gyroTurn(-40, 0.5);
+        gyroTurn(-50, 0.5);
 
-        moveIN(20, 1);
+        moveIN(14, 1);
     }
 
     /***

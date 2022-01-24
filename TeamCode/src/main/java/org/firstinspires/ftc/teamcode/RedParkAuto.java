@@ -38,6 +38,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
+import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -83,13 +84,13 @@ public class RedParkAuto extends LinearOpMode {
     private final float posY = 0;
     private final float posAngle = 0;
 
-    private VuforiaLocalizer vuforia = null;
+    private VuforiaLocalizer vuforia    = null;
     private VuforiaLocalizer.Parameters parameters = null;
-    private VuforiaTrackables targets = null;
-    private WebcamName webcamName = null;
+    private VuforiaTrackables targets   = null;
+    private WebcamName webcamName       = null;
     private List<VuforiaTrackable> allTrackables = null;
-    private static String TFOD_MODEL_ASSET = "Bee 2.0.tflite";
-    private static String[] LABELS = {"Bee 2.0"};
+    private static String TFOD_MODEL_ASSET = "CcbBee.tflite";
+    private static final String[] LABELS = {"Bee"};
     private TFObjectDetector tfod;
 
 
@@ -227,7 +228,7 @@ public class RedParkAuto extends LinearOpMode {
                     }
 
                 }
-                if (!actualBee) {
+                if(!actualBee) {
                     telemetry.addData("Target Guess:", "Left");
                     telemetry.addData("Target Level:", "Bottom");
                     targetLevel = 1;
@@ -528,7 +529,7 @@ public class RedParkAuto extends LinearOpMode {
      * @param dx, dy, dz  Target offsets in x,y,z axes
      * @param rx, ry, rz  Target rotations in x,y,z axes
      */
-    void identifyTarget(int targetIndex, String targetName, float dx, float dy, float dz, float rx, float ry, float rz) {
+    void    identifyTarget(int targetIndex, String targetName, float dx, float dy, float dz, float rx, float ry, float rz) {
         VuforiaTrackable aTarget = targets.get(targetIndex);
         aTarget.setName(targetName);
         aTarget.setLocation(OpenGLMatrix.translation(dx, dy, dz)
@@ -605,7 +606,7 @@ public class RedParkAuto extends LinearOpMode {
      * @param speed
      */
     public void moveIN(double inches, double speed) {
-        if (!opModeIsActive()) {
+        if(!opModeIsActive()) {
             return;
         }
 

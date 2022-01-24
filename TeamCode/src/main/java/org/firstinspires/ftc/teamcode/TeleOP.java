@@ -56,6 +56,7 @@ public class TeleOP extends LinearOpMode {
         boolean outputOn = false;
 
         boolean manualControl = false;
+        boolean armDown = true;
 
         waitForStart();
 
@@ -101,47 +102,62 @@ public class TeleOP extends LinearOpMode {
              */
             if (gamepad2.a) {
                 // Bottom Level
-                robot.rightArm.setTargetPosition(51);
-                robot.leftArm.setTargetPosition(51);
+                robot.rightArm.setTargetPosition(97);
+                robot.leftArm.setTargetPosition(97);
 
                 robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
                 robot.rightArm.setPower(1);
                 robot.leftArm.setPower(1);
+                armDown = false;
             }
 
             if (gamepad2.b) {
                 // Middle Level
-                robot.rightArm.setTargetPosition(90);
-                robot.leftArm.setTargetPosition(90);
+                robot.rightArm.setTargetPosition(206);
+                robot.leftArm.setTargetPosition(206);
 
                 robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
                 robot.rightArm.setPower(1);
                 robot.leftArm.setPower(1);
+                armDown = false;
             }
 
             if (gamepad2.y) {
                 // Top Level
-                robot.rightArm.setTargetPosition(140);
-                robot.leftArm.setTargetPosition(140);
+                robot.rightArm.setTargetPosition(318);
+                robot.leftArm.setTargetPosition(318);
 
                 robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
                 robot.rightArm.setPower(1);
                 robot.leftArm.setPower(1);
+                armDown = false;
             }
 
             if (gamepad2.x) {
-                // Coast all the way down to prepare to collect another ball/block
-                robot.rightArm.setPower(0);
-                robot.leftArm.setPower(0);
+                // Bring to rest
+                robot.rightArm.setTargetPosition(0);
+                robot.leftArm.setTargetPosition(0);
 
-                robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                robot.rightArm.setPower(0.25);
+                robot.leftArm.setPower(0.25);
+                armDown = true;
+            }
+
+            if(armDown && robot.leftArm.getCurrentPosition() < 6) {
+                robot.leftArm.setPower(0);
+                robot.rightArm.setPower(0);
+
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER );
             }
 
             /*

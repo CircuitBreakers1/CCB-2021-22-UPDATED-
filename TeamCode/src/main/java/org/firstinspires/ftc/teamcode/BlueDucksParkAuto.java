@@ -89,8 +89,8 @@ public class BlueDucksParkAuto extends LinearOpMode {
     private VuforiaTrackables targets   = null;
     private WebcamName webcamName       = null;
     private List<VuforiaTrackable> allTrackables = null;
-    private static final String TFOD_MODEL_ASSET = "Bee 2.0.tflite";
-    private static final String[] LABELS = {"Bee 2.0"};
+    private static final String TFOD_MODEL_ASSET = "CcbBee.tflite";
+    private static final String[] LABELS = {"Bee"};
     private TFObjectDetector tfod;
 
 
@@ -282,7 +282,7 @@ public class BlueDucksParkAuto extends LinearOpMode {
 
         moveIN(-10, 0.25);
         gyroTurn(-50, 0.5);
-        robot.backSpinner.setPower(-0.4);
+        robot.backSpinner.setPower( -0.4);
         moveIN(-27.5, 0.25, 6000);
         telemetry.addData("Status", "duck");
         telemetry.update();

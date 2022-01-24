@@ -89,8 +89,8 @@ public class BlueParkAuto extends LinearOpMode {
     private VuforiaTrackables targets   = null;
     private WebcamName webcamName       = null;
     private List<VuforiaTrackable> allTrackables = null;
-    private static final String TFOD_MODEL_ASSET = "Bee 2.0.tflite";
-    private static final String[] LABELS = {"Bee 2.0"};
+    private static final String TFOD_MODEL_ASSET = "CcbBee.tflite";
+    private static final String[] LABELS = {"Bee"};
     private TFObjectDetector tfod;
 
 
