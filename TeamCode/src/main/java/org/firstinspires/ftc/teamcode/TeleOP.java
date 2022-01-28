@@ -102,8 +102,8 @@ public class TeleOP extends LinearOpMode {
              */
             if (gamepad2.a) {
                 // Bottom Level
-                robot.rightArm.setTargetPosition(97);
-                robot.leftArm.setTargetPosition(97);
+                robot.rightArm.setTargetPosition(110);
+                robot.leftArm.setTargetPosition(110);
 
                 robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -115,8 +115,8 @@ public class TeleOP extends LinearOpMode {
 
             if (gamepad2.b) {
                 // Middle Level
-                robot.rightArm.setTargetPosition(206);
-                robot.leftArm.setTargetPosition(206);
+                robot.rightArm.setTargetPosition(215);
+                robot.leftArm.setTargetPosition(215);
 
                 robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
