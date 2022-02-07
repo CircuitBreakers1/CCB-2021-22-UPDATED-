@@ -249,14 +249,14 @@ public class RedDucksParkAuto extends LinearOpMode {
         gyroTurn(20,0.5);
 
         if(targetLevel == 1) {
-            robot.rightArm.setTargetPosition(97);
-            robot.leftArm.setTargetPosition(97);
+            robot.rightArm.setTargetPosition(117);
+            robot.leftArm.setTargetPosition(117);
         } else if(targetLevel == 2) {
-            robot.rightArm.setTargetPosition(206);
-            robot.leftArm.setTargetPosition(206);
+            robot.rightArm.setTargetPosition(226);
+            robot.leftArm.setTargetPosition(226);
         } else {
-            robot.rightArm.setTargetPosition(318);
-            robot.leftArm.setTargetPosition(318);
+            robot.rightArm.setTargetPosition(338);
+            robot.leftArm.setTargetPosition(338);
         }
 
         robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
