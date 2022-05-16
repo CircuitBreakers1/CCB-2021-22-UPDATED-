@@ -27,18 +27,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.archive.FreightFrenzy;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -60,8 +60,10 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
-@Autonomous(name="BlueParkAuto", group ="Blue")
-public class BlueParkAuto extends LinearOpMode {
+@Autonomous(name="BlueDucksAuto", group ="Blue")
+@Disabled
+
+public class BlueDucksAuto extends LinearOpMode {
 
     BNO055IMU imu;
     Orientation angles;
@@ -245,7 +247,9 @@ public class BlueParkAuto extends LinearOpMode {
         telemetry.addData("Status", "Moving off wall...");
         telemetry.update();
         moveIN(6,0.5);
-        gyroTurn(20,0.5);
+        telemetry.addData("Status:", "Turning");
+        telemetry.update();
+        gyroTurn(-20,0.5);
 
         if(targetLevel == 1) {
             robot.rightArm.setTargetPosition(51);
@@ -272,7 +276,7 @@ public class BlueParkAuto extends LinearOpMode {
         sleep(2000);
         robot.intake.setPower(0);
 
-        moveIN(-3, 0.25);
+        moveIN(-2, 0.25);
 
         robot.rightArm.setPower(0);
         robot.leftArm.setPower(0);
@@ -280,8 +284,16 @@ public class BlueParkAuto extends LinearOpMode {
         robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        gyroTurn(70, 0.5);
-        moveIN(-56, 1);
+        moveIN(-7, 0.25);
+        gyroTurn(-50, 0.5);
+        robot.backSpinner.setPower(0.4);
+        moveIN(-27.5, 0.25, 6000);
+        telemetry.addData("Status", "duck");
+        telemetry.update();
+        sleep(4000);
+        robot.backSpinner.setPower(0);
+
+        moveIN(105, 1);
     }
 
     /***

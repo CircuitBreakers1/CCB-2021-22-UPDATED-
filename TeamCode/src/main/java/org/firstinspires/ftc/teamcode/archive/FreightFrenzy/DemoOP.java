@@ -27,19 +27,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.archive.FreightFrenzy;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 
 /**
- * This file is the main code for our TeleOP
+ * OpMode for demo purposes, specifically built for CodeNinjas so kids can sa use the robot
+ * with little experience. Speed is reduced and manual control of arm is disabled.
  */
 
-@TeleOp(name = "TeleOP", group = "Linear Opmode")
-public class TeleOP extends LinearOpMode {
+
+/*
+ * Important Values:
+ * Grabbing Servos:
+ * Closed: Left 1.0, Right 0.0
+ * Open: Left 0.7, Right 0.3
+ * Encoder Arm Height:
+ * Bottom Level: 51
+ * Middle Level: 90
+ * Top Level: 140
+ *
+ * Notes:
+ * Grabbing Servos:
+ * Open: LEDs Green
+ * Closed: LEDs Red
+ */
+
+@TeleOp(name = "DemoOP", group = "Linear Opmode")
+@Disabled
+
+public class DemoOP extends LinearOpMode {
 
     HardwareInit robot = new HardwareInit();
 
@@ -49,147 +70,133 @@ public class TeleOP extends LinearOpMode {
 
         //Various booleans used for toggle buttons
         boolean spinOn = false;
-        boolean rightBumperDown = false;
-        boolean leftBumperDown = false;
-
-        boolean intakeOn = false;
-        boolean outputOn = false;
-
+        boolean aDown = false;
+        boolean grabOpen = true;
+        boolean triggerDown = false;
         boolean manualControl = false;
-        boolean armDown = true;
+
+        double demoSpeed = 0.5; //Max movement speed in demo
+
+
+        // Set the LEDs green to show the grabbing servos are open
+        setLEDs(false, true);
+
 
         waitForStart();
 
         while (opModeIsActive()) {
             // Simple tank drive
-            robot.leftFront.setPower(-gamepad1.left_stick_y);
-            robot.leftBack.setPower(-gamepad1.left_stick_y);
-            robot.rightBack.setPower(-gamepad1.right_stick_y);
-            robot.rightFront.setPower(-gamepad1.right_stick_y);
+            robot.leftFront.setPower(-gamepad1.left_stick_y * demoSpeed);
+            robot.leftBack.setPower(-gamepad1.left_stick_y * demoSpeed);
+            robot.rightBack.setPower(-gamepad1.right_stick_y * demoSpeed);
+            robot.rightFront.setPower(-gamepad1.right_stick_y * demoSpeed);
 
-            if (gamepad2.right_bumper) {
-                if (!rightBumperDown) {
-                    rightBumperDown = true;
+            /*
+            leftArm.setPower(-gamepad2.left_stick_y * .5);
+            rightArm.setPower(-gamepad2.left_stick_y * .5);
+            */
+            /*
+             * This block of code allows the A button on the driver controller to toggle the
+             * carousel spinner on and off.
+             */
+            if (gamepad1.a) {
+                if (!aDown) {
+                    aDown = true;
                     if (spinOn) {
                         robot.backSpinner.setPower(0);
                         spinOn = false;
                     } else {
-                        robot.backSpinner.setPower(-0.7);
+                        robot.backSpinner.setPower(-0.65);
                         spinOn = true;
                     }
                 }
             } else {
-                rightBumperDown = false;
-            }
-
-            if (gamepad2.left_bumper) {
-                if (!leftBumperDown) {
-                    leftBumperDown = true;
-                    if (spinOn) {
-                        robot.backSpinner.setPower(0);
-                        spinOn = false;
-                    } else {
-                        robot.backSpinner.setPower(0.7);
-                        spinOn = true;
-                    }
-                }
-            } else {
-                leftBumperDown = false;
+                aDown = false;
             }
 
             /*
-             * The next couple if blocks allow the arm to be easily set to each level
+             * The next couple if blocks allow the arm to be easily set to various positions
              */
             if (gamepad2.a) {
                 // Bottom Level
-                robot.rightArm.setTargetPosition(110);
-                robot.leftArm.setTargetPosition(110);
+                robot.rightArm.setTargetPosition(51);
+                robot.leftArm.setTargetPosition(51);
 
                 robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
                 robot.rightArm.setPower(1);
                 robot.leftArm.setPower(1);
-                armDown = false;
             }
 
             if (gamepad2.b) {
                 // Middle Level
-                robot.rightArm.setTargetPosition(215);
-                robot.leftArm.setTargetPosition(215);
+                robot.rightArm.setTargetPosition(90);
+                robot.leftArm.setTargetPosition(90);
 
                 robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
                 robot.rightArm.setPower(1);
                 robot.leftArm.setPower(1);
-                armDown = false;
             }
 
             if (gamepad2.y) {
                 // Top Level
-                robot.rightArm.setTargetPosition(318);
-                robot.leftArm.setTargetPosition(318);
+                robot.rightArm.setTargetPosition(140);
+                robot.leftArm.setTargetPosition(140);
 
                 robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
                 robot.rightArm.setPower(1);
                 robot.leftArm.setPower(1);
-                armDown = false;
             }
 
             if (gamepad2.x) {
-                // Bring to rest
-                robot.rightArm.setTargetPosition(0);
-                robot.leftArm.setTargetPosition(0);
-
-                robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                robot.rightArm.setPower(0.25);
-                robot.leftArm.setPower(0.25);
-                armDown = true;
-            }
-
-            if(armDown && robot.leftArm.getCurrentPosition() < 6) {
-                robot.leftArm.setPower(0);
+                // Coast all the way down to prepare to collect another ball/block
                 robot.rightArm.setPower(0);
+                robot.leftArm.setPower(0);
 
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER );
             }
+
+
 
             /*
              * This block of code allows the stick to be used to adjust the position of the arm
              * even while it is running to a position. Once the desired position is reached, releasing
              * the stick will have it running to the position you left it to try and stay there.
-             */
+             *
+             * DISABLED IN DEMO MODE
+             *
             if (gamepad2.left_stick_y != 0) {
                 if (!manualControl) {
                     manualControl = true;
-                    robot.rightArm.setPower(0);
-                    robot.leftArm.setPower(0);
-                    robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                    robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    rightArm.setPower(0);
+                    leftArm.setPower(0);
+                    rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                    leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 }
-                robot.leftArm.setPower(-gamepad2.left_stick_y * .5);
-                robot.rightArm.setPower(-gamepad2.left_stick_y * .5);
+                leftArm.setPower(-gamepad2.left_stick_y * .5);
+                rightArm.setPower(-gamepad2.left_stick_y * .5);
             } else if (manualControl) {
                 manualControl = false;
-                robot.rightArm.setTargetPosition(robot.rightArm.getCurrentPosition());
-                robot.leftArm.setTargetPosition(robot.leftArm.getCurrentPosition());
+                rightArm.setTargetPosition(rightArm.getCurrentPosition());
+                leftArm.setTargetPosition(leftArm.getCurrentPosition());
 
-                robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-                robot.rightArm.setPower(1);
-                robot.leftArm.setPower(1);
+                rightArm.setPower(1);
+                leftArm.setPower(1);
             }
+             */
 
 
             // A touch sensor located where the arm bottoms out allows the encoders to zero out and
-            // ensure no encoder errors build up over time
+            // ensure no encoder errors build up over time.
             if (!robot.touchSensor.getState()) {
                 robot.rightArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 robot.leftArm.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -197,52 +204,20 @@ public class TeleOP extends LinearOpMode {
                 robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
-            if(gamepad2.dpad_up) {
-                robot.intake.setPower(-1);
-                robot.rightArm.setTargetPosition(0);
-                robot.leftArm.setTargetPosition(0);
 
-                robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            // Toggle code for grabbing blocks/balls
+            if (gamepad2.left_bumper) {
+                if (!triggerDown) {
+                    triggerDown = true;
+                    if (grabOpen) {
+                        // Close the grabbers and turn the LEDs red
 
-                robot.rightArm.setPower(1);
-                robot.leftArm.setPower(1);
-                intakeOn = true;
-                outputOn = false;
+                        setLEDs(true, true);
+                    }
+                }
+            } else {
+                triggerDown = false;
             }
-            if(intakeOn && !robot.cargoTouch.getState()) {
-                robot.intake.setPower(0);
-
-                robot.rightArm.setPower(0);
-                robot.leftArm.setPower(0);
-
-                robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-                intakeOn = false;
-                outputOn = false;
-            }
-            if(gamepad2.dpad_down) {
-                robot.intake.setPower(1);
-                intakeOn = false;
-                outputOn = true;
-            }
-            if(gamepad2.dpad_left) {
-                robot.intake.setPower(0);
-
-                robot.rightArm.setPower(0);
-                robot.leftArm.setPower(0);
-
-                robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
-                intakeOn = false;
-                outputOn = false;
-            }
-
-            if(intakeOn) {
-                setLEDs(!robot.cargoTouch.getState(), true);
-            } else setLEDs(outputOn, false);
 
             // Telemetry code for showing encoder values. Helpful during debugging.
             telemetry.addData("Left Arm Position", robot.leftArm.getCurrentPosition());
@@ -252,10 +227,8 @@ public class TeleOP extends LinearOpMode {
         }
     }
 
-    /**
-     * This function serves as an easy way to set all the LED indicators.
-     */
     public void setLEDs(boolean red, boolean green) {
+        // This function serves as an easy way to set all the LED indicators
         robot.leftLEDGreen.setState(green);
         robot.leftLEDRed.setState(red);
         robot.rightLEDGreen.setState(green);

@@ -27,18 +27,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.archive.FreightFrenzy;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -60,8 +60,10 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
-@Autonomous(name="BlueDucksAuto", group ="Blue")
-public class BlueDucksAuto extends LinearOpMode {
+@Autonomous(name="RedDucksAuto", group ="Red")
+@Disabled
+
+public class RedDucksAuto extends LinearOpMode {
 
     BNO055IMU imu;
     Orientation angles;
@@ -135,11 +137,11 @@ public class BlueDucksAuto extends LinearOpMode {
                             recognition.getRight(), recognition.getBottom());
 
                     //if(recognition.getBottom() < 480) {
-                    screenHeight = recognition.getImageHeight();
-                    beeLeft[recCount] = recognition.getLeft();
-                    beeTop[recCount] = recognition.getTop();
-                    recCount++;
-                    //isBee = true;
+                        screenHeight = recognition.getImageHeight();
+                        beeLeft[recCount] = recognition.getLeft();
+                        beeTop[recCount] = recognition.getTop();
+                        recCount++;
+                        //isBee = true;
 
                     //}
 
@@ -247,7 +249,7 @@ public class BlueDucksAuto extends LinearOpMode {
         moveIN(6,0.5);
         telemetry.addData("Status:", "Turning");
         telemetry.update();
-        gyroTurn(-20,0.5);
+        gyroTurn(20,0.5);
 
         if(targetLevel == 1) {
             robot.rightArm.setTargetPosition(51);
@@ -283,8 +285,8 @@ public class BlueDucksAuto extends LinearOpMode {
         robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         moveIN(-7, 0.25);
-        gyroTurn(-50, 0.5);
-        robot.backSpinner.setPower(0.4);
+        gyroTurn(50, 0.5);
+        robot.backSpinner.setPower(-0.4);
         moveIN(-27.5, 0.25, 6000);
         telemetry.addData("Status", "duck");
         telemetry.update();

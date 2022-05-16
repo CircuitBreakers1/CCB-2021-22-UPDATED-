@@ -27,18 +27,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.archive.FreightFrenzy;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -60,8 +60,10 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
-@Autonomous(name="RedDucksAuto", group ="Red")
-public class RedDucksAuto extends LinearOpMode {
+@Autonomous(name="RedDucksParkAuto", group ="Red")
+@Disabled
+
+public class RedDucksParkAuto extends LinearOpMode {
 
     BNO055IMU imu;
     Orientation angles;
@@ -135,11 +137,11 @@ public class RedDucksAuto extends LinearOpMode {
                             recognition.getRight(), recognition.getBottom());
 
                     //if(recognition.getBottom() < 480) {
-                        screenHeight = recognition.getImageHeight();
-                        beeLeft[recCount] = recognition.getLeft();
-                        beeTop[recCount] = recognition.getTop();
-                        recCount++;
-                        //isBee = true;
+                    screenHeight = recognition.getImageHeight();
+                    beeLeft[recCount] = recognition.getLeft();
+                    beeTop[recCount] = recognition.getTop();
+                    recCount++;
+                    //isBee = true;
 
                     //}
 
@@ -241,7 +243,6 @@ public class RedDucksAuto extends LinearOpMode {
             telemetry.update();
         }
 
-
         telemetry.addData("Status", "Moving off wall...");
         telemetry.update();
         moveIN(6,0.5);
@@ -250,14 +251,14 @@ public class RedDucksAuto extends LinearOpMode {
         gyroTurn(20,0.5);
 
         if(targetLevel == 1) {
-            robot.rightArm.setTargetPosition(51);
-            robot.leftArm.setTargetPosition(51);
+            robot.rightArm.setTargetPosition(117);
+            robot.leftArm.setTargetPosition(117);
         } else if(targetLevel == 2) {
-            robot.rightArm.setTargetPosition(90);
-            robot.leftArm.setTargetPosition(90);
+            robot.rightArm.setTargetPosition(226);
+            robot.leftArm.setTargetPosition(226);
         } else {
-            robot.rightArm.setTargetPosition(140);
-            robot.leftArm.setTargetPosition(140);
+            robot.rightArm.setTargetPosition(338);
+            robot.leftArm.setTargetPosition(338);
         }
 
         robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -274,24 +275,28 @@ public class RedDucksAuto extends LinearOpMode {
         sleep(2000);
         robot.intake.setPower(0);
 
-        moveIN(-2, 0.25);
+        moveIN(-4, 0.5);
 
-        robot.rightArm.setPower(0);
-        robot.leftArm.setPower(0);
+        robot.rightArm.setTargetPosition(0);
+        robot.leftArm.setTargetPosition(0);
 
-        robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-        robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        robot.rightArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        robot.leftArm.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        moveIN(-7, 0.25);
+        robot.rightArm.setPower(0.25);
+        robot.leftArm.setPower(0.25);
+
+        moveIN(-5, 0.25);
         gyroTurn(50, 0.5);
         robot.backSpinner.setPower(-0.4);
         moveIN(-27.5, 0.25, 6000);
         telemetry.addData("Status", "duck");
         telemetry.update();
-        sleep(4000);
+        sleep(3000);
         robot.backSpinner.setPower(0);
+        gyroTurn(-50, 0.5);
 
-        moveIN(105, 1);
+        moveIN(14, 1);
     }
 
     /***

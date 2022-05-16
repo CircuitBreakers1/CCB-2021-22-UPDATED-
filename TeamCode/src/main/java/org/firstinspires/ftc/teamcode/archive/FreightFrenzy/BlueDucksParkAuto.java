@@ -27,18 +27,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.archive.FreightFrenzy;
 
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.ClassFactory;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.matrices.OpenGLMatrix;
-import org.firstinspires.ftc.robotcore.external.matrices.VectorF;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
@@ -60,8 +60,10 @@ import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XYZ;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesOrder.XZY;
 import static org.firstinspires.ftc.robotcore.external.navigation.AxesReference.EXTRINSIC;
 
-@Autonomous(name = "RedParkAuto", group = "Red")
-public class RedParkAuto extends LinearOpMode {
+@Autonomous(name="BlueDucksParkAuto", group ="Blue")
+@Disabled
+
+public class BlueDucksParkAuto extends LinearOpMode {
 
     BNO055IMU imu;
     Orientation angles;
@@ -71,11 +73,11 @@ public class RedParkAuto extends LinearOpMode {
     private static final String VUFORIA_KEY =
             "AWC3x6z/////AAABmVlXzJgJHEkClTfzpPhSQSAOSo2ALGWXmreVgLVShBXUJg8BGyNP06zZuMyV0UZUcxC2xqq5jFsSEg1V0yYBBfvKinPneqTDkbkGA1vDE18L884DGyo3awssbrJEnYxMlTYnqT6HAsQO1SQ+DiTDRJOkI2Bo8rmK2mXLXaZPApKXptVgvEFUds0cNi1DZX3d8BzNxmQuIgT9jY+4L5B0sUnEJyZEyiwKqUhpGDmWNQd3yzQcdI9vFyyX6/4FrK6GaT65uV5xW1v4dwvyZite2Fkd0/6J403Wyy3hXBBvsvUZLJvEMWa42Q31/RUDXbaJyric+SOOU1QGFOTEmN4yt7o3hgO4R/SoyWtadjNI0qx6";
 
-    private static final float mmPerInch = 25.4f;
-    private static final float mmTargetHeight = 6 * mmPerInch;
-    private static final float halfField = 72 * mmPerInch;
-    private static final float halfTile = 12 * mmPerInch;
-    private static final float oneAndHalfTile = 36 * mmPerInch;
+    private static final float mmPerInch        = 25.4f;
+    private static final float mmTargetHeight   = 6 * mmPerInch;
+    private static final float halfField        = 72 * mmPerInch;
+    private static final float halfTile         = 12 * mmPerInch;
+    private static final float oneAndHalfTile   = 36 * mmPerInch;
 
     private final float Xline = 165;
     private int labelCount;
@@ -89,7 +91,7 @@ public class RedParkAuto extends LinearOpMode {
     private VuforiaTrackables targets   = null;
     private WebcamName webcamName       = null;
     private List<VuforiaTrackable> allTrackables = null;
-    private static String TFOD_MODEL_ASSET = "CcbBee.tflite";
+    private static final String TFOD_MODEL_ASSET = "CcbBee.tflite";
     private static final String[] LABELS = {"Bee"};
     private TFObjectDetector tfod;
 
@@ -102,10 +104,8 @@ public class RedParkAuto extends LinearOpMode {
     private int screenHeight;
     private final boolean isBee = false;
     private boolean actualBee = false;
-    private float timeSinceStart;
 
-    @Override
-    public void runOpMode() {
+    @Override public void runOpMode() {
         robot.init(hardwareMap);
         initImu();
         initVuforia();
@@ -118,7 +118,7 @@ public class RedParkAuto extends LinearOpMode {
 
         if (tfod != null) {
             tfod.activate();
-            tfod.setZoom(1, 16.0 / 9.0);
+            tfod.setZoom(1, 16.0/9.0);
         }
 
         while (!isStarted()) {
@@ -151,71 +151,12 @@ public class RedParkAuto extends LinearOpMode {
             }
             scanCount++;
 
-            if (!(labelCount == 0)) {
+            if(!(labelCount == 0)) {
                 int j;
-                for (j = 0; j < recCount; j++) {
-                    if (!(beeTop[j] < (0.25 * screenHeight))) {
+                for(j = 0; j<recCount; j++) {
+                    if(!(beeTop[j] < (0.25 * screenHeight))) {
                         actualBee = true;
-                        if (beeLeft[j] > Xline) {
-                            telemetry.addData("Target Guess:", "Right");
-                            telemetry.addData("Target Level:", "Top");
-                            targetLevel = 3;
-                        } else {
-                            telemetry.addData("Target Guess:", "Middle");
-                            telemetry.addData("Target Level:", "Middle");
-                            targetLevel = 2;
-                        }
-                    }
-
-                }
-                if (!actualBee) {
-                    telemetry.addData("Target Guess:", "Left");
-                    telemetry.addData("Target Level:", "Bottom");
-                    targetLevel = 1;
-
-                }
-            } else {
-                telemetry.addData("Target Guess:", "Left");
-                telemetry.addData("Target Level:", "Bottom");
-                targetLevel = 1;
-            }
-
-
-            telemetry.update();
-        }
-
-        waitForStart();
-
-        if (scanCount < 5) {
-            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
-            if (updatedRecognitions != null) {
-                recCount = 0;
-                telemetry.addData("# Object Detected", updatedRecognitions.size());
-                labelCount = updatedRecognitions.size();
-                // step through the list of recognitions and display boundary info.
-                int i = 0;
-                for (Recognition recognition : updatedRecognitions) {
-                    telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
-                    telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
-                            recognition.getLeft(), recognition.getTop());
-                    telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
-                            recognition.getRight(), recognition.getBottom());
-
-                    screenHeight = recognition.getImageHeight();
-                    beeLeft[recCount] = recognition.getLeft();
-                    beeTop[recCount] = recognition.getTop();
-                    recCount++;
-
-                    i++;
-                }
-            }
-
-            if (!(labelCount == 0)) {
-                int j;
-                for (j = 0; j < recCount; j++) {
-                    if (!(beeTop[j] < (0.25 * screenHeight))) {
-                        actualBee = true;
-                        if (beeLeft[j] > Xline) {
+                        if(beeLeft[j] > Xline) {
                             telemetry.addData("Target Guess:", "Right");
                             telemetry.addData("Target Level:", "Top");
                             targetLevel = 3;
@@ -243,15 +184,77 @@ public class RedParkAuto extends LinearOpMode {
             telemetry.update();
         }
 
+        waitForStart();
+
+        if(scanCount < 5) {
+            List<Recognition> updatedRecognitions = tfod.getUpdatedRecognitions();
+            if (updatedRecognitions != null) {
+                recCount = 0;
+                telemetry.addData("# Object Detected", updatedRecognitions.size());
+                labelCount = updatedRecognitions.size();
+                // step through the list of recognitions and display boundary info.
+                int i = 0;
+                for (Recognition recognition : updatedRecognitions) {
+                    telemetry.addData(String.format("label (%d)", i), recognition.getLabel());
+                    telemetry.addData(String.format("  left,top (%d)", i), "%.03f , %.03f",
+                            recognition.getLeft(), recognition.getTop());
+                    telemetry.addData(String.format("  right,bottom (%d)", i), "%.03f , %.03f",
+                            recognition.getRight(), recognition.getBottom());
+
+                    screenHeight = recognition.getImageHeight();
+                    beeLeft[recCount] = recognition.getLeft();
+                    beeTop[recCount] = recognition.getTop();
+                    recCount++;
+
+                    i++;
+                }
+            }
+
+            if(!(labelCount == 0)) {
+                int j;
+                for(j = 0; j<recCount; j++) {
+                    if(!(beeTop[j] < (0.25 * screenHeight))) {
+                        actualBee = true;
+                        if(beeLeft[j] > Xline) {
+                            telemetry.addData("Target Guess:", "Right");
+                            telemetry.addData("Target Level:", "Top");
+                            targetLevel = 3;
+                        } else {
+                            telemetry.addData("Target Guess:", "Middle");
+                            telemetry.addData("Target Level:", "Middle");
+                            targetLevel = 2;
+                        }
+                    }
+
+                }
+                if(!actualBee) {
+                    telemetry.addData("Target Guess:", "Left");
+                    telemetry.addData("Target Level:", "Bottom");
+                    targetLevel = 1;
+
+                }
+            } else {
+                telemetry.addData("Target Guess:", "Left");
+                telemetry.addData("Target Level:", "Bottom");
+                targetLevel = 1;
+            }
+
+
+            telemetry.update();
+        }
+
+
         telemetry.addData("Status", "Moving off wall...");
         telemetry.update();
-        moveIN(6, 0.5);
-        gyroTurn(-20, 0.5);
+        moveIN(6,0.5);
+        telemetry.addData("Status:", "Turning");
+        telemetry.update();
+        gyroTurn(-20,0.5);
 
-        if (targetLevel == 1) {
+        if(targetLevel == 1) {
             robot.rightArm.setTargetPosition(51);
             robot.leftArm.setTargetPosition(51);
-        } else if (targetLevel == 2) {
+        } else if(targetLevel == 2) {
             robot.rightArm.setTargetPosition(90);
             robot.leftArm.setTargetPosition(90);
         } else {
@@ -265,7 +268,7 @@ public class RedParkAuto extends LinearOpMode {
         robot.rightArm.setPower(1);
         robot.leftArm.setPower(1);
 
-        moveIN(15, 0.5);
+        moveIN(17, 0.5);
 
         sleep(1000);
 
@@ -273,16 +276,23 @@ public class RedParkAuto extends LinearOpMode {
         sleep(2000);
         robot.intake.setPower(0);
 
-        moveIN(-3, 0.25);
-
         robot.rightArm.setPower(0);
         robot.leftArm.setPower(0);
 
         robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        gyroTurn(-70, 0.5);
-        moveIN(-56, 1);
+        moveIN(-10, 0.25);
+        gyroTurn(-50, 0.5);
+        robot.backSpinner.setPower( -0.4);
+        moveIN(-27.5, 0.25, 6000);
+        telemetry.addData("Status", "duck");
+        telemetry.update();
+        sleep(3000);
+        robot.backSpinner.setPower(0);
+        gyroTurn(40, 0.5);
+
+        moveIN(20, 1);
     }
 
     /***
@@ -301,11 +311,11 @@ public class RedParkAuto extends LinearOpMode {
 
     public void initImu() {
         BNO055IMU.Parameters Parameters = new BNO055IMU.Parameters();
-        Parameters.angleUnit = BNO055IMU.AngleUnit.DEGREES;
-        Parameters.accelUnit = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
+        Parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
+        Parameters.accelUnit           = BNO055IMU.AccelUnit.METERS_PERSEC_PERSEC;
         Parameters.calibrationDataFile = "BNO055IMUCalibration.json"; // see the calibration sample opmode
-        Parameters.loggingEnabled = true;
-        Parameters.loggingTag = "IMU";
+        Parameters.loggingEnabled      = true;
+        Parameters.loggingTag          = "IMU";
         Parameters.accelerationIntegrationAlgorithm = new JustLoggingAccelerationIntegrator();
 
         imu = hardwareMap.get(BNO055IMU.class, "imu");
@@ -329,18 +339,17 @@ public class RedParkAuto extends LinearOpMode {
 
     /**
      * Turn a specified number of degrees using the IMU
-     *
      * @param degrees Positive degrees moves in a clockwise direction
-     * @param speed   Speed to run the motors at
+     * @param speed Speed to run the motors at
      */
     public void gyroTurn(double degrees, double speed) {
-        if (!opModeIsActive()) {
+        if(!opModeIsActive()) {
             return;
         }
 
         double startDegrees = angles.firstAngle;
         double targetDegrees = startDegrees - degrees;
-        if (degrees < 0) {
+        if(degrees < 0) {
             robot.rightBack.setPower(speed);
             robot.rightFront.setPower(speed);
             robot.leftBack.setPower(-speed);
@@ -351,7 +360,7 @@ public class RedParkAuto extends LinearOpMode {
             robot.leftBack.setPower(speed);
             robot.leftFront.setPower(speed);
         }
-        while (!(angles.firstAngle + 3 > targetDegrees && angles.firstAngle - 3 < targetDegrees)) {
+        while(!(angles.firstAngle + 3 > targetDegrees && angles.firstAngle - 3 < targetDegrees)) {
             angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
             sleep(10);
         }
@@ -364,7 +373,6 @@ public class RedParkAuto extends LinearOpMode {
 
     /**
      * Moves a distance using encoders
-     *
      * @param inches
      * @param speed
      */
@@ -399,7 +407,7 @@ public class RedParkAuto extends LinearOpMode {
         robot.leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         robot.rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        while (((robot.leftBack.isBusy() && robot.leftFront.isBusy()) || (robot.rightBack.isBusy() && robot.rightFront.isBusy())) && opModeIsActive()) {
+        while(((robot.leftBack.isBusy() && robot.leftFront.isBusy()) || (robot.rightBack.isBusy() && robot.rightFront.isBusy())) && opModeIsActive()) {
             /*
              * Robot gets some free time.
              * What does it do during it's free time?
@@ -425,7 +433,7 @@ public class RedParkAuto extends LinearOpMode {
     }
 
     public void moveIN(double inches, double speed, float timeoutMillis) {
-        if (!opModeIsActive()) {
+        if(!opModeIsActive()) {
             return;
         }
 
@@ -461,7 +469,7 @@ public class RedParkAuto extends LinearOpMode {
         while
         (((robot.leftBack.isBusy() && robot.leftFront.isBusy()) || (robot.rightBack.isBusy() && robot.rightFront.isBusy())) && opModeIsActive() && haveTime) {
             sleep(10);
-            if (System.currentTimeMillis() > (startMillis + timeoutMillis)) {
+            if(System.currentTimeMillis() >   (startMillis + timeoutMillis)) {
                 haveTime = false;
             }
         }
@@ -506,14 +514,14 @@ public class RedParkAuto extends LinearOpMode {
 
 
         // Name and locate each trackable object
-        identifyTarget(0, "Blue Storage", -halfField, oneAndHalfTile, mmTargetHeight, 90, 0, 90);
-        identifyTarget(1, "Blue Alliance Wall", halfTile, halfField, mmTargetHeight, 90, 0, 0);
-        identifyTarget(2, "Red Storage", -halfField, -oneAndHalfTile, mmTargetHeight, 90, 0, 90);
-        identifyTarget(3, "Red Alliance Wall", halfTile, -halfField, mmTargetHeight, 90, 0, 180);
+        identifyTarget(0, "Blue Storage",       -halfField,  oneAndHalfTile, mmTargetHeight, 90, 0, 90);
+        identifyTarget(1, "Blue Alliance Wall",  halfTile,   halfField,      mmTargetHeight, 90, 0, 0);
+        identifyTarget(2, "Red Storage",        -halfField, -oneAndHalfTile, mmTargetHeight, 90, 0, 90);
+        identifyTarget(3, "Red Alliance Wall",   halfTile,  -halfField,      mmTargetHeight, 90, 0, 180);
 
-        final float CAMERA_FORWARD_DISPLACEMENT = 4.375f * mmPerInch;   // eg: Enter the forward distance from the center of the robot to the camera lens
+        final float CAMERA_FORWARD_DISPLACEMENT  = 4.375f * mmPerInch;   // eg: Enter the forward distance from the center of the robot to the camera lens
         final float CAMERA_VERTICAL_DISPLACEMENT = 10.0f * mmPerInch;   // eg: Camera is 6 Inches above ground
-        final float CAMERA_LEFT_DISPLACEMENT = -8.0f * mmPerInch;   // eg: Enter the left distance from the center of the robot to the camera lens
+        final float CAMERA_LEFT_DISPLACEMENT     = -8.0f * mmPerInch;   // eg: Enter the left distance from the center of the robot to the camera lens
 
         OpenGLMatrix cameraLocationOnRobot = OpenGLMatrix
                 .translation(CAMERA_FORWARD_DISPLACEMENT, CAMERA_LEFT_DISPLACEMENT, CAMERA_VERTICAL_DISPLACEMENT)
