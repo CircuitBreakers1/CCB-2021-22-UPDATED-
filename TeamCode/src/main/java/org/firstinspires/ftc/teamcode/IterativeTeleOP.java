@@ -31,34 +31,17 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.firstinspires.ftc.teamcode.robot;
-
-
-import org.firstinspires.ftc.teamcode.archive.FreightFrenzy.HardwareInit;
-
-/**
- * This file contains an example of an iterative (Non-Linear) "OpMode".
- * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
- * The names of OpModes appear on the menu of the FTC Driver Station.
- * When an selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- *
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all iterative OpModes contain.
- *
- * Use Android Studios to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this opmode to the Driver Station OpMode list
- */
+import static org.firstinspires.ftc.teamcode.Robot.*;
 
 @TeleOp(name="TeleOP", group="")
 public class IterativeTeleOP extends OpMode
 {
-    robot Robot = new robot();
+    Robot robot = new Robot();
 
 
     @Override
     public void init() {
-        Robot.init(hardwareMap);
+        robot.init(hardwareMap);
     }
 
     @Override
@@ -76,14 +59,16 @@ public class IterativeTeleOP extends OpMode
         double x = gamepad1.left_stick_x;
         double rx = gamepad1.right_stick_x;
 
-        Robot.leftFront.setPower(y + x + rx);
-        Robot.leftBack.setPower(y - x + rx);
-        Robot.rightFront.setPower(y - x - rx);
-        Robot.rightBack.setPower(y + x - rx);
+        leftFront.setPower(y + x + rx);
+        leftBack.setPower(y - x + rx);
+        rightFront.setPower(y - x - rx);
+        rightBack.setPower(y + x - rx);
+
     }
 
     @Override
     public void stop() {
+
     }
 
 }
