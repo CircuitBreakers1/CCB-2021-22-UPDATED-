@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -18,6 +17,7 @@ public class Robot {
     public static float xLoc;
     public static float yLoc;
     public static float rotation;
+    public static float maxYdev = 0;
 
     /* local OpMode members. */
     HardwareMap hwMap =  null;
@@ -66,6 +66,9 @@ public class Robot {
         if(PathType == STRAIGHT_TURN_TO || PathType == ARC_NO_TURN || PathType == ARC_TURN_TO) {
             throw new wrongInformationException();
         }
+
+        pathMan Path = new pathMan(PathType, endX, endY);
+
         float movementAngle; //The angle at which the robot moves relative to the line of movement
         float angleToTarget = (float) toDegrees(tan((endY - yLoc) / (endX - xLoc))); //The angle of the direct line to the endpoint
 
@@ -86,9 +89,18 @@ public class Robot {
         float lowerXTolerance = endX - moveTolerance;
         float upperYTolerance = endY + moveTolerance;
         float lowerYTolerance = endY - moveTolerance;
+        //TODO: Figure out object telemetry
+        float avgYDev;
+        float pathTotalYDev = 0;
+        float pathAvgCount = 0;
 
         while(true) {
             updateLocation();
+            //Update Telemetry
+            if(Path.getYDeviation() > maxYdev) maxYdev = Path.getYDeviation();
+            pathTotalYDev = pathTotalYDev + Path.getYDeviation();
+            pathAvgCount++;
+            avgYDev = pathTotalYDev / pathAvgCount;
             if (xLoc <= upperXTolerance && xLoc >= lowerXTolerance && yLoc <= upperYTolerance && yLoc >= lowerYTolerance) {
                 break;
             }

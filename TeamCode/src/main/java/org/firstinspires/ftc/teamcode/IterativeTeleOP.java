@@ -65,6 +65,8 @@ public class IterativeTeleOP extends OpMode
         rightFront.setPower(y - x - rx);
         rightBack.setPower(y + x - rx);
 
+        telemetry.update();
+
     }
 
     @Override
