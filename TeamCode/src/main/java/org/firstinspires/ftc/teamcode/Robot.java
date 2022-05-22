@@ -1,13 +1,20 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry.Item;
+
 import static org.firstinspires.ftc.teamcode.pathType.*;
 import static java.lang.Math.*;
 
-
+/**
+ * This class contains all hardware maps and functions for use in opModes. An object should be
+ * created, then during init phase {@link #init init} should be called with the opMode hwmap
+ */
 public class Robot {
     public static DcMotor leftFront;
     public static DcMotor rightFront;
@@ -17,18 +24,40 @@ public class Robot {
     public static float xLoc;
     public static float yLoc;
     public static float rotation;
+    public static float pathMaxYdev = 0;
+    public static float pathAvgYDev = 0;
+    public static float pathTotalYDev = 0;
+    public static float pathAvgCount = 0;
     public static float maxYdev = 0;
+    public static float avgYDev = 0;
+    public static float totalYDev = 0;
+    public static float avgCount = 0;
 
     /* local OpMode members. */
     HardwareMap hwMap =  null;
+    private static OpMode opMode;
     private final ElapsedTime period  = new ElapsedTime();
-    private static float moveTolerance = 1.0f; //Tolerance for X and Y values when moving
-    private static float turnTolerance = 1.0f; //Tolerance for degree values when turning
+    private final static float moveTolerance = 1.0f; //Tolerance for X and Y values when moving
+    private final static float turnTolerance = 1.0f; //Tolerance for degree values when turning
 
 
-    /* Constructor */
-    public Robot(){}
-
+    /**
+     * Initalize the robot object.
+     * @param OPMode <b>Always</b> pass <i>this</i> here as it allows the telemetry to initialize.
+     * @param isAuto Tells the robot whether or not to add telemetry for autonomous
+     */
+    public Robot(OpMode OPMode, boolean isAuto){
+        //Grab telemetry object from active opMode
+        opMode = OPMode;
+        opMode.telemetry.setAutoClear(false); //Stuff will need to be manually removed
+        opMode.telemetry.addAction(new Runnable() { @Override public void run() {updateLocation();} });
+        opMode.telemetry.addData("Robot X", ".3f%", xLoc)
+                .addData(" Robot Y", ".3f%", yLoc);
+        if(isAuto) {
+            opMode.telemetry.addData("Overall yDev Average", ".3f%", pathAvgYDev)
+                    .addData("Current yDev Max", ".3f%", pathMaxYdev);
+        }
+    }
 
     public void init(HardwareMap ahwMap) {
         // Save reference to Hardware map
@@ -89,22 +118,40 @@ public class Robot {
         float lowerXTolerance = endX - moveTolerance;
         float upperYTolerance = endY + moveTolerance;
         float lowerYTolerance = endY - moveTolerance;
-        //TODO: Figure out object telemetry
-        float avgYDev;
-        float pathTotalYDev = 0;
-        float pathAvgCount = 0;
+
+        pathAvgYDev = 0;
+        pathTotalYDev = 0;
+        pathAvgCount = 0;
+
+        Object tempUpdateToken = opMode.telemetry.addAction(new Runnable() {
+            @Override
+            public void run() {
+                if(Path.getYDeviation() > pathMaxYdev) pathMaxYdev = Path.getYDeviation();
+                pathTotalYDev += Path.getYDeviation();
+                pathAvgCount++;
+                pathAvgYDev = pathTotalYDev / pathAvgCount;
+
+                if(Path.getYDeviation() > maxYdev) maxYdev = Path.getYDeviation();
+                totalYDev += Path.getYDeviation();
+                avgCount++;
+                avgYDev = totalYDev / avgCount;
+            }
+        });
+
+        Item movement =
+                opMode.telemetry.addData("Current yDev Average", ".3f%", pathAvgYDev)
+                        .addData("Current yDev Max", ".3f%", pathMaxYdev);
 
         while(true) {
             updateLocation();
-            //Update Telemetry
-            if(Path.getYDeviation() > maxYdev) maxYdev = Path.getYDeviation();
-            pathTotalYDev = pathTotalYDev + Path.getYDeviation();
-            pathAvgCount++;
-            avgYDev = pathTotalYDev / pathAvgCount;
+            opMode.telemetry.update();
             if (xLoc <= upperXTolerance && xLoc >= lowerXTolerance && yLoc <= upperYTolerance && yLoc >= lowerYTolerance) {
                 break;
             }
         }
+
+        opMode.telemetry.removeAction(tempUpdateToken);
+        opMode.telemetry.removeItem(movement);
 
         leftFront.setPower(0);
         leftBack.setPower(0);

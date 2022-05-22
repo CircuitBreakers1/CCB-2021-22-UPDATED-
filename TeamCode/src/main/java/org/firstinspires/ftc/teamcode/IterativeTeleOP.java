@@ -32,21 +32,22 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import static org.firstinspires.ftc.teamcode.Robot.*;
+import static org.firstinspires.ftc.teamcode.ButtonToggle.*;
 
 @TeleOp(name="TeleOP", group="")
 public class IterativeTeleOP extends OpMode
 {
-    Robot robot = new Robot();
-
+    Robot robot = new Robot(this, false);
 
     @Override
     public void init() {
         robot.init(hardwareMap);
+        ButtonToggle.opMode = this;
     }
 
     @Override
     public void init_loop() {
-
+        updateButtons();
     }
 
     @Override
@@ -56,17 +57,16 @@ public class IterativeTeleOP extends OpMode
 
     @Override
     public void loop() {
+        updateButtons();
+
         double y = -gamepad1.left_stick_y;
         double x = gamepad1.left_stick_x;
-        double rx = gamepad1.right_stick_x;
+        double rot = gamepad1.right_stick_x;
 
-        leftFront.setPower(y + x + rx);
-        leftBack.setPower(y - x + rx);
-        rightFront.setPower(y - x - rx);
-        rightBack.setPower(y + x - rx);
-
-        telemetry.update();
-
+        leftFront.setPower(y + x + rot);
+        leftBack.setPower(y - x + rot);
+        rightFront.setPower(y - x - rot);
+        rightBack.setPower(y + x - rot);
     }
 
     @Override

@@ -1,12 +1,13 @@
 package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.teamcode.Robot.*;
+import static org.firstinspires.ftc.teamcode.functionType.*;
 import static org.firstinspires.ftc.teamcode.pathType.*;
 
 
 public class pathMan {
     private float currentX, currentY, startX, startY, endX, endY, currentRot, m, b;
-    private pathType functionType;
+    private functionType FunctionType;
 
     public pathMan(pathType PathType, float endXPoint, float endYPoint) throws wrongInformationException {
         this.currentX = xLoc;
@@ -14,11 +15,13 @@ public class pathMan {
         this.currentRot = rotation;
         this.endX = endXPoint;
         this.endY = endYPoint;
-        this.functionType = PathType;
 
-        if(PathType == STRAIGHT_TURN_TO || PathType == ARC_NO_TURN || PathType == ARC_TURN_TO) {
+        if(PathType == ARC_NO_TURN || PathType == ARC_TURN_TO) {
             throw new wrongInformationException();
         }
+
+        this.FunctionType = LINE;
+
         /*
          * Formula for straight line using two points:
          * y = ((x2-x1)/(y2-y1))(x-x1) + y1
@@ -30,7 +33,7 @@ public class pathMan {
         this.b = -1*m*currentX + currentY;
     }
 
-    public pathMan(pathType PathType, float endXPoint, float endYPoint, float angle) {
+    public pathMan(pathType PathType, float endXPoint, float endYPoint, float a) {
 
     }
 
@@ -42,7 +45,7 @@ public class pathMan {
      */
     public float getYDeviation() {
         float intendedY = 0;
-        if(this.functionType == STRAIGHT || this.functionType == STRAIGHT_NO_TURN || this.functionType == STRAIGHT_TURN_TO) {
+        if(this.FunctionType == LINE) {
             intendedY = this.m*xLoc + b;
         }
         return yLoc - intendedY;
@@ -54,5 +57,9 @@ public class pathMan {
 
 enum pathType {
     STRAIGHT, STRAIGHT_NO_TURN, STRAIGHT_TURN_TO, ARC_TURN_TO, ARC_NO_TURN
+}
+
+enum functionType {
+    LINE, ARC
 }
 
