@@ -7,18 +7,25 @@ import static org.firstinspires.ftc.teamcode.pathType.*;
 
 public class pathMan {
     private float currentX, currentY, startX, startY, endX, endY, currentRot, m, b;
+    private boolean invertedFunction = false; //For lines that are straight up and down we need to use a workaround
     private functionType FunctionType;
 
-    public pathMan(pathType PathType, float endXPoint, float endYPoint) throws wrongInformationException {
-        this.currentX = xLoc;
-        this.currentY = yLoc;
-        this.currentRot = rotation;
-        this.endX = endXPoint;
-        this.endY = endYPoint;
-
-        if(PathType == ARC_NO_TURN || PathType == ARC_TURN_TO) {
-            throw new wrongInformationException();
+    public pathMan(pathType PathType, float endXPoint, float endYPoint) {
+        if(currentY == endY) {
+            invertedFunction = true;
+            this.currentY = xLoc;
+            this.currentX = yLoc;
+            this.endX = endYPoint;
+            this.endY = endXPoint;
+        } else {
+            this.currentX = xLoc;
+            this.currentY = yLoc;
+            this.currentRot = rotation;
+            this.endX = endXPoint;
+            this.endY = endYPoint;
         }
+
+
 
         this.FunctionType = LINE;
 
@@ -44,11 +51,23 @@ public class pathMan {
      * @return Returns Y deviation from the X value of the function generated
      */
     public float getYDeviation() {
+
         float intendedY = 0;
         if(this.FunctionType == LINE) {
-            intendedY = this.m*xLoc + b;
+            if(!invertedFunction) {
+                intendedY = this.m*xLoc + this.b;
+                return yLoc - intendedY;
+            } else {
+                intendedY = this.m*yLoc + this.b;
+                return xLoc - intendedY;
+            }
+
         }
-        return yLoc - intendedY;
+        if(this.FunctionType == ARC) {
+            return 69;
+        }
+
+        return 69; //appease the java
     }
 
 

@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.Gamepad;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,22 +22,25 @@ public class ButtonToggle implements Runnable {
 
     public static OpMode opMode;
 
-    //Add a list to
+    //Create a list to show the buttons that need to be updated
     private static List<ButtonToggle> buttons = new ArrayList<>();
 
     public ButtonToggle(int gamepadNumber, Button buttonName) {
         this.button = buttonName;
         this.gamepadRef = gamepadNumber;
+        buttons.add(this);
     }
 
     public void onToggleOn(Runnable action) {
-        if(toggleProcessed || !isOn) return;
+        if(this.toggleProcessed || !this.isOn) return;
         run();
+        this.toggleProcessed = true;
     }
 
     public void onToggleOff(Runnable action) {
-        if(toggleProcessed || isOn) return;
+        if(this.toggleProcessed || this.isOn) return;
         run();
+        this.toggleProcessed = true;
     }
 
     public void whileOn(Runnable action) {

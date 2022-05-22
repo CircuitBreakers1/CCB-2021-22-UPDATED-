@@ -21,9 +21,9 @@ public class Robot {
     public static DcMotor leftBack;
     public static DcMotor rightBack;
 
-    public static float xLoc;
-    public static float yLoc;
-    public static float rotation;
+    public static float xLoc = 0;
+    public static float yLoc = 0;
+    public static float rotation = 0;
     public static float pathMaxYdev = 0;
     public static float pathAvgYDev = 0;
     public static float pathTotalYDev = 0;
@@ -40,6 +40,17 @@ public class Robot {
     private final static float moveTolerance = 1.0f; //Tolerance for X and Y values when moving
     private final static float turnTolerance = 1.0f; //Tolerance for degree values when turning
 
+    //All distance values in inches
+    private static final float odoWidthToCenter = 5 / 2;
+    private static final float odoLengthToCenter = 6 / 2;
+    private static final float wheelRadius = 1;
+    private static final float ticksPerRev = 1160;
+    private static final float constantOfMovement = (float) ((2 * PI * wheelRadius) / ticksPerRev);
+
+    private static float deltaLeftOdo = 0;
+    private static float deltaRightOdo = 0;
+    private static float deltaFrontOdo = 0;
+
 
     /**
      * Initalize the robot object.
@@ -52,7 +63,8 @@ public class Robot {
         opMode.telemetry.setAutoClear(false); //Stuff will need to be manually removed
         opMode.telemetry.addAction(new Runnable() { @Override public void run() {updateLocation();} });
         opMode.telemetry.addData("Robot X", ".3f%", xLoc)
-                .addData(" Robot Y", ".3f%", yLoc);
+                .addData(" Robot Y", ".3f%", yLoc)
+                .addData(" Robot Angle", ".3f%", rotation);
         if(isAuto) {
             opMode.telemetry.addData("Overall yDev Average", ".3f%", pathAvgYDev)
                     .addData("Current yDev Max", ".3f%", pathMaxYdev);
@@ -74,13 +86,41 @@ public class Robot {
     }
 
     public static void updateLocation() {
-        xLoc = 0;
-        yLoc = 0;
-        rotation = 0;
+        deltaLeftOdo -= leftBack.getCurrentPosition();
+        deltaRightOdo -= rightBack.getCurrentPosition();
+        deltaFrontOdo -= rightFront.getCurrentPosition();
+
+
+        xLoc += constantOfMovement * ((deltaLeftOdo + deltaRightOdo) / 2);
+        yLoc = constantOfMovement *
+                (deltaFrontOdo - (odoWidthToCenter * (deltaRightOdo - deltaLeftOdo) / (2 * odoLengthToCenter)));
+        rotation += constantOfMovement * ((deltaRightOdo - deltaLeftOdo) / (2 * odoLengthToCenter));
     }
 
-    public static void turnTo(float angle) {
+    public static void turnTo(float angle, double speed) {
+        if(angle <= rotation + 180) {
+            leftFront.setPower(-speed);
+            leftBack.setPower(-speed);
+            rightFront.setPower(speed);
+            rightBack.setPower(speed);
+        } else {
+            leftFront.setPower(speed);
+            leftBack.setPower(speed);
+            rightFront.setPower(-speed);
+            rightBack.setPower(-speed);
+        }
 
+        while (true) {
+            updateLocation();
+            opMode.telemetry.update();
+            if(rotation >= angle - turnTolerance && rotation <= angle + turnTolerance) {
+                break;
+            }
+        }
+        leftFront.setPower(0);
+        leftBack.setPower(0);
+        rightFront.setPower(0);
+        rightBack.setPower(0);
     }
 
     /**
@@ -90,11 +130,9 @@ public class Robot {
      * @param endY Where the robot should end up on the y plane
      * @throws wrongInformationException Throws an error if there is missing or extra information for the pathtype
      */
-    public static void moveTo(pathType PathType, float endX, float endY, double speed) throws wrongInformationException {
+    public static void moveTo(pathType PathType, float endX, float endY, double speed) {
         //This specific case is built to only deal with straight line movement
-        if(PathType == STRAIGHT_TURN_TO || PathType == ARC_NO_TURN || PathType == ARC_TURN_TO) {
-            throw new wrongInformationException();
-        }
+
 
         pathMan Path = new pathMan(PathType, endX, endY);
 
@@ -103,7 +141,7 @@ public class Robot {
 
         if(PathType == STRAIGHT) {
             movementAngle = 0;
-            turnTo(angleToTarget);
+            turnTo(angleToTarget, speed);
         } else if(PathType == STRAIGHT_NO_TURN) {
             movementAngle = rotation - angleToTarget;
         }

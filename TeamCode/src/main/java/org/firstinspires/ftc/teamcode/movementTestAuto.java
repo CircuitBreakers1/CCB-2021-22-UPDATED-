@@ -29,62 +29,36 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import static org.firstinspires.ftc.teamcode.Robot.*;
-import static org.firstinspires.ftc.teamcode.ButtonToggle.*;
+import static org.firstinspires.ftc.teamcode.pathType.*;
 
-@TeleOp(name="TeleOP", group="")
-public class IterativeTeleOP extends OpMode
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+
+@Autonomous(name="Movement Test", group="")
+public class movementTestAuto extends OpMode
 {
-    Robot robot = new Robot(this, false);
+    Robot robot = new Robot(this, true);
 
     @Override
     public void init() {
         robot.init(hardwareMap);
-        ButtonToggle.opMode = this;
     }
 
     @Override
     public void init_loop() {
-        updateButtons();
     }
 
     @Override
     public void start() {
-
+        moveTo(STRAIGHT, 10, 10, 1);
+        turnTo(180, 1);
+        moveTo(STRAIGHT, 0, 0, 1);
     }
 
     @Override
     public void loop() {
-        updateButtons();
 
-        double y = -gamepad1.left_stick_y;
-        double x = gamepad1.left_stick_x;
-        double rot = gamepad1.right_stick_x;
-
-        double lfPower = y + x + rot;
-        double rfPower = y - x - rot;
-        double lbPower = y - x + rot;
-        double rbPower = y + x - rot;
-
-        double normalization;
-
-        normalization = Math.max(Math.abs(lfPower), Math.abs(rfPower));
-        normalization = Math.max(normalization, Math.abs(lbPower));
-        normalization = Math.max(normalization, Math.abs(rbPower));
-
-        if(normalization > 1.0) {
-            lfPower /= normalization;
-            rfPower /= normalization;
-            lbPower /= normalization;
-            rbPower /= normalization;
-        }
-
-        leftFront.setPower(lfPower);
-        leftBack.setPower(lbPower);
-        rightFront.setPower(rfPower);
-        rightBack.setPower(rbPower);
     }
 
     @Override
