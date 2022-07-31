@@ -59,32 +59,34 @@ public class IterativeTeleOP extends OpMode
     public void loop() {
         updateButtons();
 
+        telemetry.setAutoClear(false); //Stuff will need to be manually removed
+        //telemetry.addAction(new Runnable() { @Override public void run() {updateLocation();} });
+        //telemetry.addData("Robot X", ".3f%", xLoc)
+          //      .addData(" Robot Y", ".3f%", yLoc)
+            //    .addData(" Robot Angle", ".3f%", rotation);
+
         double y = -gamepad1.left_stick_y;
         double x = gamepad1.left_stick_x;
-        double rot = gamepad1.right_stick_x;
+        double rx = gamepad1.right_stick_x;
 
-        double lfPower = y + x + rot;
-        double rfPower = y - x - rot;
-        double lbPower = y - x + rot;
-        double rbPower = y + x - rot;
+        angle.setPower(-gamepad2.left_stick_y);
+        extension.setPower(gamepad2.right_stick_y);
 
-        double normalization;
+        Robot.leftFront.setPower(y + x + rx);
+        Robot.leftBack.setPower(y - x + rx);
+        Robot.rightFront.setPower(y - x - rx);
+        Robot.rightBack.setPower(y + x - rx);
 
-        normalization = Math.max(Math.abs(lfPower), Math.abs(rfPower));
-        normalization = Math.max(normalization, Math.abs(lbPower));
-        normalization = Math.max(normalization, Math.abs(rbPower));
-
-        if(normalization > 1.0) {
-            lfPower /= normalization;
-            rfPower /= normalization;
-            lbPower /= normalization;
-            rbPower /= normalization;
+        if(gamepad2.a) {
+            leftSuck.setPower(1);
+            rightSuck.setPower(-1);
+        } else if(gamepad2.b){
+            leftSuck.setPower(0);
+            rightSuck.setPower(0);
+        } else if(gamepad2.x) {
+            leftSuck.setPower(-1);
+            rightSuck.setPower(1);
         }
-
-        leftFront.setPower(lfPower);
-        leftBack.setPower(lbPower);
-        rightFront.setPower(rfPower);
-        rightBack.setPower(rbPower);
     }
 
     @Override

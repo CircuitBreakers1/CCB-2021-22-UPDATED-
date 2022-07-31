@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry.Item;
@@ -20,6 +22,10 @@ public class Robot {
     public static DcMotor rightFront;
     public static DcMotor leftBack;
     public static DcMotor rightBack;
+    public static DcMotor extension;
+    public static DcMotor angle;
+    public static CRServo leftSuck;
+    public static CRServo rightSuck;
 
     public static float xLoc = 0;
     public static float yLoc = 0;
@@ -80,15 +86,24 @@ public class Robot {
         rightFront  = hwMap.get(DcMotor.class, "rightFront");
         leftBack  = hwMap.get(DcMotor.class, "leftBack");
         rightBack  = hwMap.get(DcMotor.class, "rightBack");
+        extension = hwMap.get(DcMotor.class, "extension");
+        angle = hwMap.get(DcMotor.class, "angle");
 
+        leftSuck = hwMap.get(CRServo.class, "leftSuck");
+        rightSuck = hwMap.get(CRServo.class, "rightSuck");
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     public static void updateLocation() {
-        deltaLeftOdo -= leftBack.getCurrentPosition();
-        deltaRightOdo -= rightBack.getCurrentPosition();
-        deltaFrontOdo -= rightFront.getCurrentPosition();
+        deltaLeftOdo = leftBack.getCurrentPosition() - deltaLeftOdo;
+        deltaRightOdo = rightBack.getCurrentPosition() - deltaRightOdo;
+        deltaFrontOdo = rightFront.getCurrentPosition() - deltaFrontOdo;
 
 
         xLoc += constantOfMovement * ((deltaLeftOdo + deltaRightOdo) / 2);
