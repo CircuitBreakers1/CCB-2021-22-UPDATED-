@@ -38,6 +38,8 @@ import static org.firstinspires.ftc.teamcode.ButtonToggle.*;
 public class IterativeTeleOP extends OpMode
 {
     Robot robot = new Robot(this, false);
+    boolean isIntaking = false;
+    boolean isOutputting = false;
 
     @Override
     public void init() {
@@ -59,7 +61,7 @@ public class IterativeTeleOP extends OpMode
     public void loop() {
         updateButtons();
 
-        telemetry.setAutoClear(false); //Stuff will need to be manually removed
+        //telemetry.setAutoClear(false); //Stuff will need to be manually removed
         //telemetry.addAction(new Runnable() { @Override public void run() {updateLocation();} });
         //telemetry.addData("Robot X", ".3f%", xLoc)
           //      .addData(" Robot Y", ".3f%", yLoc)
@@ -70,6 +72,13 @@ public class IterativeTeleOP extends OpMode
         double rx = gamepad1.right_stick_x;
 
         angle.setPower(-gamepad2.left_stick_y);
+
+        if(-gamepad2.left_stick_y > 0) {
+            angle.setPower(-gamepad2.left_stick_y);
+        } else if(-gamepad2.left_stick_y < 0) {
+            angle.setPower(0.1 * -gamepad2.left_stick_y);
+        }
+
         extension.setPower(gamepad2.right_stick_y);
 
         Robot.leftFront.setPower(y + x + rx);
@@ -80,12 +89,29 @@ public class IterativeTeleOP extends OpMode
         if(gamepad2.a) {
             leftSuck.setPower(1);
             rightSuck.setPower(-1);
+            isIntaking = true;
+            isOutputting = false;
         } else if(gamepad2.b){
             leftSuck.setPower(0);
             rightSuck.setPower(0);
+            isIntaking = false;
+            isOutputting = false;
         } else if(gamepad2.x) {
             leftSuck.setPower(-1);
             rightSuck.setPower(1);
+            isIntaking = false;
+            isOutputting = true;
+        }
+
+        telemetry.addData("Is intaking?", isIntaking);
+        telemetry.addData("Is outputting?", isOutputting);
+        telemetry.addData("Touch Sensor", touch.getState());
+
+        if(!touch.getState() && isIntaking) {
+            leftSuck.setPower(0);
+            rightSuck.setPower(0);
+            isIntaking = false;
+            isOutputting = false;
         }
     }
 

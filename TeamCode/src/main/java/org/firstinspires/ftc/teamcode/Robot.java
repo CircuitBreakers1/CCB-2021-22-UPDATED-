@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -26,6 +27,8 @@ public class Robot {
     public static DcMotor angle;
     public static CRServo leftSuck;
     public static CRServo rightSuck;
+
+    public static DigitalChannel touch;
 
     public static float xLoc = 0;
     public static float yLoc = 0;
@@ -88,6 +91,9 @@ public class Robot {
         rightBack  = hwMap.get(DcMotor.class, "rightBack");
         extension = hwMap.get(DcMotor.class, "extension");
         angle = hwMap.get(DcMotor.class, "angle");
+
+        touch = hwMap.get(DigitalChannel.class, "touch");
+        touch.setMode(DigitalChannel.Mode.INPUT);
 
         leftSuck = hwMap.get(CRServo.class, "leftSuck");
         rightSuck = hwMap.get(CRServo.class, "rightSuck");
