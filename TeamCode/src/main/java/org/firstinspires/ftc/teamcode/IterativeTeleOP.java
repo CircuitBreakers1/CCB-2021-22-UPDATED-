@@ -34,12 +34,18 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import static org.firstinspires.ftc.teamcode.Robot.*;
 import static org.firstinspires.ftc.teamcode.ButtonToggle.*;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
 @TeleOp(name="TeleOP", group="")
 public class IterativeTeleOP extends OpMode
 {
     Robot robot = new Robot(this, false);
     boolean isIntaking = false;
     boolean isOutputting = false;
+
+    Telemetry.Item intake = telemetry.addData("Is intaking?", isIntaking);
+    Telemetry.Item output = telemetry.addData("Is outputting?", isOutputting);
+    Telemetry.Item touchSense = telemetry.addData("Touch Sensor", touch.getState());
 
     @Override
     public void init() {
@@ -103,9 +109,9 @@ public class IterativeTeleOP extends OpMode
             isOutputting = true;
         }
 
-        telemetry.addData("Is intaking?", isIntaking);
-        telemetry.addData("Is outputting?", isOutputting);
-        telemetry.addData("Touch Sensor", touch.getState());
+        touchSense.setValue(touch.getState());
+        intake.setValue(isIntaking);
+        output.setValue(isOutputting);
 
         if(!touch.getState() && isIntaking) {
             leftSuck.setPower(0);
@@ -117,7 +123,9 @@ public class IterativeTeleOP extends OpMode
 
     @Override
     public void stop() {
-
+        //Make sure the robot controller clears any actions setup by the telemetry so they do not
+        //run when the opmode has stopped
+        telemetry.clearAll();
     }
 
 }

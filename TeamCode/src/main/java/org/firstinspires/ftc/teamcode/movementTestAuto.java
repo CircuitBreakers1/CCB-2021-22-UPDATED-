@@ -33,11 +33,11 @@ import static org.firstinspires.ftc.teamcode.Robot.*;
 import static org.firstinspires.ftc.teamcode.pathType.*;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 @Autonomous(name="Movement Test", group="")
-public class movementTestAuto extends OpMode
-{
+public class movementTestAuto extends OpMode {
     Robot robot = new Robot(this, true);
 
     @Override

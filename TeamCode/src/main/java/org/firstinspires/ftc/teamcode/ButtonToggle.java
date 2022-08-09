@@ -195,7 +195,6 @@ public class ButtonToggle implements Runnable {
             } else if(!btn.thisButtonState) btn.isDown = false;
         }
     }
-
 }
 
 enum Button {

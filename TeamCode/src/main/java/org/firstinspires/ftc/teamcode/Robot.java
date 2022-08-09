@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.ServoConfigurationType;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.Telemetry.Item;
 
 import static org.firstinspires.ftc.teamcode.pathType.*;
@@ -16,7 +17,11 @@ import static java.lang.Math.*;
 
 /**
  * This class contains all hardware maps and functions for use in opModes. An object should be
- * created, then during init phase {@link #init init} should be called with the opMode hwmap
+ * created, then during init phase {@link #init init} should be called with the opMode hwmap.
+ *
+ * This class also creates a basic framework of telemetry. It sets auto clear to off, meaning that
+ * the first time something is intended to be added to telemetry it should be created using
+ * .addData() and stored in a Telemetry.Item. To update, use .setValue() with the Item.
  */
 public class Robot {
     public static DcMotor leftFront;
@@ -45,6 +50,7 @@ public class Robot {
     /* local OpMode members. */
     HardwareMap hwMap =  null;
     private static OpMode opMode;
+    private boolean opIsAuto;
     private final ElapsedTime period  = new ElapsedTime();
     private final static float moveTolerance = 1.0f; //Tolerance for X and Y values when moving
     private final static float turnTolerance = 1.0f; //Tolerance for degree values when turning
@@ -69,15 +75,7 @@ public class Robot {
     public Robot(OpMode OPMode, boolean isAuto){
         //Grab telemetry object from active opMode
         opMode = OPMode;
-        opMode.telemetry.setAutoClear(false); //Stuff will need to be manually removed
-        opMode.telemetry.addAction(new Runnable() { @Override public void run() {updateLocation();} });
-        opMode.telemetry.addData("Robot X", ".3f%", xLoc)
-                .addData(" Robot Y", ".3f%", yLoc)
-                .addData(" Robot Angle", ".3f%", rotation);
-        if(isAuto) {
-            opMode.telemetry.addData("Overall yDev Average", ".3f%", pathAvgYDev)
-                    .addData("Current yDev Max", ".3f%", pathMaxYdev);
-        }
+        opIsAuto = isAuto;
     }
 
     public void init(HardwareMap ahwMap) {
@@ -97,6 +95,7 @@ public class Robot {
 
         leftSuck = hwMap.get(CRServo.class, "leftSuck");
         rightSuck = hwMap.get(CRServo.class, "rightSuck");
+
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
 
@@ -104,6 +103,16 @@ public class Robot {
         rightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         leftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        opMode.telemetry.setAutoClear(false);
+        opMode.telemetry.addAction(new Runnable() { @Override public void run() {updateLocation();} });
+        Telemetry.Item robotX = opMode.telemetry.addData("Robot X", ".3f%", xLoc);
+        Telemetry.Item robotY = opMode.telemetry.addData("Robot Y", ".3f%", yLoc);
+        Telemetry.Item robotAngle = opMode.telemetry.addData("Robot Angle", ".3f%", rotation);
+        if(opIsAuto) {
+            Telemetry.Item yDevAvg = opMode.telemetry.addData("Overall yDev Average", ".3f%", pathAvgYDev);
+            Telemetry.Item yDevMax = opMode.telemetry.addData("Current yDev Max", ".3f%", pathMaxYdev);
+        }
     }
 
     public static void updateLocation() {
@@ -113,7 +122,7 @@ public class Robot {
 
 
         xLoc += constantOfMovement * ((deltaLeftOdo + deltaRightOdo) / 2);
-        yLoc = constantOfMovement *
+        yLoc += constantOfMovement *
                 (deltaFrontOdo - (odoWidthToCenter * (deltaRightOdo - deltaLeftOdo) / (2 * odoLengthToCenter)));
         rotation += constantOfMovement * ((deltaRightOdo - deltaLeftOdo) / (2 * odoLengthToCenter));
     }
@@ -197,7 +206,7 @@ public class Robot {
             }
         });
 
-        Item movement =
+        Telemetry.Item movement =
                 opMode.telemetry.addData("Current yDev Average", ".3f%", pathAvgYDev)
                         .addData("Current yDev Max", ".3f%", pathMaxYdev);
 
