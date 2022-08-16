@@ -31,21 +31,26 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
+
 import static org.firstinspires.ftc.teamcode.Robot.*;
 import static org.firstinspires.ftc.teamcode.ButtonToggle.*;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
-@TeleOp(name="TeleOP", group="")
-public class IterativeTeleOP extends OpMode
-{
+@TeleOp(name = "TeleOP")
+public class IterativeTeleOP extends OpMode {
     Robot robot = new Robot(this, false);
+    int resetPhase = 0;
     boolean isIntaking = false;
     boolean isOutputting = false;
+    boolean isResetting = false;
 
-    Telemetry.Item intake = telemetry.addData("Is intaking?", isIntaking);
-    Telemetry.Item output = telemetry.addData("Is outputting?", isOutputting);
-    Telemetry.Item touchSense = telemetry.addData("Touch Sensor", touch.getState());
+    //Telemetry.Item intake = telemetry.addData("Is intaking?", isIntaking);
+    //Telemetry.Item output = telemetry.addData("Is outputting?", isOutputting);
+    //Telemetry.Item touchSense = telemetry.addData("Touch Sensor", touch.getState());
+    //Telemetry.Item armPos = telemetry.addData("Arm Position", angle.getCurrentPosition());
+
 
     @Override
     public void init() {
@@ -65,59 +70,121 @@ public class IterativeTeleOP extends OpMode
 
     @Override
     public void loop() {
-        updateButtons();
+        if (!isResetting) {
 
-        //telemetry.setAutoClear(false); //Stuff will need to be manually removed
-        //telemetry.addAction(new Runnable() { @Override public void run() {updateLocation();} });
-        //telemetry.addData("Robot X", ".3f%", xLoc)
-          //      .addData(" Robot Y", ".3f%", yLoc)
+            updateButtons();
+
+            //telemetry.setAutoClear(false); //Stuff will need to be manually removed
+            //telemetry.addAction(new Runnable() { @Override public void run() {updateLocation();} });
+            //telemetry.addData("Robot X", ".3f%", xLoc)
+            //      .addData(" Robot Y", ".3f%", yLoc)
             //    .addData(" Robot Angle", ".3f%", rotation);
 
-        double y = -gamepad1.left_stick_y;
-        double x = gamepad1.left_stick_x;
-        double rx = gamepad1.right_stick_x;
+            double y = -gamepad1.left_stick_y;
+            double x = gamepad1.left_stick_x;
+            double rx = gamepad1.right_stick_x;
 
-        angle.setPower(-gamepad2.left_stick_y);
+            //angle.setPower(-gamepad2.left_stick_y);
 
-        if(-gamepad2.left_stick_y > 0) {
-            angle.setPower(-gamepad2.left_stick_y);
-        } else if(-gamepad2.left_stick_y < 0) {
-            angle.setPower(0.1 * -gamepad2.left_stick_y);
+            float rangeGetter = angle.getCurrentPosition();
+
+            if (-gamepad2.left_stick_y > 0 && (rangeGetter <= 4300 || gamepad2.start)) {
+                angle.setPower(-gamepad2.left_stick_y);
+            } else if (-gamepad2.left_stick_y < 0 && (rangeGetter >= -800 || gamepad2.start)) {
+                angle.setPower(0.5 * -gamepad2.left_stick_y);
+            } else {
+                angle.setPower(0);
+            }
+            //Max 4300
+            //Min -990
+
+
+            float extensionGetter = extension.getCurrentPosition();
+            if (gamepad2.right_stick_y < 0 && (extensionGetter >= -3000 || gamepad2.start)) {
+                extension.setPower(gamepad2.right_stick_y);
+            } else if (gamepad2.right_stick_y > 0 && (extensionGetter < 0 || gamepad2.start)) {
+                extension.setPower(gamepad2.right_stick_y);
+            } else {
+                extension.setPower(0);
+            }
+
+
+            Robot.leftFront.setPower(0.75 * (y + x + rx));
+            Robot.leftBack.setPower(0.75 * (y - x + rx));
+            Robot.rightFront.setPower(0.75 * (y - x - rx));
+            Robot.rightBack.setPower(0.75 * (y + x - rx));
+
+            if (gamepad2.a) {
+                leftSuck.setPower(1);
+                rightSuck.setPower(-1);
+                isIntaking = true;
+                isOutputting = false;
+            } else if (gamepad2.b) {
+                leftSuck.setPower(0);
+                rightSuck.setPower(0);
+                isIntaking = false;
+                isOutputting = false;
+            } else if (gamepad2.x) {
+                leftSuck.setPower(-1);
+                rightSuck.setPower(1);
+                isIntaking = false;
+                isOutputting = true;
+            }
+
+            //touchSense.setValue(touch.getState());
+            //intake.setValue(isIntaking);
+            //output.setValue(isOutputting);
+            //armPos.setValue(angle.getCurrentPosition());
+
+            telemetry.addData("Arm Position", angle.getCurrentPosition());
+
+
+            if (!touch.getState() && isIntaking) {
+                leftSuck.setPower(0);
+                rightSuck.setPower(0);
+                isIntaking = false;
+                isOutputting = false;
+            }
         }
 
-        extension.setPower(gamepad2.right_stick_y);
-
-        Robot.leftFront.setPower(y + x + rx);
-        Robot.leftBack.setPower(y - x + rx);
-        Robot.rightFront.setPower(y - x - rx);
-        Robot.rightBack.setPower(y + x - rx);
-
-        if(gamepad2.a) {
-            leftSuck.setPower(1);
-            rightSuck.setPower(-1);
-            isIntaking = true;
-            isOutputting = false;
-        } else if(gamepad2.b){
-            leftSuck.setPower(0);
-            rightSuck.setPower(0);
-            isIntaking = false;
-            isOutputting = false;
-        } else if(gamepad2.x) {
-            leftSuck.setPower(-1);
-            rightSuck.setPower(1);
-            isIntaking = false;
-            isOutputting = true;
+        if (gamepad2.back && gamepad2.start && !isResetting) {
+            resetPhase = 0;
+            isResetting = true;
+            angle.setTargetPosition(600);
+            angle.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            angle.setPower(0.5);
         }
 
-        touchSense.setValue(touch.getState());
-        intake.setValue(isIntaking);
-        output.setValue(isOutputting);
+        if (isResetting) {
+            switch (resetPhase) {
+                case 0:
+                    if (!angle.isBusy()) {
+                        angle.setPower(0);
+                        extension.setTargetPosition(0);
+                        extension.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        extension.setPower(1);
+                        resetPhase = 1;
+                    }
+                    break;
+                case 1:
+                    if (!extension.isBusy()) {
+                        extension.setPower(0);
+                        angle.setTargetPosition(0);
+                        angle.setPower(0.5);
+                        resetPhase = 2;
+                    }
+                    break;
+                case 2:
+                    if (!angle.isBusy()) {
+                        angle.setPower(0);
 
-        if(!touch.getState() && isIntaking) {
-            leftSuck.setPower(0);
-            rightSuck.setPower(0);
-            isIntaking = false;
-            isOutputting = false;
+                        extension.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                        angle.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+                        isResetting = false;
+                    }
+                    break;
+            }
         }
     }
 

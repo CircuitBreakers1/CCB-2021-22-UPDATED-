@@ -36,7 +36,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-@Autonomous(name="Movement Test", group="")
+@Autonomous(name = "Movement Test", group = "")
 public class movementTestAuto extends OpMode {
     Robot robot = new Robot(this, true);
 

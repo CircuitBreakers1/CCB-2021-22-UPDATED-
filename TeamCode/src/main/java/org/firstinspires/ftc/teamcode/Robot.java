@@ -104,6 +104,12 @@ public class Robot {
         leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         leftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        angle.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        angle.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        extension.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        extension.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        /*
         opMode.telemetry.setAutoClear(false);
         opMode.telemetry.addAction(new Runnable() { @Override public void run() {updateLocation();} });
         Telemetry.Item robotX = opMode.telemetry.addData("Robot X", ".3f%", xLoc);
@@ -113,6 +119,7 @@ public class Robot {
             Telemetry.Item yDevAvg = opMode.telemetry.addData("Overall yDev Average", ".3f%", pathAvgYDev);
             Telemetry.Item yDevMax = opMode.telemetry.addData("Current yDev Max", ".3f%", pathMaxYdev);
         }
+         */
     }
 
     public static void updateLocation() {

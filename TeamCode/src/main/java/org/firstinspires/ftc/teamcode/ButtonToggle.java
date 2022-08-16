@@ -16,7 +16,7 @@ public class ButtonToggle implements Runnable {
     private boolean isDown = false;
     private boolean toggleProcessed = true;
     private boolean thisButtonState = false;
-    private int gamepadRef;
+    private final int gamepadRef;
 
     private Button button;
 
@@ -32,19 +32,19 @@ public class ButtonToggle implements Runnable {
     }
 
     public void onToggleOn(Runnable action) {
-        if(this.toggleProcessed || !this.isOn) return;
+        if (this.toggleProcessed || !this.isOn) return;
         run();
         this.toggleProcessed = true;
     }
 
     public void onToggleOff(Runnable action) {
-        if(this.toggleProcessed || this.isOn) return;
+        if (this.toggleProcessed || this.isOn) return;
         run();
         this.toggleProcessed = true;
     }
 
     public void whileOn(Runnable action) {
-        if(!isOn) return;
+        if (!isOn) return;
         run();
     }
 
@@ -57,7 +57,7 @@ public class ButtonToggle implements Runnable {
      * Updates the states of the buttons. Run at the start of the loop.
      */
     public static void updateButtons() {
-        for(ButtonToggle btn: buttons) {
+        for (ButtonToggle btn : buttons) {
             //Updates the button state that matches each object
             switch (btn.button) {
                 case a:
@@ -188,11 +188,11 @@ public class ButtonToggle implements Runnable {
                     break;
             }
 
-            if(btn.thisButtonState && !btn.isDown) {
+            if (btn.thisButtonState && !btn.isDown) {
                 btn.isDown = true;
                 btn.isOn = !btn.isOn;
                 btn.toggleProcessed = false;
-            } else if(!btn.thisButtonState) btn.isDown = false;
+            } else if (!btn.thisButtonState) btn.isDown = false;
         }
     }
 }
