@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.hardware.Gamepad;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +10,15 @@ import java.util.List;
 /**
  * Yes, this class is more complex than it needs to be, but java no like pass by reference so here
  * we are
+ *
+ *
+ * lol jk i trold myself
  */
 public class ButtonToggle implements Runnable {
+
+    private Gamepad gamepad;
+
+
 
     private boolean isOn = false;
     private boolean isDown = false;

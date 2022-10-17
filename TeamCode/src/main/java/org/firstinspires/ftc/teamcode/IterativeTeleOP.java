@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode;
 
+import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -37,19 +38,22 @@ import static org.firstinspires.ftc.teamcode.Robot.*;
 import static org.firstinspires.ftc.teamcode.ButtonToggle.*;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
+import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
+import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 
 @TeleOp(name = "TeleOP")
 public class IterativeTeleOP extends OpMode {
     Robot robot = new Robot(this, false);
-    int resetPhase = 0;
+    Orientation angles;
     boolean isIntaking = false;
     boolean isOutputting = false;
-    boolean isResetting = false;
 
-    //Telemetry.Item intake = telemetry.addData("Is intaking?", isIntaking);
-    //Telemetry.Item output = telemetry.addData("Is outputting?", isOutputting);
-    //Telemetry.Item touchSense = telemetry.addData("Touch Sensor", touch.getState());
-    //Telemetry.Item armPos = telemetry.addData("Arm Position", angle.getCurrentPosition());
+    //Move into init??
+    Telemetry.Item intake = telemetry.addData("Is intaking?", isIntaking);
+    Telemetry.Item output = telemetry.addData("Is outputting?", isOutputting);
+
 
 
     @Override
@@ -65,127 +69,73 @@ public class IterativeTeleOP extends OpMode {
 
     @Override
     public void start() {
-
+        leftBack.resetEncoder();
+        leftFront.resetEncoder();
+        rightFront.resetEncoder();
+        rightBack.resetEncoder();
     }
 
     @Override
     public void loop() {
-        if (!isResetting) {
+            holOdom.updatePose();
+            Pose2d currentLocation = holOdom.getPose();
+            double angle = Math.toDegrees(currentLocation.getHeading());
+            angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
 
-            updateButtons();
+            //updateButtons();
+            //updateLocation();
+            //outsideTeleTest();
 
             //telemetry.setAutoClear(false); //Stuff will need to be manually removed
             //telemetry.addAction(new Runnable() { @Override public void run() {updateLocation();} });
-            //telemetry.addData("Robot X", ".3f%", xLoc)
-            //      .addData(" Robot Y", ".3f%", yLoc)
-            //    .addData(" Robot Angle", ".3f%", rotation);
+
+
+            telemetry.addData("Robot X", currentLocation.getX());
+            telemetry.addData("Robot Y", currentLocation.getY());
+            telemetry.addData("Robot Angle", angle);
+            telemetry.addData("Gyro Angle", angles.firstAngle);
+
+            telemetry.addData("Left Odo", leftOdo.getCurrentPosition());
+            telemetry.addData("Right Odo", -rightOdo.getCurrentPosition());
+            telemetry.addData("Back Odo", backOdo.getCurrentPosition());
+
+
+            //rive.driveRobotCentric(gamepad1.right_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x);
+            //drive.driveFieldCentric(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, -angle);
+
 
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
-            //angle.setPower(-gamepad2.left_stick_y);
+            leftFront.set(0.75 * (y + x + rx));
+            leftBack.set(0.75 * (y - x + rx));
+            rightFront.set(0.75 * (y - x - rx));
+            rightBack.set(0.75 * (y + x - rx));
 
-            float rangeGetter = angle.getCurrentPosition();
-
-            if (-gamepad2.left_stick_y > 0 && (rangeGetter <= 4300 || gamepad2.start)) {
-                angle.setPower(-gamepad2.left_stick_y);
-            } else if (-gamepad2.left_stick_y < 0 && (rangeGetter >= -800 || gamepad2.start)) {
-                angle.setPower(0.5 * -gamepad2.left_stick_y);
-            } else {
-                angle.setPower(0);
-            }
-            //Max 4300
-            //Min -990
-
-
-            float extensionGetter = extension.getCurrentPosition();
-            if (gamepad2.right_stick_y < 0 && (extensionGetter >= -3000 || gamepad2.start)) {
-                extension.setPower(gamepad2.right_stick_y);
-            } else if (gamepad2.right_stick_y > 0 && (extensionGetter < 0 || gamepad2.start)) {
-                extension.setPower(gamepad2.right_stick_y);
-            } else {
-                extension.setPower(0);
-            }
-
-
-            Robot.leftFront.setPower(0.75 * (y + x + rx));
-            Robot.leftBack.setPower(0.75 * (y - x + rx));
-            Robot.rightFront.setPower(0.75 * (y - x - rx));
-            Robot.rightBack.setPower(0.75 * (y + x - rx));
-
-            if (gamepad2.a) {
-                leftSuck.setPower(1);
-                rightSuck.setPower(-1);
+            if(!isIntaking && gamepad2.a) {
+                pickupLeft.setPower(1);
+                pickupRight.setPower(-1);
                 isIntaking = true;
                 isOutputting = false;
-            } else if (gamepad2.b) {
-                leftSuck.setPower(0);
-                rightSuck.setPower(0);
-                isIntaking = false;
-                isOutputting = false;
-            } else if (gamepad2.x) {
-                leftSuck.setPower(-1);
-                rightSuck.setPower(1);
-                isIntaking = false;
+            }
+            if(!isOutputting && gamepad2.b) {
+                pickupLeft.setPower(-1);
+                pickupRight.setPower(1);
                 isOutputting = true;
+                isIntaking = false;
             }
-
-            //touchSense.setValue(touch.getState());
-            //intake.setValue(isIntaking);
-            //output.setValue(isOutputting);
-            //armPos.setValue(angle.getCurrentPosition());
-
-            telemetry.addData("Arm Position", angle.getCurrentPosition());
-
-
-            if (!touch.getState() && isIntaking) {
-                leftSuck.setPower(0);
-                rightSuck.setPower(0);
+            if(gamepad2.x || (!coneTouch.getState() && isIntaking)) {
+                pickupLeft.setPower(0);
+                pickupRight.setPower(0);
                 isIntaking = false;
                 isOutputting = false;
             }
-        }
 
-        if (gamepad2.back && gamepad2.start && !isResetting) {
-            resetPhase = 0;
-            isResetting = true;
-            angle.setTargetPosition(600);
-            angle.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-            angle.setPower(0.5);
-        }
 
-        if (isResetting) {
-            switch (resetPhase) {
-                case 0:
-                    if (!angle.isBusy()) {
-                        angle.setPower(0);
-                        extension.setTargetPosition(0);
-                        extension.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        extension.setPower(1);
-                        resetPhase = 1;
-                    }
-                    break;
-                case 1:
-                    if (!extension.isBusy()) {
-                        extension.setPower(0);
-                        angle.setTargetPosition(0);
-                        angle.setPower(0.5);
-                        resetPhase = 2;
-                    }
-                    break;
-                case 2:
-                    if (!angle.isBusy()) {
-                        angle.setPower(0);
 
-                        extension.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                        angle.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            armLift.setPower(gamepad2.left_stick_y);
 
-                        isResetting = false;
-                    }
-                    break;
-            }
-        }
     }
 
     @Override
