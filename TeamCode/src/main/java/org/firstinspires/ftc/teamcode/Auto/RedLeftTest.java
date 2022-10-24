@@ -27,51 +27,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Auto;
 
-import static org.firstinspires.ftc.teamcode.Robot.*;
-import static org.firstinspires.ftc.teamcode.pathType.*;
-import static org.firstinspires.ftc.teamcode.switchType.MIRROR_ANGLE;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rotation;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.xLoc;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.*;
 
-import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-@Autonomous(name = "Iterative Movement Test", group = "")
-public class movementTestAuto extends LinearOpMode {
+import org.firstinspires.ftc.teamcode.Subsystems.Robot;
+
+
+/**
+ *
+ */
+
+@Autonomous(name="Location Test Auto", group="Linear Opmode")
+
+public class RedLeftTest extends LinearOpMode {
+
+    MainAuto auto = new MainAuto(autoStartSpot.RED_LEFT, this);
+
     Robot robot = new Robot(this, true);
 
     @Override
-    public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap);
+    public void runOpMode() {
+
+
+        robot.init(hardwareMap, 36, 7, 90);
+
+        telemetry.addData("X Loc", xLoc);
+        telemetry.addData("Y Loc", yLoc);
+        telemetry.addData("Heading", rotation);
+        telemetry.update();
 
         waitForStart();
 
-        while(opModeIsActive()) {
-            double y = -gamepad1.left_stick_y;
-            double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
+        //Robot.moveTo(pathType.STRAIGHT, 36, 55, 0.2);
+        positionalMovement.moveToLocation(36, 55, 0.3);
+        //Robot.moveToLocation(0,0,0.2);
 
-            leftFront.set((y + x + rx));
-            leftBack.set(y - x + rx);
-            rightFront.set(y - x - rx);
-            rightBack.set(y + x - rx);
-
-            if(gamepad1.start) {
-                turnTo(0.1f,0.5);
-            }
-
-            if(gamepad1.back) {
-                moveTo(STRAIGHT,0,0,0.25);
-            }
-
-            holOdom.updatePose();
-            Pose2d currentLocation = holOdom.getPose();
-
-            telemetry.addData("Robot X", currentLocation.getX());
-            telemetry.addData("Robot Y", currentLocation.getY());
-            telemetry.addData("Robot Angle", Math.toDegrees(currentLocation.getHeading()));
-            telemetry.update();
-        }
+        drivetrain.stop();
     }
 }

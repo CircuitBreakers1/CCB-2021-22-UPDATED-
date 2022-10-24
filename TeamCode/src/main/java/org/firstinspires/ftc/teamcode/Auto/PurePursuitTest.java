@@ -27,24 +27,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Auto;
 
-import static org.firstinspires.ftc.teamcode.Robot.rotation;
-import static org.firstinspires.ftc.teamcode.Robot.xLoc;
-import static org.firstinspires.ftc.teamcode.Robot.*;
+import static org.firstinspires.ftc.teamcode.Subsystems.DrivetrainSubsystem.mecDrive;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.drivetrain;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.holOdom;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.positionalMovement;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rotation;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.xLoc;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.yLoc;
 
+import com.arcrobotics.ftclib.purepursuit.Path;
+import com.arcrobotics.ftclib.purepursuit.Waypoint;
+import com.arcrobotics.ftclib.purepursuit.waypoints.EndWaypoint;
+import com.arcrobotics.ftclib.purepursuit.waypoints.GeneralWaypoint;
+import com.arcrobotics.ftclib.purepursuit.waypoints.StartWaypoint;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+
+import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 
 /**
  *
  */
 
-@Autonomous(name="Main Auto", group="Linear Opmode")
+@Autonomous(name="Pure Pursuit Test Auto", group="Linear Opmode")
 
-public class RedLeftTest extends LinearOpMode {
+public class PurePursuitTest extends LinearOpMode {
 
     MainAuto auto = new MainAuto(autoStartSpot.RED_LEFT, this);
 
@@ -54,22 +64,36 @@ public class RedLeftTest extends LinearOpMode {
     public void runOpMode() {
 
 
-        robot.init(hardwareMap, 36, 7, 0);
+        robot.init(hardwareMap, 36, 7, 90);
 
         telemetry.addData("X Loc", xLoc);
         telemetry.addData("Y Loc", yLoc);
         telemetry.addData("Heading", rotation);
         telemetry.update();
 
+        Waypoint startLocation = new StartWaypoint(holOdom.getPose());
+        Waypoint coneSquareCenterEnd =
+                new EndWaypoint(36, 55, 3.14/4, 0.5, 0.5,6, 2, 3.14/12);
+
+
+        Waypoint conePickUp =
+                new EndWaypoint(3, 55, 3.14, 0.5, 0.5, 6, 2, 3.14/12);
+        Waypoint coneSquareCenter =
+                new GeneralWaypoint(36, 55, 3.14/4, 0.5, 0.5, 6);
+        Waypoint coneSet =
+                new EndWaypoint(42, 61, 3.14/4, 0.5, 0.5, 6, 2, 3.14/12);
+        Waypoint currentRobotLocation;
+
+        Path initialPath = new Path(startLocation, coneSquareCenterEnd);
+        initialPath.init();
+
         waitForStart();
 
-        //Robot.moveTo(pathType.STRAIGHT, 36, 55, 0.2);
-        Robot.moveToLocation(35, 55, 0.3);
-        //Robot.moveToLocation(0,0,0.2);
+        initialPath.followPath(mecDrive, holOdom);
 
-        leftFront.set(0);
-        leftBack.set(0);
-        rightFront.set(0);
-        rightBack.set(0);
+        
+
+
+        drivetrain.stop();
     }
 }

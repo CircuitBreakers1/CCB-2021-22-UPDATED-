@@ -1,6 +1,6 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Auto;
 
-import static org.firstinspires.ftc.teamcode.switchType.*;
+import static org.firstinspires.ftc.teamcode.Auto.switchType.*;
 
 /**
  * This class provides the framework to allow opposite alliance autos to be created in one program

@@ -1,8 +1,7 @@
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.Subsystems;
 
-import static org.firstinspires.ftc.teamcode.Robot.*;
-import static org.firstinspires.ftc.teamcode.functionType.*;
-import static org.firstinspires.ftc.teamcode.pathType.*;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.*;
+import static org.firstinspires.ftc.teamcode.Subsystems.functionType.*;
 
 
 public class pathMan {
@@ -72,10 +71,6 @@ public class pathMan {
 
 
 
-}
-
-enum pathType {
-    STRAIGHT, STRAIGHT_NO_TURN, STRAIGHT_TURN_TO, ARC_TURN_TO, ARC_NO_TURN
 }
 
 enum functionType {

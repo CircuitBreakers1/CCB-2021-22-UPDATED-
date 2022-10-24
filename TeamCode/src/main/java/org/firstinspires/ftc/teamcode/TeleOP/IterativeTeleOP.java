@@ -27,21 +27,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.TeleOP;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import static org.firstinspires.ftc.teamcode.Robot.*;
-import static org.firstinspires.ftc.teamcode.ButtonToggle.*;
+//import static org.firstinspires.ftc.teamcode.Subsystems.ButtonToggleSubsystem.updateButtons;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.*;
+
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.Subsystems.ButtonToggleSubsystem;
+import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 @TeleOp(name = "TeleOP")
 public class IterativeTeleOP extends OpMode {
@@ -54,17 +57,16 @@ public class IterativeTeleOP extends OpMode {
     Telemetry.Item intake = telemetry.addData("Is intaking?", isIntaking);
     Telemetry.Item output = telemetry.addData("Is outputting?", isOutputting);
 
-
+    //ButtonToggleSubsystem a1 = new ButtonToggleSubsystem(() -> gamepad1.a);
 
     @Override
     public void init() {
-        robot.init(hardwareMap);
-        ButtonToggle.opMode = this;
+        robot.init(hardwareMap, 0, 0, 0);
     }
 
     @Override
     public void init_loop() {
-        updateButtons();
+
     }
 
     @Override
@@ -79,8 +81,8 @@ public class IterativeTeleOP extends OpMode {
     public void loop() {
             holOdom.updatePose();
             Pose2d currentLocation = holOdom.getPose();
-            double angle = Math.toDegrees(currentLocation.getHeading());
-            angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.DEGREES);
+            double angle = currentLocation.getHeading();
+            angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
 
             //updateButtons();
             //updateLocation();
@@ -90,17 +92,18 @@ public class IterativeTeleOP extends OpMode {
             //telemetry.addAction(new Runnable() { @Override public void run() {updateLocation();} });
 
 
+            telemetry.addData("Arm Position", armLift.getCurrentPosition());
             telemetry.addData("Robot X", currentLocation.getX());
             telemetry.addData("Robot Y", currentLocation.getY());
             telemetry.addData("Robot Angle", angle);
             telemetry.addData("Gyro Angle", angles.firstAngle);
 
             telemetry.addData("Left Odo", leftOdo.getCurrentPosition());
-            telemetry.addData("Right Odo", -rightOdo.getCurrentPosition());
+            telemetry.addData("Right Odo", rightOdo.getCurrentPosition());
             telemetry.addData("Back Odo", backOdo.getCurrentPosition());
 
 
-            //rive.driveRobotCentric(gamepad1.right_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x);
+            //drive.driveRobotCentric(gamepad1.right_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x);
             //drive.driveFieldCentric(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, -angle);
 
 
