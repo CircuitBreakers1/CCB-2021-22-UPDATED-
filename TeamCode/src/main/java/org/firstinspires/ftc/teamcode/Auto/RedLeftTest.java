@@ -29,13 +29,16 @@
 
 package org.firstinspires.ftc.teamcode.Auto;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rotation;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.xLoc;
+import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.turnTo;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.*;
 
+import static java.lang.Math.PI;
+
+import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 
@@ -55,19 +58,42 @@ public class RedLeftTest extends LinearOpMode {
     public void runOpMode() {
 
 
-        robot.init(hardwareMap, 36, 7, 90);
+        robot.init(hardwareMap, 36, 7, 90, false);
 
-        telemetry.addData("X Loc", xLoc);
-        telemetry.addData("Y Loc", yLoc);
-        telemetry.addData("Heading", rotation);
+        holOdom.updatePose();
+        Pose2d moving = holOdom.getPose();
+
+        telemetry.addData("X Loc", moving.getX());
+        telemetry.addData("Y Loc", moving.getY());
+        telemetry.addData("Heading", moving.getHeading());
         telemetry.update();
 
         waitForStart();
 
         //Robot.moveTo(pathType.STRAIGHT, 36, 55, 0.2);
-        positionalMovement.moveToLocation(36, 55, 0.3);
+        positionalMovement.moveToLocation(36, 55, 0.5);
         //Robot.moveToLocation(0,0,0.2);
+        /*
+        turnTo(PI/2, 0.5);
+        sleep(1000);
+        turnTo(0, 0.5);
+        sleep(1000);
+        turnTo((3*PI)/2, 0.5);
+        sleep(1000);
+        turnTo((3*PI)/2, 0.5);
+        */
+
 
         drivetrain.stop();
+
+        while(opModeIsActive()) {
+            holOdom.updatePose();
+            moving = holOdom.getPose();
+            telemetry.addData("X Loc", moving.getX());
+            telemetry.addData("Y Loc", moving.getY());
+            telemetry.addData("Heading", moving.getHeading());
+            telemetry.update();
+            sleep(100);
+        }
     }
 }

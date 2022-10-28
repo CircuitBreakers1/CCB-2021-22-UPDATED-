@@ -1,9 +1,7 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
-import com.arcrobotics.ftclib.geometry.Translation2d;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
@@ -16,9 +14,12 @@ import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.fieldSquares.*;
-import static org.firstinspires.ftc.teamcode.Subsystems.pathType.*;
 import static java.lang.Math.*;
+
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
 
 
 /**
@@ -41,6 +42,10 @@ public class Robot {
     public static DcMotor armLift;
 
     public static DigitalChannel coneTouch;
+    public static DigitalChannel armTouch;
+
+    public static OpenCvCamera camera;
+    public static VisionPipeline visionPipeline = new VisionPipeline();
 
     public static MotorEx leftOdo;
     public static MotorEx rightOdo;
@@ -59,26 +64,26 @@ public class Robot {
     HardwareMap hwMap =  null;
     private static OpMode opMode;
     private static boolean opIsAuto;
-    private final ElapsedTime period  = new ElapsedTime();
+    public static final ElapsedTime period  = new ElapsedTime();
 
     //All distance values in inches
     private static final float wheelRadius = (float) 1.49606 / 2;
     private static final float ticksPerRev = 1440;
     public static final float ticksToIn = (float) ((2 * PI * wheelRadius) / ticksPerRev);
 
-    private static final double TRACKWIDTH = 12;
+    private static final double TRACKWIDTH = 11.9;
     private static final double CENTER_WHEEL_OFFSET = -4.9375; //Was 7.75
 
 
 
     //Create the Subsystems
     public static DrivetrainSubsystem drivetrain;
-    public static HolonomicOdometry holOdom = new HolonomicOdometry(
-            () -> leftOdo.getCurrentPosition() * ticksToIn,
-            () -> rightOdo.getCurrentPosition() * ticksToIn,
-            () -> backOdo.getCurrentPosition() * ticksToIn,
-            TRACKWIDTH, CENTER_WHEEL_OFFSET
-    );
+    public static HolonomicOdometry holOdom;
+
+    static {
+
+    }
+
     public static PositionalMovementSubsystem positionalMovement;
 
 
@@ -93,7 +98,7 @@ public class Robot {
         opIsAuto = isAuto;
     }
 
-    private void initHelp(HardwareMap ahwMap) {
+    private void initHelp(HardwareMap ahwMap, boolean initCam) {
         // Save reference to Hardware map
         hwMap = ahwMap;
 
@@ -108,6 +113,7 @@ public class Robot {
         pickupRight = hwMap.get(CRServo.class, "pickupRight");
 
         coneTouch = hwMap.get(DigitalChannel.class, "coneTouch");
+        armTouch = hwMap.get(DigitalChannel.class, "armTouch");
 
         leftOdo = new MotorEx(hwMap, "leftOdo");
         rightOdo = new MotorEx(hwMap, "rightOdo");
@@ -127,6 +133,7 @@ public class Robot {
 
 
         coneTouch.setMode(DigitalChannel.Mode.INPUT);
+        armTouch.setMode(DigitalChannel.Mode.INPUT);
 
         armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
@@ -174,16 +181,30 @@ public class Robot {
         backOdo.resetEncoder();
 
 
-        leftOdo.setInverted(true);
-        rightOdo.setInverted(false);
+        leftOdo.setInverted(false);
+        rightOdo.setInverted(true);
         backOdo.setInverted(false);
 
 
+        //Apparently it likes the odos flipped???
+        holOdom = new HolonomicOdometry(
+                () -> rightOdo.getCurrentPosition() * ticksToIn,
+                () -> leftOdo.getCurrentPosition() * ticksToIn,
+                () -> backOdo.getCurrentPosition() * ticksToIn,
+                TRACKWIDTH, CENTER_WHEEL_OFFSET
+        );
+
         //ButtonToggleSubsystem.clearList();
+        if(initCam) {
+            initCV(hwMap);
+        }
+
+        //camera.openCameraDevice();
+
     }
 
-    public void init(HardwareMap ahwMap) {
-        initHelp(ahwMap);
+    public void init(HardwareMap ahwMap, boolean initCam) {
+        initHelp(ahwMap, initCam);
 
         holOdom.updatePose(new Pose2d());
 
@@ -196,8 +217,8 @@ public class Robot {
         positionalMovement = new PositionalMovementSubsystem(drivetrain, holOdom, opMode);
     }
 
-    public void init(HardwareMap ahwMap, double startX, double startY, double startDegrees) {
-        initHelp(ahwMap);
+    public void init(HardwareMap ahwMap, double startX, double startY, double startDegrees, boolean initCam) {
+        initHelp(ahwMap, initCam);
 
         Pose2d startPose = new Pose2d(startX, startY, Rotation2d.fromDegrees(startDegrees));
 
@@ -212,9 +233,33 @@ public class Robot {
         positionalMovement = new PositionalMovementSubsystem(drivetrain, holOdom, opMode);
     }
 
+    /**
+     * This function is automatically run within init(..., initCam = true). Should only be ran for debugging
+     * @param ahwMap
+     */
+    public static void initCV(HardwareMap ahwMap) {
+        HardwareMap hwMap = ahwMap;
+
+        int cameraMonitorViewId = hwMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hwMap.appContext.getPackageName());
+        WebcamName webcamName = hwMap.get(WebcamName.class, "Webcam 1");
+        camera = OpenCvCameraFactory.getInstance().createWebcam(webcamName, cameraMonitorViewId);
 
 
+        camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
+            @Override
+            public void onOpened() {
+                camera.setPipeline(visionPipeline);
+                camera.startStreaming(640, 480, OpenCvCameraRotation.SIDEWAYS_LEFT);
+            }
 
+            @Override
+            public void onError(int errorCode) {
+                /*
+                 * This will be called if the camera could not be opened
+                 */
+            }
+        });
+    }
 
 
 }

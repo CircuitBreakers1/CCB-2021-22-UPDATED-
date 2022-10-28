@@ -32,7 +32,6 @@ package org.firstinspires.ftc.teamcode.Auto;
 import static org.firstinspires.ftc.teamcode.Subsystems.DrivetrainSubsystem.mecDrive;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.drivetrain;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.holOdom;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.positionalMovement;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rotation;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.xLoc;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.yLoc;
@@ -64,7 +63,7 @@ public class PurePursuitTest extends LinearOpMode {
     public void runOpMode() {
 
 
-        robot.init(hardwareMap, 36, 7, 90);
+        robot.init(hardwareMap, 36, 7, 90, false);
 
         telemetry.addData("X Loc", xLoc);
         telemetry.addData("Y Loc", yLoc);

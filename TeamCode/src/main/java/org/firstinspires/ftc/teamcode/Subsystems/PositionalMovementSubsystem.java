@@ -10,13 +10,15 @@ import static org.firstinspires.ftc.teamcode.Subsystems.fieldSquares.getCurrentS
 import static org.firstinspires.ftc.teamcode.Subsystems.fieldSquares.getTargetSquareLocation;
 import static org.firstinspires.ftc.teamcode.Subsystems.pathType.STRAIGHT;
 import static org.firstinspires.ftc.teamcode.Subsystems.pathType.STRAIGHT_NO_TURN;
+import static java.lang.Math.PI;
 import static java.lang.Math.atan;
 import static java.lang.Math.atan2;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
-import static java.lang.Math.toDegrees;
 
+import com.arcrobotics.ftclib.controller.PIDController;
+import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Translation2d;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
@@ -28,7 +30,7 @@ public class PositionalMovementSubsystem {
     private static OpMode opMode;
 
     private final static float moveTolerance = 3.0f; //Tolerance for X and Y values when moving
-    private final static float turnTolerance = 0.5f; //Tolerance for degree values when turning
+    private final static float turnTolerance = (float) Math.toRadians(0.5); //Tolerance for degree values when turning
     private final static double squareFromCenterTolerance = 6;
 
     public PositionalMovementSubsystem(DrivetrainSubsystem driveTemp, HolonomicOdometry odoTemp, OpMode opModeTemp) {
@@ -39,61 +41,71 @@ public class PositionalMovementSubsystem {
 
     /**
      * Tells the robot to turn to a specific heading.
-     * @param angle The angle to turn to
+     * @param angle The angle to turn to IN RADIANS MOTHERFUCKER! Domain is [-pi, pi]
      * @param speed The speed at which to turn
      * @return The final angle, for debug purposes
      */
     public static double turnTo(double angle, double speed) {
         Pose2d moving = holOdom.getPose();
 
-        double heading = Math.toDegrees(moving.getHeading());
+        double heading = moving.getHeading();
         double tempTargetNormalize, tempCurrentNormalize, tempOppCurrent;
 
         boolean turningRight;
 
-        tempTargetNormalize = angle < 0 ? angle + 360 : angle;
-        tempCurrentNormalize = heading < 0 ? heading + 360 : heading;
-        tempOppCurrent = tempCurrentNormalize + 180 < 360 ? tempCurrentNormalize + 180 : tempCurrentNormalize - 180;
+        tempTargetNormalize = angle < 0 ? angle + (2 * PI) : angle;
+        tempCurrentNormalize = heading < 0 ? heading + (2 * PI): heading;
+        tempOppCurrent = tempCurrentNormalize + PI < (2 * PI) ? tempCurrentNormalize + PI : tempCurrentNormalize - PI;
 
-        if(tempCurrentNormalize >= tempTargetNormalize - turnTolerance && tempCurrentNormalize <= tempTargetNormalize + turnTolerance) {
+        double tolCheckCurrent = (2 * PI) + tempCurrentNormalize;
+        double tolCheckTarg = (2 * PI) + tempTargetNormalize;
+
+        if(tolCheckCurrent >= tolCheckTarg - turnTolerance && tolCheckCurrent <= tolCheckTarg + turnTolerance) {
             return heading;
         }
 
-        if(tempCurrentNormalize < tempOppCurrent && tempCurrentNormalize > tempTargetNormalize) {
-            /*
-            drive.l.set(-speed);
-            leftBack.set(-speed);
-            rightFront.set(speed);
-            rightBack.set(speed);
-            */
-            drive.drive(-speed, speed);
+        if(tempTargetNormalize >= PI) {
+            if(heading >= tempTargetNormalize || heading <= tempOppCurrent) {
+                turningRight = true;
+            } else {
+                turningRight = false;
+            }
+        } else if (heading <= tempTargetNormalize || heading > tempOppCurrent) {
             turningRight = false;
         } else {
-            /*
-            drive.l.set(speed);
+            turningRight = true;
+        }
+
+        if(turningRight) {
+            leftFront.set(speed);
             leftBack.set(speed);
             rightFront.set(-speed);
             rightBack.set(-speed);
-             */
-            drive.drive(speed, -speed);
-            turningRight = true;
+        } else {
+            leftFront.set(-speed);
+            leftBack.set(-speed);
+            rightFront.set(speed);
+            rightBack.set(speed);
         }
 
         while (true) {
             holOdom.updatePose();
             moving = holOdom.getPose();
-            heading = (float) Math.toDegrees(moving.getHeading());
-            tempCurrentNormalize = heading < 0 ? heading + 360 : heading;
+            heading = moving.getHeading();
+            tempCurrentNormalize = heading < 0 ? heading + (2 * PI): heading;
 
-            if(tempCurrentNormalize >= tempTargetNormalize - turnTolerance && tempCurrentNormalize <= tempTargetNormalize + turnTolerance) {
+            tolCheckCurrent = (2 * PI) + tempCurrentNormalize;
+
+            if(tolCheckCurrent >= tolCheckTarg - turnTolerance && tolCheckCurrent <= tolCheckTarg + turnTolerance) {
                 break;
             }
 
-            //Check if remainging movement is under 45 degrees, and if so begin to ramp motors down
+            //Check if remaining movement is under pi/4 radians, and if so begin to ramp motors down
             double remainingDegrees = Math.abs(angle - heading);
 
-            if(remainingDegrees < 45) {
-                //Degrees for graphing and functions
+            if(remainingDegrees < (PI / 4)) {
+                //Degrees for graphing and functions because scuffed PID
+                remainingDegrees = Math.toDegrees(remainingDegrees);
                 double degreesInverted = 45 - remainingDegrees;
 
                 double rampDownSpeed = (-0.5 / 3.14) * Math.atan((0.12 * degreesInverted) - 3.2) + 0.3;
@@ -143,7 +155,7 @@ public class PositionalMovementSubsystem {
         Pose2d moving = holOdom.getPose();
 
         double movementAngle, debugTurnToAngle = 0; //The angle at which the robot moves relative to the line of movement
-        double angleToTarget = toDegrees(atan2((endY - moving.getY()), (endX - moving.getX()))); //The angle of the direct line to the endpoint
+        double angleToTarget = atan2((endY - moving.getY()), (endX - moving.getX())); //The angle of the direct line to the endpoint
         double startAngleToTarget = angleToTarget;
         if(PathType == STRAIGHT) {
             debugTurnToAngle = turnTo(angleToTarget, speed);
@@ -178,20 +190,20 @@ public class PositionalMovementSubsystem {
             if (PathType == STRAIGHT) {
                 opMode.telemetry.addData("Robot turnTo() Angle", debugTurnToAngle);
             }
-            opMode.telemetry.addData("Robot Angle", Math.toDegrees(moving.getHeading()));
+            opMode.telemetry.addData("Robot Angle", moving.getHeading());
             opMode.telemetry.addData("Robot Target Angle", angleToTarget);
             opMode.telemetry.update();
 
             if (distance < moveTolerance) {
                 break;
-            } else if (distance < precisionRange && !isPaused) {
+            } else if (distance < precisionRange) {
                 double distanceInverted = 5 - distance;
 
-                double rampDownSpeed = (-0.6 / 3.14) * Math.atan((1.00 * distanceInverted) - 0.6) + 0.3;
+                double rampDownSpeed = (-0.6 / 3.14) * Math.atan((distanceInverted) - 0.6) + 0.3;
 
                 switch (PathType) {
                     case STRAIGHT:
-                        //drive.driveRobotCentric(0,rampDownSpeed,0);
+                        drive.drive(rampDownSpeed);
                         break;
                     case STRAIGHT_NO_TURN:
                         movementAngle = moving.getHeading() + angleToTarget;
@@ -210,42 +222,10 @@ public class PositionalMovementSubsystem {
                         break;
                 }
             }
-            /*
-            if(opMode.gamepad1.a) {
-                drive.l.set(0);
-                leftBack.set(0);
-                rightFront.set(0);
-                rightBack.set(0);
-                isPaused = true;
-            }
-
-             */
-            /*
-            if(opMode.gamepad1.b) {
-                switch (PathType) {
-                    case STRAIGHT:
-                        drive.driveRobotCentric(0,speed,0);
-                        break;
-                    case STRAIGHT_NO_TURN:
-                        movementAngle = moving.getHeading() + angleToTarget;
-
-                        double xComp = cos(movementAngle + 3.14);
-                        double yComp = sin(movementAngle + 3.14);
-
-                        drive.l.set(speed * (yComp + xComp));
-                        leftBack.set(speed * (yComp - xComp));
-                        rightFront.set(speed * (yComp - xComp));
-                        rightBack.set(speed * (yComp + xComp));
-                        break;
-                }
-                isPaused = false;
-            }
-
-             */
 
 
             //Angle Adjustment using recursion
-            angleToTarget = toDegrees(atan2((endY - moving.getY()), (endX - moving.getX())));
+            angleToTarget = atan2((endY - moving.getY()), (endX - moving.getX()));
             /* if(angleToTarget > 360) {
                 angleToTarget = angleToTarget - 360;
             }
@@ -271,17 +251,19 @@ public class PositionalMovementSubsystem {
     public static void moveToLocation(double endX, double endY, double speed) {
         holOdom.updatePose();
         Pose2d moving = holOdom.getPose();
-        final double tolerance = 3;
+        final double moveTolerance = 8, angleTolerance = Math.toRadians(2);
         double startX = moving.getX(), startY = moving.getY(), heading = moving.getHeading();
         double deltaX = startX - endX, deltaY = startY - endY;
         double targetAngle = atan(deltaY / deltaX);
+        boolean correctionTriggered = false;
+        double lastCorrect;
         targetAngle = targetAngle + 3.14;
 
         if(targetAngle > 6.28) {
             targetAngle = targetAngle - 6.28;
         }
 
-        turnTo(toDegrees(targetAngle), speed);
+        turnTo(targetAngle, speed);
 
         //drive.drive(speed);
 
@@ -304,7 +286,7 @@ public class PositionalMovementSubsystem {
             dHelper = (deltaX * deltaX) + (deltaY * deltaY);
             distance = sqrt(dHelper);
 
-            if(distance <= tolerance) {
+            if(distance <= moveTolerance) {
                 break;
             }
 
@@ -314,6 +296,29 @@ public class PositionalMovementSubsystem {
             opMode.telemetry.addData("Left Odo", leftOdo.getCurrentPosition());
             opMode.telemetry.addData("Right Odo", rightOdo.getCurrentPosition());
             opMode.telemetry.update();
+
+            /*
+            if((heading > targetAngle + angleTolerance || heading < targetAngle - angleTolerance) && !correctionTriggered) {
+                //Trigger correction
+                double correctionAngle = atan(deltaY / deltaX);
+                correctionTriggered = true;
+
+                double x_rotated = speed * Math.cos(correctionAngle) /* - y * Math.sin(correctionAngle) */ /*;
+                double y_rotated = speed * Math.sin(correctionAngle) /* + y * Math.cos(correctionAngle) */ /*;
+
+                leftBack.set(x_rotated);
+                leftFront.set(x_rotated);
+                rightBack.set(x_rotated);
+                rightFront.set(x_rotated);
+
+                lastCorrect = Robot.period.time();
+            }
+
+            */
+            //PIDFController pidf = new PIDFController();
+
+
+
         }
 
         //drive.stop();

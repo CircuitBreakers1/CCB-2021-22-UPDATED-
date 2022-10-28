@@ -43,7 +43,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-import org.firstinspires.ftc.teamcode.Subsystems.ButtonToggleSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 @TeleOp(name = "TeleOP")
@@ -52,6 +51,8 @@ public class IterativeTeleOP extends OpMode {
     Orientation angles;
     boolean isIntaking = false;
     boolean isOutputting = false;
+    boolean manualControl = false;
+    int[] armLimits = {100, 1000, 1500};
 
     //Move into init??
     Telemetry.Item intake = telemetry.addData("Is intaking?", isIntaking);
@@ -61,7 +62,7 @@ public class IterativeTeleOP extends OpMode {
 
     @Override
     public void init() {
-        robot.init(hardwareMap, 0, 0, 0);
+        robot.init(hardwareMap, 0, 0, 0, false);
     }
 
     @Override
@@ -84,14 +85,6 @@ public class IterativeTeleOP extends OpMode {
             double angle = currentLocation.getHeading();
             angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
 
-            //updateButtons();
-            //updateLocation();
-            //outsideTeleTest();
-
-            //telemetry.setAutoClear(false); //Stuff will need to be manually removed
-            //telemetry.addAction(new Runnable() { @Override public void run() {updateLocation();} });
-
-
             telemetry.addData("Arm Position", armLift.getCurrentPosition());
             telemetry.addData("Robot X", currentLocation.getX());
             telemetry.addData("Robot Y", currentLocation.getY());
@@ -101,6 +94,7 @@ public class IterativeTeleOP extends OpMode {
             telemetry.addData("Left Odo", leftOdo.getCurrentPosition());
             telemetry.addData("Right Odo", rightOdo.getCurrentPosition());
             telemetry.addData("Back Odo", backOdo.getCurrentPosition());
+            telemetry.addData("Arm Spot", armLift.getCurrentPosition());
 
 
             //drive.driveRobotCentric(gamepad1.right_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x);
@@ -136,9 +130,40 @@ public class IterativeTeleOP extends OpMode {
             }
 
 
+            if(!armTouch.getState() && armLift.getCurrentPosition() != 0) {
+                armLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
 
-            armLift.setPower(gamepad2.left_stick_y);
+            if(gamepad2.left_stick_y != 0) {
+                if(!manualControl) {
+                    manualControl = true;
+                    armLift.setPower(0);
+                    armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                }
+                armLift.setPower(gamepad2.left_stick_y);
 
+            } else if (manualControl) {
+                armLift.setTargetPosition(armLift.getCurrentPosition());
+                armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                armLift.setPower(0.75);
+            }
+
+            if(!manualControl) {
+                if (gamepad2.dpad_up) {
+                    armLift.setTargetPosition(armLimits[2]);
+                    armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    armLift.setPower(0.75);
+                } else if (gamepad2.dpad_left) {
+                    armLift.setTargetPosition(armLimits[1]);
+                    armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    armLift.setPower(0.75);
+                } else if (gamepad2.dpad_down) {
+                    armLift.setTargetPosition(armLimits[0]);
+                    armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    armLift.setPower(0.75);
+                }
+            }
     }
 
     @Override

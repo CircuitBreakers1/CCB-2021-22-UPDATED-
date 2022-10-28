@@ -29,52 +29,50 @@
 
 package org.firstinspires.ftc.teamcode.Auto;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.moveTo;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.*;
-import static org.firstinspires.ftc.teamcode.Subsystems.pathType.*;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.drivetrain;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.holOdom;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.visionPipeline;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
+import org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline;
+import org.openftc.easyopencv.OpenCvCamera;
+import org.openftc.easyopencv.OpenCvCameraFactory;
+import org.openftc.easyopencv.OpenCvCameraRotation;
 
-@Autonomous(name = "Iterative Movement Test", group = "")
-public class movementTestAuto extends LinearOpMode {
-    Robot robot = new Robot(this, true);
+
+/**
+ *
+ */
+
+@Autonomous(name="Vision Test", group="Linear Opmode")
+
+public class VisionTest extends LinearOpMode {
+
+    //Robot robot = new Robot(this, true);
+
 
     @Override
-    public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap, false);
+    public void runOpMode() {
+
+
+        //robot.init(hardwareMap, 36, 7, 90, true);
+
+        Robot.initCV(hardwareMap);
 
         waitForStart();
 
         while(opModeIsActive()) {
-            double y = -gamepad1.left_stick_y;
-            double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
-
-            leftFront.set((y + x + rx));
-            leftBack.set(y - x + rx);
-            rightFront.set(y - x - rx);
-            rightBack.set(y + x - rx);
-
-            if(gamepad1.start) {
-                PositionalMovementSubsystem.turnTo(0.1f,0.5);
-            }
-
-            if(gamepad1.back) {
-                moveTo(STRAIGHT,0,0,0.25);
-            }
-
-            holOdom.updatePose();
-            Pose2d currentLocation = holOdom.getPose();
-
-            telemetry.addData("Robot X", currentLocation.getX());
-            telemetry.addData("Robot Y", currentLocation.getY());
-            telemetry.addData("Robot Angle", Math.toDegrees(currentLocation.getHeading()));
+            telemetry.addData("Color Guess", visionPipeline.getPredictedColor().toString());
+            telemetry.addData("Hue Average", visionPipeline.getAverage());
             telemetry.update();
+
+            sleep(10);
         }
     }
 }
