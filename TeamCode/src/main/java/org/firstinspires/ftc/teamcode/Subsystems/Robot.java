@@ -57,6 +57,8 @@ public class Robot {
     public static float yLoc = 0;
     public static float rotation = 0;
 
+
+
     private static char squareXLocation = 'A';
     private static int squareYLocation = 1;
 
@@ -64,6 +66,7 @@ public class Robot {
     HardwareMap hwMap =  null;
     private static OpMode opMode;
     private static boolean opIsAuto;
+    public static boolean useFTCDash;
     public static final ElapsedTime period  = new ElapsedTime();
 
     //All distance values in inches
@@ -71,7 +74,7 @@ public class Robot {
     private static final float ticksPerRev = 1440;
     public static final float ticksToIn = (float) ((2 * PI * wheelRadius) / ticksPerRev);
 
-    private static final double TRACKWIDTH = 11.9;
+    private static final double TRACKWIDTH = 12;
     private static final double CENTER_WHEEL_OFFSET = -4.9375; //Was 7.75
 
 
@@ -80,10 +83,6 @@ public class Robot {
     public static DrivetrainSubsystem drivetrain;
     public static HolonomicOdometry holOdom;
 
-    static {
-
-    }
-
     public static PositionalMovementSubsystem positionalMovement;
 
 
@@ -91,11 +90,13 @@ public class Robot {
      * Initalize the robot object.
      * @param OPMode <b>Always</b> pass <i>this</i> here as it allows the telemetry to initialize.
      * @param isAuto Tells the robot whether or not to add telemetry for autonomous
+     * @param useDash Tells the robot whether to send data to the FTC Dashboard
      */
-    public Robot(OpMode OPMode, boolean isAuto){
+    public Robot(OpMode OPMode, boolean isAuto, boolean useDash){
         //Grab opmode object from active opMode for telemetry
         opMode = OPMode;
         opIsAuto = isAuto;
+        useFTCDash = useDash;
     }
 
     private void initHelp(HardwareMap ahwMap, boolean initCam) {
@@ -118,17 +119,18 @@ public class Robot {
         leftOdo = new MotorEx(hwMap, "leftOdo");
         rightOdo = new MotorEx(hwMap, "rightOdo");
         backOdo = new MotorEx(hwMap, "backOdo");
-        /*
-        if(opIsAuto) {
+
+        if(false) {
             leftBack.setRunMode(Motor.RunMode.VelocityControl);
             leftFront.setRunMode(Motor.RunMode.VelocityControl);
             rightBack.setRunMode(Motor.RunMode.VelocityControl);
             rightFront.setRunMode(Motor.RunMode.VelocityControl);
-        } else { */
+        } else {
             leftBack.setRunMode(Motor.RunMode.RawPower);
             leftFront.setRunMode(Motor.RunMode.RawPower);
             rightBack.setRunMode(Motor.RunMode.RawPower);
             rightFront.setRunMode(Motor.RunMode.RawPower);
+        }
 
 
 

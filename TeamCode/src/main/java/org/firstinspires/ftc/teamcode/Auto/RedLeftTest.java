@@ -29,16 +29,13 @@
 
 package org.firstinspires.ftc.teamcode.Auto;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.turnTo;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.*;
-
-import static java.lang.Math.PI;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 
@@ -52,13 +49,13 @@ public class RedLeftTest extends LinearOpMode {
 
     MainAuto auto = new MainAuto(autoStartSpot.RED_LEFT, this);
 
-    Robot robot = new Robot(this, true);
+    Robot robot = new Robot(this, true, true);
 
     @Override
     public void runOpMode() {
 
 
-        robot.init(hardwareMap, 36, 7, 90, false);
+        robot.init(hardwareMap, 36.2, 7, 90, false);
 
         holOdom.updatePose();
         Pose2d moving = holOdom.getPose();
@@ -68,20 +65,45 @@ public class RedLeftTest extends LinearOpMode {
         telemetry.addData("Heading", moving.getHeading());
         telemetry.update();
 
+        while (opModeInInit()) {
+            if(!armTouch.getState() && armLift.getCurrentPosition() != 0) {
+                armLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            }
+
+            telemetry.addData("X Loc", moving.getX());
+            telemetry.addData("Y Loc", moving.getY());
+            telemetry.addData("Heading", moving.getHeading());
+            telemetry.addData("Arm Value", armLift.getCurrentPosition());
+            telemetry.update();
+        }
+
         waitForStart();
 
-        //Robot.moveTo(pathType.STRAIGHT, 36, 55, 0.2);
+         pickupLeft.setPower(1);
+         pickupRight.setPower(-1);
+
+         while(coneTouch.getState()) {
+             idle();
+         }
+
+        pickupLeft.setPower(0);
+        pickupRight.setPower(0);
+
+
+        armLift.setTargetPosition(-3560);
+        armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        armLift.setPower(1);
         positionalMovement.moveToLocation(36, 55, 0.5);
-        //Robot.moveToLocation(0,0,0.2);
-        /*
-        turnTo(PI/2, 0.5);
-        sleep(1000);
-        turnTo(0, 0.5);
-        sleep(1000);
-        turnTo((3*PI)/2, 0.5);
-        sleep(1000);
-        turnTo((3*PI)/2, 0.5);
-        */
+        positionalMovement.moveToLocation(53,61,0.25);
+
+
+        pickupLeft.setPower(-1);
+        pickupRight.setPower(1);
+        sleep(3000);
+        pickupLeft.setPower(0);
+        pickupRight.setPower(0);
+
 
 
         drivetrain.stop();
@@ -92,6 +114,7 @@ public class RedLeftTest extends LinearOpMode {
             telemetry.addData("X Loc", moving.getX());
             telemetry.addData("Y Loc", moving.getY());
             telemetry.addData("Heading", moving.getHeading());
+            telemetry.addData("Arm Value", armLift.getCurrentPosition());
             telemetry.update();
             sleep(100);
         }

@@ -47,7 +47,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 @TeleOp(name = "TeleOP")
 public class IterativeTeleOP extends OpMode {
-    Robot robot = new Robot(this, false);
+    Robot robot = new Robot(this, false, false);
     Orientation angles;
     boolean isIntaking = false;
     boolean isOutputting = false;
@@ -62,7 +62,7 @@ public class IterativeTeleOP extends OpMode {
 
     @Override
     public void init() {
-        robot.init(hardwareMap, 0, 0, 0, false);
+        robot.init(hardwareMap, 36.2, 7, 90, false);
     }
 
     @Override
@@ -129,12 +129,14 @@ public class IterativeTeleOP extends OpMode {
                 isOutputting = false;
             }
 
+            armLift.setPower(gamepad2.left_stick_y);
+
 
             if(!armTouch.getState() && armLift.getCurrentPosition() != 0) {
                 armLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
-
+            /*
             if(gamepad2.left_stick_y != 0) {
                 if(!manualControl) {
                     manualControl = true;
@@ -164,6 +166,8 @@ public class IterativeTeleOP extends OpMode {
                     armLift.setPower(0.75);
                 }
             }
+
+             */
     }
 
     @Override

@@ -29,21 +29,15 @@
 
 package org.firstinspires.ftc.teamcode.Auto;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.DrivetrainSubsystem.mecDrive;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.drivetrain;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.holOdom;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rotation;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.xLoc;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.yLoc;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.positionalMovement;
 
-import com.arcrobotics.ftclib.purepursuit.Path;
-import com.arcrobotics.ftclib.purepursuit.Waypoint;
-import com.arcrobotics.ftclib.purepursuit.waypoints.EndWaypoint;
-import com.arcrobotics.ftclib.purepursuit.waypoints.GeneralWaypoint;
-import com.arcrobotics.ftclib.purepursuit.waypoints.StartWaypoint;
+import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 
@@ -51,9 +45,9 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot;
  *
  */
 
-@Autonomous(name="Pure Pursuit Test Auto", group="Linear Opmode")
+@Autonomous(name="Tuning", group="Linear Opmode")
 
-public class PurePursuitTest extends LinearOpMode {
+public class TuningTestAuto extends LinearOpMode {
 
     MainAuto auto = new MainAuto(autoStartSpot.RED_LEFT, this);
 
@@ -63,36 +57,65 @@ public class PurePursuitTest extends LinearOpMode {
     public void runOpMode() {
 
 
-        robot.init(hardwareMap, 36, 7, 90, false);
+        robot.init(hardwareMap, 36, 7, 0, false);
 
-        telemetry.addData("X Loc", xLoc);
-        telemetry.addData("Y Loc", yLoc);
-        telemetry.addData("Heading", rotation);
+        holOdom.updatePose();
+        Pose2d moving = holOdom.getPose();
+
+        telemetry.addData("X Loc", moving.getX());
+        telemetry.addData("Y Loc", moving.getY());
+        telemetry.addData("Heading", moving.getHeading());
         telemetry.update();
-
-        Waypoint startLocation = new StartWaypoint(holOdom.getPose());
-        Waypoint coneSquareCenterEnd =
-                new EndWaypoint(36, 55, 3.14/4, 0.5, 0.5,6, 2, 3.14/12);
-
-
-        Waypoint conePickUp =
-                new EndWaypoint(3, 55, 3.14, 0.5, 0.5, 6, 2, 3.14/12);
-        Waypoint coneSquareCenter =
-                new GeneralWaypoint(36, 55, 3.14/4, 0.5, 0.5, 6);
-        Waypoint coneSet =
-                new EndWaypoint(42, 61, 3.14/4, 0.5, 0.5, 6, 2, 3.14/12);
-        Waypoint currentRobotLocation;
-
-        Path initialPath = new Path(startLocation, coneSquareCenterEnd);
-        initialPath.init();
 
         waitForStart();
 
-        initialPath.followPath(mecDrive, holOdom);
+        PositionalMovementSubsystem.turnTo(Math.PI / 2, 0.5);
+        sleep(1000);
+        PositionalMovementSubsystem.turnTo(Math.PI, 0.5);
+        sleep(1000);
+        PositionalMovementSubsystem.turnTo(0, 0.5);
+        sleep(1000);
+        PositionalMovementSubsystem.turnTo(-Math.PI / 2, 0.5);
 
-        
+        //Robot.moveTo(pathType.STRAIGHT, 36, 55, 0.2);
+        //positionalMovement.moveToLocation(36, 55, 0.5);
+        //Robot.moveToLocation(0,0,0.2);
+        /*
+        turnTo(PI/2, 0.5);
+        sleep(1000);
+        turnTo(0, 0.5);
+        sleep(1000);
+        turnTo((3*PI)/2, 0.5);
+        sleep(1000);
+        turnTo((3*PI)/2, 0.5);
+        */
 
 
-        drivetrain.stop();
+        //drivetrain.stop();
+
+        boolean isAtStart = true;
+
+        while(opModeIsActive()) {
+            holOdom.updatePose();
+            moving = holOdom.getPose();
+            telemetry.addData("Press A to move", moving.getX());
+            telemetry.addData("X Loc", moving.getX());
+            telemetry.addData("Y Loc", moving.getY());
+            telemetry.addData("Heading", moving.getHeading());
+            telemetry.update();
+            /*
+            if(gamepad1.a) {
+                if (isAtStart) {
+                    positionalMovement.moveToLocation(36, 55, 0.5);
+                    isAtStart = false;
+                } else {
+                    positionalMovement.moveToLocation(36, 10, 0.5);
+                    isAtStart = true;
+                }
+            }
+
+             */
+
+        }
     }
 }

@@ -42,7 +42,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 @Autonomous(name = "Iterative Movement Test", group = "")
 public class movementTestAuto extends LinearOpMode {
-    Robot robot = new Robot(this, true);
+    Robot robot = new Robot(this, true, false);
 
     @Override
     public void runOpMode() throws InterruptedException {
