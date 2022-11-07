@@ -16,4 +16,6 @@ public class tuningConstants {
     public static double ANGLEPIDFD = 0;
     public static double ANGLEPIDFF = 0;
 
+    public static double trackTuning = 12;
+
 }

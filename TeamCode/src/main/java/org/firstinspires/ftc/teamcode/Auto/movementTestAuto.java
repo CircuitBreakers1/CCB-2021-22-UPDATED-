@@ -35,12 +35,14 @@ import static org.firstinspires.ftc.teamcode.Subsystems.pathType.*;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 @Autonomous(name = "Iterative Movement Test", group = "")
+@Disabled
 public class movementTestAuto extends LinearOpMode {
     Robot robot = new Robot(this, true, false);
 

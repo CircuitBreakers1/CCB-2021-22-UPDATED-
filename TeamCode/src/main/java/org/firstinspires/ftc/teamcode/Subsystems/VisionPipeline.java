@@ -15,8 +15,8 @@ public class VisionPipeline extends OpenCvPipeline {
         RED, GREEN, BLUE
     }
 
-    private static final double rectWidthPercentage = 0.65, rectHeightPercentage = 0.5;
-    private static final int rectangleWidth = 70, rectangleHeight = 100;
+    private static final double rectWidthPercentage = 0.69, rectHeightPercentage = 0.58;
+    private static final int rectangleWidth = 40, rectangleHeight = 75;
     private double average;
     private Mat matAdapted = new Mat(), block = new Mat();
     private Mat matHue = new Mat();
@@ -46,11 +46,11 @@ public class VisionPipeline extends OpenCvPipeline {
 
 
         //This if uses what hopefully comes out to the HSV value that is needed to check the color
-        if(average <= 60/2 || (average >= 300/2 && average <= 360/2)) {
+        if(average <= 30 || (average >= 140 && average <= 180)) {
             predictedColor = RED;
-        } else if (average > 60/2 && average <= 180/2) {
+        } else if (average > 30 && average <= 90) {
             predictedColor = GREEN;
-        } else if (average > 180/2 && average < 300/2) {
+        } else if (average > 90 && average < 140) {
             predictedColor = BLUE;
         }
 

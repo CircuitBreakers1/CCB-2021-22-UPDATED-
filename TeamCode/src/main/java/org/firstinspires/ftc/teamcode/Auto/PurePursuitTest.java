@@ -42,6 +42,7 @@ import com.arcrobotics.ftclib.purepursuit.waypoints.EndWaypoint;
 import com.arcrobotics.ftclib.purepursuit.waypoints.GeneralWaypoint;
 import com.arcrobotics.ftclib.purepursuit.waypoints.StartWaypoint;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
@@ -52,7 +53,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot;
  */
 
 @Autonomous(name="Pure Pursuit Test Auto", group="Linear Opmode")
-
+@Disabled
 public class PurePursuitTest extends LinearOpMode {
 
     MainAuto auto = new MainAuto(autoStartSpot.RED_LEFT, this);

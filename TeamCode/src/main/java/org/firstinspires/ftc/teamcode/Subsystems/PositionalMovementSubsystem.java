@@ -25,6 +25,7 @@ import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Translation2d;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -32,13 +33,13 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class PositionalMovementSubsystem {
     private static DrivetrainSubsystem drive;
     private static HolonomicOdometry holOdom;
-    private static OpMode opMode;
+    private static LinearOpMode opMode;
 
     private final static float moveTolerance = 3.0f; //Tolerance for X and Y values when moving
     private final static float turnTolerance = (float) (PI / 6); //Tolerance for degree values when turning
     private final static double squareFromCenterTolerance = 6;
 
-    public PositionalMovementSubsystem(DrivetrainSubsystem driveTemp, HolonomicOdometry odoTemp, OpMode opModeTemp) {
+    public PositionalMovementSubsystem(DrivetrainSubsystem driveTemp, HolonomicOdometry odoTemp, LinearOpMode opModeTemp) {
         drive = driveTemp;
         holOdom = odoTemp;
         opMode = opModeTemp;
@@ -51,6 +52,10 @@ public class PositionalMovementSubsystem {
      * @return The final angle, for debug purposes
      */
     public static double turnTo(double angle, double speed) {
+        if (!opMode.opModeIsActive()) {
+            return 0.0;
+        }
+
         Pose2d moving = holOdom.getPose();
 
         double heading = moving.getHeading();
@@ -93,7 +98,7 @@ public class PositionalMovementSubsystem {
             rightBack.set(speed);
         }
 
-        while (true) {
+        while (opMode.opModeIsActive()) {
             holOdom.updatePose();
             moving = holOdom.getPose();
             heading = moving.getHeading();
@@ -254,6 +259,10 @@ public class PositionalMovementSubsystem {
     }
 
     public static void moveToLocation(double endX, double endY, double speed) {
+        if(!opMode.opModeIsActive()) {
+            return;
+        }
+
         Telemetry telemetry = null;
         if(useFTCDash) {
             FtcDashboard dashboard = FtcDashboard.getInstance();
@@ -266,7 +275,7 @@ public class PositionalMovementSubsystem {
         final double moveTolerance = 8, angleTolerance = Math.toRadians(2);
         double startX = moving.getX(), startY = moving.getY(), heading = moving.getHeading();
         double deltaX = startX - endX, deltaY = startY - endY;
-        double targetAngle = atan(deltaY / deltaX);
+        double targetAngle = atan2(deltaY, deltaX);
         boolean correctionTriggered = false;
         double lastCorrect;
         targetAngle = targetAngle + 3.14;
@@ -276,10 +285,6 @@ public class PositionalMovementSubsystem {
         }
 
         heading = turnTo(targetAngle, speed);
-
-        //drive.drive(speed);
-
-
 
         double distance, dHelper, curX, curY;
         double turningAdjustment = 0, speedAdjustment = 0, adjustedLeftSpeed = 0, adjustedRightSpeed = 0;
@@ -306,19 +311,12 @@ public class PositionalMovementSubsystem {
             telemetry.update();
         }
 
-
-        /*
-        while(!opMode.gamepad1.a) {
-        }
-
-         */
-
         leftBack.set(speed);
         leftFront.set(speed);
         rightBack.set(speed);
         rightFront.set(speed);
 
-        while(true) {
+        while(opMode.opModeIsActive()) {
             holOdom.updatePose();
             moving = holOdom.getPose();
             heading = moving.getHeading();
@@ -360,9 +358,175 @@ public class PositionalMovementSubsystem {
 
              */
 
+            adjustedLeftSpeed = speed - 0.025;
+            adjustedRightSpeed = speed;
+
+            //Allow the velocity control to run
+            leftBack.set(adjustedLeftSpeed);
+            leftFront.set(adjustedLeftSpeed);
+            rightBack.set(adjustedRightSpeed);
+            rightFront.set(adjustedRightSpeed);
+
+            opMode.telemetry.addData("Distance", distance);
+            opMode.telemetry.addData("Curr X", curX);
+            opMode.telemetry.addData("Curr Y", curY);
+            opMode.telemetry.addData("Left Odo", leftOdo.getCurrentPosition());
+            opMode.telemetry.addData("Right Odo", rightOdo.getCurrentPosition());
+            opMode.telemetry.update();
+
+            if(useFTCDash) {
+                telemetry.addData("Distance (Forward Error)", distance);
+                telemetry.addData("Forward PID Output", speedAdjustment);
+                telemetry.addData("Angle Deviation (Angle Error)", heading - targetAngle);
+                telemetry.addData("Angle PID Output", turningAdjustment);
+                telemetry.addData("Left Speed Target", adjustedLeftSpeed);
+                telemetry.addData("Right Speed Target", adjustedRightSpeed);
+
+                telemetry.addData("Curr X", curX);
+                telemetry.addData("Curr Y", curY);
+
+                telemetry.update();
+            }
+
+            /*
+            if((heading > targetAngle + angleTolerance || heading < targetAngle - angleTolerance) && !correctionTriggered) {
+                //Trigger correction
+                double correctionAngle = atan(deltaY / deltaX);
+                correctionTriggered = true;
+
+                double x_rotated = speed * Math.cos(correctionAngle) /* - y * Math.sin(correctionAngle) */ /*;
+                double y_rotated = speed * Math.sin(correctionAngle) /* + y * Math.cos(correctionAngle) */ /*;
+
+                leftBack.set(x_rotated);
+                leftFront.set(x_rotated);
+                rightBack.set(x_rotated);
+                rightFront.set(x_rotated);
+
+                lastCorrect = Robot.period.time();
+            }
+
+            */
 
 
 
+        }
+
+        //drive.stop();
+
+        leftBack.set(0);
+        leftFront.set(0);
+        rightBack.set(0);
+        rightFront.set(0);
+
+    }
+
+
+
+    public static void moveToLocation(double endX, double endY, double speed, boolean turn) {
+        if(!opMode.opModeIsActive()) {
+            return;
+        }
+
+        Telemetry telemetry = null;
+        if(useFTCDash) {
+            FtcDashboard dashboard = FtcDashboard.getInstance();
+            telemetry = dashboard.getTelemetry();
+        }
+
+        holOdom.updatePose();
+        Pose2d moving = holOdom.getPose();
+
+        final double moveTolerance = 8, angleTolerance = Math.toRadians(2);
+        double startX = moving.getX(), startY = moving.getY(), heading = moving.getHeading();
+        double deltaX = startX - endX, deltaY = startY - endY;
+        double targetAngle = atan2(deltaY, deltaX);
+        boolean correctionTriggered = false;
+        double lastCorrect;
+        targetAngle = targetAngle + 3.14;
+
+        if(targetAngle > 6.28) {
+            targetAngle = targetAngle - 6.28;
+        }
+
+
+        if(turn) {
+            heading = turnTo(targetAngle, speed);
+        } else {
+            heading = 0.0;
+        }
+
+
+        double distance, dHelper, curX, curY;
+        double turningAdjustment = 0, speedAdjustment = 0, adjustedLeftSpeed = 0, adjustedRightSpeed = 0;
+
+        dHelper = (deltaX * deltaX) + (deltaY * deltaY);
+        distance = sqrt(dHelper);
+
+        //The input of this system is distance to target, the target is 0 distance to the target point, and the output is motor speeds
+        PIDFController pidfForward =
+                new PIDFController(FORWARDPIDFF, FORWARDPIDFI, FORWARDPIDFD, FORWARDPIDFI, 0, distance);
+        //Input: Angle deviation to target angle, Target: 0 angle deviation, Output: Motor weighting
+        PIDFController pidfTurning =
+                new PIDFController(ANGLEPIDFP, ANGLEPIDFI, ANGLEPIDFD, ANGLEPIDFF, 0, heading - targetAngle);
+
+        if(useFTCDash) {
+            telemetry.addData("Distance (Forward Error)", distance);
+            telemetry.addData("Forward PID Output", speedAdjustment);
+            telemetry.addData("Angle Deviation (Angle Error)", heading - targetAngle);
+            telemetry.addData("Angle PID Output", turningAdjustment);
+            telemetry.addData("Left Speed Target", adjustedLeftSpeed);
+            telemetry.addData("Right Speed Target", adjustedRightSpeed);
+
+
+            telemetry.update();
+        }
+
+        leftBack.set(speed);
+        leftFront.set(speed);
+        rightBack.set(speed);
+        rightFront.set(speed);
+
+        while(opMode.opModeIsActive()) {
+            holOdom.updatePose();
+            moving = holOdom.getPose();
+            heading = moving.getHeading();
+
+            curX = moving.getX();
+            curY = moving.getY();
+
+            deltaX = endX - curX;
+            deltaY = endY - curY;
+            dHelper = (deltaX * deltaX) + (deltaY * deltaY);
+            distance = sqrt(dHelper);
+
+            if(distance <= moveTolerance) {
+                break;
+            }
+
+            targetAngle = atan(deltaY / deltaX);
+            /*
+
+            if(!pidfForward.atSetPoint()) {
+                speedAdjustment = pidfForward.calculate(distance);
+                adjustedLeftSpeed = speedAdjustment * speed;
+                adjustedRightSpeed = speedAdjustment * speed;
+
+                adjustedRightSpeed = clip(adjustedRightSpeed, -speed, speed);
+                adjustedRightSpeed = clip(adjustedLeftSpeed, -speed, speed);
+            } else {
+                adjustedLeftSpeed = speed;
+                adjustedRightSpeed = speed;
+            }
+
+            /*
+
+            if(!pidfTurning.atSetPoint()) {
+                turningAdjustment = pidfTurning.calculate(heading - targetAngle);
+                adjustedLeftSpeed = adjustedLeftSpeed - turningAdjustment;
+                adjustedRightSpeed = adjustedRightSpeed + turningAdjustment;
+            }
+
+             */
 
             adjustedLeftSpeed = speed - 0.025;
             adjustedRightSpeed = speed;

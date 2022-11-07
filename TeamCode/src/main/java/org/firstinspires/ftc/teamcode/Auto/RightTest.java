@@ -29,9 +29,16 @@
 
 package org.firstinspires.ftc.teamcode.Auto;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.*;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.*;
-import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.BLUE;
+import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.moveToLocation;
+import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.turnTo;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.armLift;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.armTouch;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.coneTouch;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.drivetrain;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.holOdom;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.pickupLeft;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.pickupRight;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.visionPipeline;
 import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.GREEN;
 import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.RED;
 
@@ -40,7 +47,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline;
 
@@ -49,9 +55,9 @@ import org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline;
  *
  */
 
-@Autonomous(name="Left Auto", group="Linear Opmode")
+@Autonomous(name="Right Auto", group="Linear Opmode")
 
-public class RedLeftTest extends LinearOpMode {
+public class RightTest extends LinearOpMode {
 
     MainAuto auto = new MainAuto(autoStartSpot.RED_LEFT, this);
 
@@ -134,12 +140,12 @@ public class RedLeftTest extends LinearOpMode {
         pickupLeft.setPower(0.3);
         pickupRight.setPower(-0.3);
 
-        moveToLocation(52,60,0.25);
+        moveToLocation(24.5,62,0.25);
 
         holOdom.updatePose();
         moving = holOdom.getPose();
 
-        turnTo(moving.getHeading() + Math.toRadians(40), 0.5);
+        //turnTo(moving.getHeading() - Math.toRadians(40), 0.5);
 
         pickupLeft.setPower(-1);
         pickupRight.setPower(1);
@@ -168,12 +174,12 @@ public class RedLeftTest extends LinearOpMode {
         if(color == RED) {
             //moveToLocation(12, 60, 0.5);
             //turnTo(0, 0.5);
-            drivetrain.drive(0.5, -0.5);
+            drivetrain.drive(-0.5, 0.5);
             sleep(500);
             drivetrain.drive(-0.5);
-            sleep(900);
+            sleep(700);
         } else if(color == GREEN) {
-            drivetrain.drive(0.5, -0.5);
+            drivetrain.drive(-0.5, 0.5);
             sleep(500);
             drivetrain.drive(0.5);
             sleep(700);

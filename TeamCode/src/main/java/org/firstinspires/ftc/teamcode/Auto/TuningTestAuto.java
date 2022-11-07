@@ -35,6 +35,7 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot.positionalMovement
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
@@ -46,7 +47,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot;
  */
 
 @Autonomous(name="Tuning", group="Linear Opmode")
-
+@Disabled
 public class TuningTestAuto extends LinearOpMode {
 
     MainAuto auto = new MainAuto(autoStartSpot.RED_LEFT, this);
@@ -55,6 +56,14 @@ public class TuningTestAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() {
+
+
+        /*
+         * TODO: Tune trackwidth
+         * TODO: Fix pathing
+         * TODO: Finish Auto run
+         * TODO: Implement Auto switcher
+         */
 
 
         robot.init(hardwareMap, 36, 7, 0, false);

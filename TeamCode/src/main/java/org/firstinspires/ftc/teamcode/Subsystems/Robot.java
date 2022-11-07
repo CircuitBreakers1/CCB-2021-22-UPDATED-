@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.tuningConstants.trackTuning;
+
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.arcrobotics.ftclib.hardware.motors.Motor;
@@ -7,6 +9,7 @@ import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -64,7 +67,7 @@ public class Robot {
 
     /* local OpMode members. */
     HardwareMap hwMap =  null;
-    private static OpMode opMode;
+    private static LinearOpMode opMode;
     private static boolean opIsAuto;
     public static boolean useFTCDash;
     public static final ElapsedTime period  = new ElapsedTime();
@@ -74,7 +77,7 @@ public class Robot {
     private static final float ticksPerRev = 1440;
     public static final float ticksToIn = (float) ((2 * PI * wheelRadius) / ticksPerRev);
 
-    private static final double TRACKWIDTH = 12;
+    private static final double TRACKWIDTH = trackTuning;
     private static final double CENTER_WHEEL_OFFSET = -4.9375; //Was 7.75
 
 
@@ -92,7 +95,7 @@ public class Robot {
      * @param isAuto Tells the robot whether or not to add telemetry for autonomous
      * @param useDash Tells the robot whether to send data to the FTC Dashboard
      */
-    public Robot(OpMode OPMode, boolean isAuto, boolean useDash){
+    public Robot(LinearOpMode OPMode, boolean isAuto, boolean useDash){
         //Grab opmode object from active opMode for telemetry
         opMode = OPMode;
         opIsAuto = isAuto;

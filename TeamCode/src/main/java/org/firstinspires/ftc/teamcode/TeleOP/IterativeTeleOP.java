@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.teamcode.TeleOP;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -46,13 +47,13 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 @TeleOp(name = "TeleOP")
-public class IterativeTeleOP extends OpMode {
+public class IterativeTeleOP extends LinearOpMode {
     Robot robot = new Robot(this, false, false);
     Orientation angles;
     boolean isIntaking = false;
     boolean isOutputting = false;
     boolean manualControl = false;
-    int[] armLimits = {100, 1000, 1500};
+    int[] armLimits = {-2000, -2600, -3560};
 
     //Move into init??
     Telemetry.Item intake = telemetry.addData("Is intaking?", isIntaking);
@@ -61,25 +62,17 @@ public class IterativeTeleOP extends OpMode {
     //ButtonToggleSubsystem a1 = new ButtonToggleSubsystem(() -> gamepad1.a);
 
     @Override
-    public void init() {
+    public void runOpMode() throws InterruptedException {
         robot.init(hardwareMap, 36.2, 7, 90, false);
-    }
 
-    @Override
-    public void init_loop() {
+        waitForStart();
 
-    }
-
-    @Override
-    public void start() {
         leftBack.resetEncoder();
         leftFront.resetEncoder();
         rightFront.resetEncoder();
         rightBack.resetEncoder();
-    }
 
-    @Override
-    public void loop() {
+        while (opModeIsActive()) {
             holOdom.updatePose();
             Pose2d currentLocation = holOdom.getPose();
             double angle = currentLocation.getHeading();
@@ -95,11 +88,10 @@ public class IterativeTeleOP extends OpMode {
             telemetry.addData("Right Odo", rightOdo.getCurrentPosition());
             telemetry.addData("Back Odo", backOdo.getCurrentPosition());
             telemetry.addData("Arm Spot", armLift.getCurrentPosition());
-
+            telemetry.update();
 
             //drive.driveRobotCentric(gamepad1.right_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x);
             //drive.driveFieldCentric(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, -angle);
-
 
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
@@ -110,71 +102,63 @@ public class IterativeTeleOP extends OpMode {
             rightFront.set(0.75 * (y - x - rx));
             rightBack.set(0.75 * (y + x - rx));
 
-            if(!isIntaking && gamepad2.a) {
+            if(!isIntaking && gamepad2.dpad_up) {
                 pickupLeft.setPower(1);
                 pickupRight.setPower(-1);
                 isIntaking = true;
                 isOutputting = false;
             }
-            if(!isOutputting && gamepad2.b) {
+            if(!isOutputting && gamepad2.dpad_down) {
                 pickupLeft.setPower(-1);
                 pickupRight.setPower(1);
                 isOutputting = true;
                 isIntaking = false;
             }
-            if(gamepad2.x || (!coneTouch.getState() && isIntaking)) {
+            if(gamepad2.dpad_left || (!coneTouch.getState() && isIntaking)) {
                 pickupLeft.setPower(0);
                 pickupRight.setPower(0);
                 isIntaking = false;
                 isOutputting = false;
             }
 
-            armLift.setPower(gamepad2.left_stick_y);
-
-
             if(!armTouch.getState() && armLift.getCurrentPosition() != 0) {
                 armLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
+            armLift.setPower(gamepad2.right_stick_y);
+
             /*
-            if(gamepad2.left_stick_y != 0) {
+            if(Math.abs(gamepad2.right_stick_y) > 0.1) {
                 if(!manualControl) {
                     manualControl = true;
                     armLift.setPower(0);
                     armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 }
-                armLift.setPower(gamepad2.left_stick_y);
+                armLift.setPower(gamepad2.right_stick_y);
 
             } else if (manualControl) {
+                //armLift.setPower(0);
+                manualControl = false;
                 armLift.setTargetPosition(armLift.getCurrentPosition());
-                armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                armLift.setPower(0.75);
             }
 
             if(!manualControl) {
-                if (gamepad2.dpad_up) {
+                if (gamepad2.y) {
                     armLift.setTargetPosition(armLimits[2]);
                     armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    armLift.setPower(0.75);
-                } else if (gamepad2.dpad_left) {
+                    armLift.setPower(1);
+                } else if (gamepad2.b) {
                     armLift.setTargetPosition(armLimits[1]);
                     armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    armLift.setPower(0.75);
-                } else if (gamepad2.dpad_down) {
+                    armLift.setPower(1);
+                } else if (gamepad2.a) {
                     armLift.setTargetPosition(armLimits[0]);
                     armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    armLift.setPower(0.75);
+                    armLift.setPower(1);
                 }
             }
-
              */
-    }
 
-    @Override
-    public void stop() {
-        //Make sure the robot controller clears any actions setup by the telemetry so they do not
-        //run when the opmode has stopped
-        telemetry.clearAll();
+        }
     }
-
 }
