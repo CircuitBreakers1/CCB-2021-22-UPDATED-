@@ -63,14 +63,11 @@ public class IterativeTeleOP extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap, 36.2, 7, 90, false);
+        robot.init(hardwareMap, 0, 0, 0, false);
 
         waitForStart();
 
-        leftBack.resetEncoder();
-        leftFront.resetEncoder();
-        rightFront.resetEncoder();
-        rightBack.resetEncoder();
+        //drivetrain.resetEncoders();
 
         while (opModeIsActive()) {
             holOdom.updatePose();
@@ -83,11 +80,13 @@ public class IterativeTeleOP extends LinearOpMode {
             telemetry.addData("Robot Y", currentLocation.getY());
             telemetry.addData("Robot Angle", angle);
             telemetry.addData("Gyro Angle", angles.firstAngle);
+            telemetry.addData("Angle Error", Math.abs(angles.firstAngle) - Math.abs(angle));
 
             telemetry.addData("Left Odo", leftOdo.getCurrentPosition());
             telemetry.addData("Right Odo", rightOdo.getCurrentPosition());
             telemetry.addData("Back Odo", backOdo.getCurrentPosition());
             telemetry.addData("Arm Spot", armLift.getCurrentPosition());
+            telemetry.addData("Left Back", leftBack.getCurrentPosition());
             telemetry.update();
 
             //drive.driveRobotCentric(gamepad1.right_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x);
@@ -97,10 +96,10 @@ public class IterativeTeleOP extends LinearOpMode {
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
 
-            leftFront.set(0.75 * (y + x + rx));
-            leftBack.set(0.75 * (y - x + rx));
-            rightFront.set(0.75 * (y - x - rx));
-            rightBack.set(0.75 * (y + x - rx));
+            leftFront.setPower(0.75 * (y + x + rx));
+            leftBack.setPower(0.75 * (y - x + rx));
+            rightFront.setPower(0.75 * (y - x - rx));
+            rightBack.setPower(0.75 * (y + x - rx));
 
             if(!isIntaking && gamepad2.dpad_up) {
                 pickupLeft.setPower(1);
@@ -126,6 +125,7 @@ public class IterativeTeleOP extends LinearOpMode {
                 armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
             armLift.setPower(gamepad2.right_stick_y);
+            rightOdo.set(gamepad2.right_stick_y);
 
             /*
             if(Math.abs(gamepad2.right_stick_y) > 0.1) {

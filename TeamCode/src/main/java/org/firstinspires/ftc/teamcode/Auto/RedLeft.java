@@ -46,12 +46,12 @@ import org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline;
 
 
 /**
- *
+ *  The autonomous for the Left side of the field.
  */
 
 @Autonomous(name="Left Auto", group="Linear Opmode")
 
-public class RedLeftTest extends LinearOpMode {
+public class RedLeft extends LinearOpMode {
 
     MainAuto auto = new MainAuto(autoStartSpot.RED_LEFT, this);
 

@@ -10,9 +10,10 @@ import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.hardware.bosch.JustLoggingAccelerationIntegrator;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -24,6 +25,8 @@ import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
+import java.util.Objects;
+
 
 /**
  * This class contains all hardware maps and functions for use in opModes. An object should be
@@ -34,10 +37,10 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
  * .addData() and stored in a Telemetry.Item. To update, use .setValue() with the Item.
  */
 public class Robot {
-    public static MotorEx leftFront;
-    public static MotorEx rightFront;
-    public static MotorEx leftBack;
-    public static MotorEx rightBack;
+    public static DcMotorEx leftFront;
+    public static DcMotorEx rightFront;
+    public static DcMotorEx leftBack;
+    public static DcMotorEx rightBack;
 
     public static CRServo pickupLeft;
     public static CRServo pickupRight;
@@ -60,7 +63,7 @@ public class Robot {
     public static float yLoc = 0;
     public static float rotation = 0;
 
-
+    double[] tune = {1.0, 1.0, 1.0, 1.0};
 
     private static char squareXLocation = 'A';
     private static int squareYLocation = 1;
@@ -107,10 +110,15 @@ public class Robot {
         hwMap = ahwMap;
 
         // Define and Initialize Motors
-        leftFront = new MotorEx(hwMap, "leftFront", Motor.GoBILDA.RPM_312);
-        rightFront = new MotorEx(hwMap, "rightFront", Motor.GoBILDA.RPM_312);
-        leftBack = new MotorEx(hwMap, "leftBack", Motor.GoBILDA.RPM_312);
-        rightBack = new MotorEx(hwMap, "rightBack", Motor.GoBILDA.RPM_312);
+//        leftFront = new MotorEx(hwMap, "leftFront", Motor.GoBILDA.RPM_312);
+//        rightFront = new MotorEx(hwMap, "rightFront", Motor.GoBILDA.RPM_312);
+//        leftBack = new MotorEx(hwMap, "leftBack", Motor.GoBILDA.RPM_312);
+//        rightBack = new MotorEx(hwMap, "rightBack", Motor.GoBILDA.RPM_312);
+        leftFront = hwMap.get(DcMotorEx.class, "leftFront");
+        rightFront = hwMap.get(DcMotorEx.class, "rightFront");
+        leftBack = hwMap.get(DcMotorEx.class, "leftBack");
+        rightBack = hwMap.get(DcMotorEx.class, "rightBack");
+
         armLift = hwMap.get(DcMotor.class, "armLift");
 
         pickupLeft = hwMap.get(CRServo.class, "pickupLeft");
@@ -123,18 +131,29 @@ public class Robot {
         rightOdo = new MotorEx(hwMap, "rightOdo");
         backOdo = new MotorEx(hwMap, "backOdo");
 
-        if(false) {
-            leftBack.setRunMode(Motor.RunMode.VelocityControl);
-            leftFront.setRunMode(Motor.RunMode.VelocityControl);
-            rightBack.setRunMode(Motor.RunMode.VelocityControl);
-            rightFront.setRunMode(Motor.RunMode.VelocityControl);
-        } else {
-            leftBack.setRunMode(Motor.RunMode.RawPower);
-            leftFront.setRunMode(Motor.RunMode.RawPower);
-            rightBack.setRunMode(Motor.RunMode.RawPower);
-            rightFront.setRunMode(Motor.RunMode.RawPower);
-        }
+//        if(false) {
+//            leftBack.setRunMode(Motor.RunMode.VelocityControl);
+//            leftFront.setRunMode(Motor.RunMode.VelocityControl);
+//            rightBack.setRunMode(Motor.RunMode.VelocityControl);
+//            rightFront.setRunMode(Motor.RunMode.VelocityControl);
+//        } else {
+//            leftBack.setRunMode(Motor.RunMode.RawPower);
+//            leftFront.setRunMode(Motor.RunMode.RawPower);
+//            rightBack.setRunMode(Motor.RunMode.RawPower);
+//            rightFront.setRunMode(Motor.RunMode.RawPower);
+//        }
 
+        //Set the drivemotors to run without encoder
+        leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        //Set them to brake
+        leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
         coneTouch.setMode(DigitalChannel.Mode.INPUT);
@@ -142,23 +161,26 @@ public class Robot {
 
         armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        /*
-        leftBack.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        rightBack.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        leftFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        rightFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-        */
 
-        leftBack.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-        rightBack.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-        leftFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-        rightFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+//        leftBack.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+//        rightBack.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+//        leftFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+//        rightFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
+
+
+//        leftBack.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+//        rightBack.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+//        leftFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
+//        rightFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
 
         armLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
-        leftBack.setInverted(true);
-        leftFront.setInverted(true);
+//        leftBack.setInverted(true);
+//        leftFront.setInverted(true);
+
+        leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
 
         leftOdo.setDistancePerPulse(ticksToIn);
         rightOdo.setDistancePerPulse(ticksToIn);
@@ -176,10 +198,12 @@ public class Robot {
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
 
-        rightBack.resetEncoder();
-        rightFront.resetEncoder();
-        leftBack.resetEncoder();
-        leftFront.resetEncoder();
+//        rightBack.resetEncoder();
+//        rightFront.resetEncoder();
+//        leftBack.resetEncoder();
+//        leftFront.resetEncoder();
+
+
 
         rightOdo.resetEncoder();
         leftOdo.resetEncoder();
@@ -220,6 +244,7 @@ public class Robot {
 
         drivetrain = new DrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
         positionalMovement = new PositionalMovementSubsystem(drivetrain, holOdom, opMode);
+        drivetrain.resetEncoders();
     }
 
     public void init(HardwareMap ahwMap, double startX, double startY, double startDegrees, boolean initCam) {
@@ -236,6 +261,7 @@ public class Robot {
 
         drivetrain = new DrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
         positionalMovement = new PositionalMovementSubsystem(drivetrain, holOdom, opMode);
+        drivetrain.resetEncoders();
     }
 
     /**

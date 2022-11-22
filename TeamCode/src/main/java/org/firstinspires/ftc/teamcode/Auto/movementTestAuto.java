@@ -30,53 +30,38 @@
 package org.firstinspires.ftc.teamcode.Auto;
 
 import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.moveTo;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.*;
-import static org.firstinspires.ftc.teamcode.Subsystems.pathType.*;
 
-import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 @Autonomous(name = "Iterative Movement Test", group = "")
-@Disabled
 public class movementTestAuto extends LinearOpMode {
-    Robot robot = new Robot(this, true, false);
+    Robot robot = new Robot(this, true, true);
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap, false);
+        robot.init(hardwareMap, 0, 0, 90, false);
+
+        FtcDashboard ftcDashboard = FtcDashboard.getInstance();
+        Telemetry dashTelemetry = ftcDashboard.getTelemetry();
 
         waitForStart();
 
         while(opModeIsActive()) {
-            double y = -gamepad1.left_stick_y;
-            double x = gamepad1.left_stick_x;
-            double rx = gamepad1.right_stick_x;
-
-            leftFront.set((y + x + rx));
-            leftBack.set(y - x + rx);
-            rightFront.set(y - x - rx);
-            rightBack.set(y + x - rx);
-
-            if(gamepad1.start) {
-                PositionalMovementSubsystem.turnTo(0.1f,0.5);
+            if(gamepad1.a) {
+                PositionalMovementSubsystem.moveTo(30,0,90, 0.5,true, dashTelemetry);
             }
 
-            if(gamepad1.back) {
-                moveTo(STRAIGHT,0,0,0.25);
+            if(gamepad1.b) {
+                PositionalMovementSubsystem.moveTo(0, 0, 0, 0.50, true, dashTelemetry);
             }
 
-            holOdom.updatePose();
-            Pose2d currentLocation = holOdom.getPose();
-
-            telemetry.addData("Robot X", currentLocation.getX());
-            telemetry.addData("Robot Y", currentLocation.getY());
-            telemetry.addData("Robot Angle", Math.toDegrees(currentLocation.getHeading()));
-            telemetry.update();
+            idle();
         }
     }
 }

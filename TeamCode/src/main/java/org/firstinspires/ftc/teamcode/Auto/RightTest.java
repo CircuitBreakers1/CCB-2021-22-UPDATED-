@@ -52,7 +52,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline;
 
 
 /**
- *
+ *  The autonomous for the Right Side of the Field
  */
 
 @Autonomous(name="Right Auto", group="Linear Opmode")
@@ -170,6 +170,7 @@ public class RightTest extends LinearOpMode {
          */
 
         holOdom.updatePose();
+        moving = holOdom.getPose();
 
         if(color == RED) {
             //moveToLocation(12, 60, 0.5);

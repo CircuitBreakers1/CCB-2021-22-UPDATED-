@@ -7,27 +7,24 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightBack;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightFront;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightOdo;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.useFTCDash;
-import static org.firstinspires.ftc.teamcode.Subsystems.fieldSquares.getCurrentSquareCenter;
-import static org.firstinspires.ftc.teamcode.Subsystems.fieldSquares.getTargetSquareLocation;
-import static org.firstinspires.ftc.teamcode.Subsystems.pathType.STRAIGHT;
-import static org.firstinspires.ftc.teamcode.Subsystems.pathType.STRAIGHT_NO_TURN;
 import static org.firstinspires.ftc.teamcode.Subsystems.tuningConstants.*;
 import static java.lang.Math.PI;
+import static java.lang.Math.abs;
 import static java.lang.Math.atan;
 import static java.lang.Math.atan2;
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
+import static java.lang.Math.max;
 import static java.lang.Math.sqrt;
+
+import androidx.annotation.FloatRange;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
-import com.arcrobotics.ftclib.geometry.Translation2d;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+import org.checkerframework.checker.units.qual.s;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class PositionalMovementSubsystem {
@@ -87,15 +84,15 @@ public class PositionalMovementSubsystem {
         }
 
         if(turningRight) {
-            leftFront.set(speed);
-            leftBack.set(speed);
-            rightFront.set(-speed);
-            rightBack.set(-speed);
+            leftFront.setPower(speed);
+            leftBack.setPower(speed);
+            rightFront.setPower(-speed);
+            rightBack.setPower(-speed);
         } else {
-            leftFront.set(-speed);
-            leftBack.set(-speed);
-            rightFront.set(speed);
-            rightBack.set(speed);
+            leftFront.setPower(-speed);
+            leftBack.setPower(-speed);
+            rightFront.setPower(speed);
+            rightBack.setPower(speed);
         }
 
         while (opMode.opModeIsActive()) {
@@ -122,18 +119,18 @@ public class PositionalMovementSubsystem {
 
                 if(turningRight) {
                     /*
-                    drive.l.set(rampDownSpeed);
-                    leftBack.set(rampDownSpeed);
-                    rightFront.set(-rampDownSpeed);
-                    rightBack.set(-rampDownSpeed);
+                    drive.l.setPower(rampDownSpeed);
+                    leftBack.setPower(rampDownSpeed);
+                    rightFront.setPower(-rampDownSpeed);
+                    rightBack.setPower(-rampDownSpeed);
                      */
                     drive.drive(rampDownSpeed, -rampDownSpeed);
                 } else {
                     /*
-                    drive.l.set(-rampDownSpeed);
-                    leftBack.set(-rampDownSpeed);
-                    rightFront.set(rampDownSpeed);
-                    rightBack.set(rampDownSpeed);
+                    drive.l.setPower(-rampDownSpeed);
+                    leftBack.setPower(-rampDownSpeed);
+                    rightFront.setPower(rampDownSpeed);
+                    rightBack.setPower(rampDownSpeed);
                      */
                     drive.drive(-rampDownSpeed, rampDownSpeed);
                 }
@@ -150,112 +147,199 @@ public class PositionalMovementSubsystem {
     }
 
     /**
-     *
-     * @param PathType The type of path the robot should take to get to the desired destination
-     * @param endX Where the robot should end up on the x plane
-     * @param endY Where the robot should end up on the y plane
+     * Move the robot to a given point from the current location
+     * @param endX The X coordinate to go to
+     * @param endY The Y cooridnate to go to
+     * @param endAngle The end angle of the movement (In Radians)
+     * @param speed The maximum speed at which to move the motors (0.0 - 1.0)
+     * @param holometric Whether the robot should move holometrically (true) or to turn and drive straight (false)
+     * @param dashTelemetry Pass the telemetry object from the opmode to this parameter to send data to the dashboard
      */
-    public static void moveTo(pathType PathType, double endX, double endY, double speed) {
-        //This specific case is built to only deal with straight line movement
-        final double maxAngleDeviation = Math.toRadians(2);
-        //Represents a distance to the target point where the robot gradually reduces speed to increase accuracy
-        final double precisionRange = 6;
-        boolean isPaused = false;
+    public static void moveTo(double endX, double endY, double endAngle, @FloatRange(from = 0, to = 1) double speed, boolean holometric, Telemetry dashTelemetry) {
+        final double distanceTol = 0.5;
+        final double turnTol = 3.14 / 6;
+        boolean xTrac = true, yTrac = true;
 
-        Pose2d moving = holOdom.getPose();
-
-        double movementAngle, debugTurnToAngle = 0; //The angle at which the robot moves relative to the line of movement
-        double angleToTarget = atan2((endY - moving.getY()), (endX - moving.getX())); //The angle of the direct line to the endpoint
-        double startAngleToTarget = angleToTarget;
-        if(PathType == STRAIGHT) {
-            debugTurnToAngle = turnTo(angleToTarget, speed);
-            drive.drive(speed);
-        } else if(PathType == STRAIGHT_NO_TURN) {
-            movementAngle = moving.getHeading() + angleToTarget;
-
-            double xComp = cos(movementAngle + 3.14);
-            double yComp = sin(movementAngle + 3.14);
-            /*
-            drive.l.set(speed * (yComp + xComp));
-            leftBack.set(speed * (yComp - xComp));
-            rightFront.set(speed * (yComp - xComp));
-            rightBack.set(speed * (yComp + xComp));
-             */
-            drive.driveHolo(yComp, xComp, 0, speed);
+        if (!holometric) {
+            moveToLocation(endX, endY, speed);
         }
 
-        Translation2d target = new Translation2d(endX, endY);
-        Translation2d pose;
+        holOdom.updatePose();
+        Pose2d moving = holOdom.getPose();
 
-        while(true) {
+        double startX = moving.getX(), startY = moving.getY(), heading = moving.getHeading();
+
+        PIDController pidX = new PIDController(FORWARDPIDFP, FORWARDPIDFI, FORWARDPIDFD);
+        PIDController pidY = new PIDController(HORIZONTALPIDFP, HORIZONTALPIDFI, HORIZONTALPIDFD);
+        PIDController pidT = new PIDController(0,0,0);
+
+        pidX.setTolerance(distanceTol);
+        pidY.setTolerance(distanceTol);
+        pidT.setTolerance(turnTol);
+
+        double x = pidX.calculate(startX, endX);
+        double y = pidY.calculate(startY, endY);
+        double t = 0;
+
+        double x_rotated = x * Math.cos(heading) - y * Math.sin(heading);
+        double y_rotated = x * Math.sin(heading) + y * Math.cos(heading);
+
+        double lfSpeed = x_rotated + y_rotated;
+        double lbSpeed = x_rotated - y_rotated;
+        double rfSpeed = x_rotated - y_rotated;
+        double rbSpeed = x_rotated + y_rotated;
+
+        double lfTemp = abs(lfSpeed);
+        double lbTemp = abs(lbSpeed);
+        double rfTemp = abs(rfSpeed);
+        double rbTemp = abs(rbSpeed);
+
+        double maxSpeed = max(lfTemp, max(lbTemp, max(rfTemp, rbTemp)));
+
+        if(maxSpeed > 1) {
+            lfSpeed /= maxSpeed;
+            lbSpeed /= maxSpeed;
+            rfSpeed /= maxSpeed;
+            rbSpeed /= maxSpeed;
+        }
+
+
+        double curX, curY, curT;
+
+        //Allow time to setup tracking on FTCDashboard
+        while (opMode.opModeIsActive() && !opMode.gamepad1.x && useFTCDash) {
             holOdom.updatePose();
             moving = holOdom.getPose();
-            pose = moving.getTranslation();
-            double x = moving.getX(), y = moving.getY(), heading = moving.getHeading();
-            double distance = Math.sqrt(((x - endX) * (x - endX)) + ((y - endY) * (y - endY)));
 
-            opMode.telemetry.addData("Robot X", x);
-            opMode.telemetry.addData("Robot Y", y);
-            opMode.telemetry.addData("Distance", distance);
-            if (PathType == STRAIGHT) {
-                opMode.telemetry.addData("Robot turnTo() Angle", debugTurnToAngle);
+            curX = moving.getX();
+            curY = moving.getY();
+            curT = moving.getHeading();
+
+            dashTelemetry.addData("X Error", endX - curX);
+            dashTelemetry.addData("X PID Output", x);
+            dashTelemetry.addData("Y Error", endY - curY);
+            dashTelemetry.addData("Y PID Output", y);
+            dashTelemetry.addData("Angle", curT);
+            dashTelemetry.addData("LF Speed", lfSpeed * speed);
+            dashTelemetry.addData("LB Speed", rfSpeed * speed);
+            dashTelemetry.addData("RF Speed", rfSpeed * speed);
+            dashTelemetry.addData("RB Speed", rbSpeed * speed);
+            dashTelemetry.addData("Tracking X", xTrac);
+            dashTelemetry.addData("Tracking Y", yTrac);
+            dashTelemetry.update();
+        }
+
+//        leftFront.setPower(lfSpeed * speed);
+//        leftBack.setPower(rfSpeed * speed);
+//        rightFront.setPower(rfSpeed * speed);
+//        rightBack.setPower(rbSpeed * speed);
+//
+        drive.drive(lfSpeed * speed, rfSpeed * speed, lbSpeed * speed, rbSpeed * speed);
+
+        while(opMode.opModeIsActive()) {
+            holOdom.updatePose();
+            moving = holOdom.getPose();
+
+            curX = moving.getX();
+            curY = moving.getY();
+            curT = moving.getHeading();
+
+            x = pidX.calculate(curX, endX);
+            y = pidY.calculate(curY, endY);
+
+//            if(xTrac) {
+//                x = pidX.calculate(curX);
+//            } else {
+//                x = 0;
+//            }
+//            if(yTrac) {
+//                y = pidY.calculate(curY);
+//            } else {
+//                y = 0;
+//            }
+
+            //t = pidT.calculate(curT);
+
+            x_rotated = x * Math.cos(heading) - y * Math.sin(heading);
+            y_rotated = x * Math.sin(heading) + y * Math.cos(heading);
+
+            // x, y, theta input mixing
+            lfSpeed = x_rotated + y_rotated;
+            lbSpeed = x_rotated - y_rotated;
+            rfSpeed = x_rotated - y_rotated;
+            rbSpeed = x_rotated + y_rotated;
+
+            lfTemp = abs(lfSpeed);
+            lbTemp = abs(lbSpeed);
+            rfTemp = abs(rfSpeed);
+            rbTemp = abs(rbSpeed);
+
+//            if(lfTemp > 1.0 && lfTemp >= lbTemp && lfTemp >= rfTemp && lfTemp >= rbTemp) {
+//                lbSpeed = lbSpeed / lfTemp;
+//                rfSpeed = rfSpeed / lfTemp;
+//                rbSpeed = rbSpeed / lfTemp;
+//                lfSpeed = lfSpeed / lfTemp;
+//            } else if (lbTemp > 1.0 && lbTemp >= lfTemp && lbTemp >= rfTemp && lbTemp >= rbTemp) {
+//                lfSpeed = lfSpeed / lbTemp;
+//                rfSpeed = rfSpeed / lbTemp;
+//                rbSpeed = rbSpeed / lbTemp;
+//                lbSpeed = lfSpeed / lbTemp;
+//            } else if (rfTemp > 1.0 && rfTemp >= lfTemp && rfTemp >= lbTemp && rfTemp >= rbTemp) {
+//                lfSpeed = lfSpeed / rfTemp;
+//                lbSpeed = lbSpeed / rfTemp;
+//                rbSpeed = rbSpeed / rfTemp;
+//                rfSpeed = rfSpeed / rfTemp;
+//            } else if (rbTemp > 1.0 && rbTemp >= lfTemp && rbTemp >= lbTemp && rbTemp >= rfTemp) {
+//                lfSpeed = lfSpeed / rbTemp;
+//                lbSpeed = lbSpeed / rbTemp;
+//                rfSpeed = rfSpeed / rbTemp;
+//                rbSpeed = rbSpeed / rbTemp;
+//            }
+
+           maxSpeed = max(lfTemp, max(lbTemp, max(rfTemp, rbTemp)));
+
+            if(maxSpeed > 1) {
+                lfSpeed /= maxSpeed;
+                lbSpeed /= maxSpeed;
+                rfSpeed /= maxSpeed;
+                rbSpeed /= maxSpeed;
             }
-            opMode.telemetry.addData("Robot Angle", moving.getHeading());
-            opMode.telemetry.addData("Robot Target Angle", angleToTarget);
-            opMode.telemetry.update();
 
-            if (distance < moveTolerance) {
+//            leftFront.setPower(lfSpeed * speed);
+//            leftBack.setPower(rfSpeed * speed);
+//            rightFront.setPower(rfSpeed * speed);
+//            rightBack.setPower(rbSpeed * speed);
+
+            drive.drive(lfSpeed * speed, rfSpeed * speed, lbSpeed * speed, rbSpeed * speed);
+
+            if(pidX.atSetPoint() && pidY.atSetPoint() /* && pidT.atSetPoint()*/) {
                 break;
-            } else if (distance < precisionRange) {
-                double distanceInverted = 5 - distance;
-
-                double rampDownSpeed = (-0.6 / 3.14) * Math.atan((distanceInverted) - 0.6) + 0.3;
-
-                switch (PathType) {
-                    case STRAIGHT:
-                        drive.drive(rampDownSpeed);
-                        break;
-                    case STRAIGHT_NO_TURN:
-                        movementAngle = moving.getHeading() + angleToTarget;
-
-                        double xComp = cos(movementAngle + 3.14);
-                        double yComp = sin(movementAngle + 3.14);
-
-                        /*
-                        drive.l.set(rampDownSpeed * (yComp + xComp));
-                        leftBack.set(rampDownSpeed * (yComp - xComp));
-                        rightFront.set(rampDownSpeed * (yComp - xComp));
-                        rightBack.set(rampDownSpeed * (yComp + xComp));
-                        */
-
-                        drive.driveHolo(yComp, xComp, 0, rampDownSpeed);
-                        break;
-                }
             }
 
 
-            //Angle Adjustment using recursion
-            angleToTarget = atan2((endY - moving.getY()), (endX - moving.getX()));
-            /* if(angleToTarget > 360) {
-                angleToTarget = angleToTarget - 360;
-            }
-            */
-            /*
-            if((heading > angleToTarget + maxAngleDeviation || heading < angleToTarget - maxAngleDeviation) && !isPaused && PathType == STRAIGHT) {
-                moveTo(STRAIGHT_NO_TURN, endX, endY, speed);
-                break;
-            }
-            if(PathType == STRAIGHT_NO_TURN &&
-                    !((angleToTarget <= startAngleToTarget + maxAngleDeviation) && (angleToTarget >= startAngleToTarget - maxAngleDeviation))) {
-                moveTo(STRAIGHT_NO_TURN, endX, endY, speed);
-                break;
-            }
-            */
+            dashTelemetry.addData("X Error", endX - curX);
+            dashTelemetry.addData("X PID Output", x);
+            dashTelemetry.addData("Y Error", endY - curY);
+            dashTelemetry.addData("Y PID Output", y);
+            dashTelemetry.addData("Angle", curT);
+            dashTelemetry.addData("LF Speed", lfSpeed * speed);
+            dashTelemetry.addData("LB Speed", lfSpeed * speed);
+            dashTelemetry.addData("RF Speed", rfSpeed * speed);
+            dashTelemetry.addData("RB Speed", rbSpeed * speed);
+            dashTelemetry.addData("Tracking X", xTrac);
+            dashTelemetry.addData("Tracking Y", yTrac);
+            dashTelemetry.update();
 
         }
         drive.stop();
+    }
 
+    public static void moveTo(double endX, double endY, double speed, boolean holometric) {
         holOdom.updatePose();
+        Pose2d moving = holOdom.getPose();
+
+        double heading = moving.getHeading();
+        moveTo(endX, endY, heading, speed, holometric, null);
     }
 
     public static void moveToLocation(double endX, double endY, double speed) {
@@ -296,8 +380,8 @@ public class PositionalMovementSubsystem {
         PIDFController pidfForward =
                 new PIDFController(FORWARDPIDFF, FORWARDPIDFI, FORWARDPIDFD, FORWARDPIDFI, 0, distance);
         //Input: Angle deviation to target angle, Target: 0 angle deviation, Output: Motor weighting
-        PIDFController pidfTurning =
-                new PIDFController(ANGLEPIDFP, ANGLEPIDFI, ANGLEPIDFD, ANGLEPIDFF, 0, heading - targetAngle);
+        //PIDFController pidfTurning =
+                //new PIDFController(ANGLEPIDFP, ANGLEPIDFI, ANGLEPIDFD, ANGLEPIDFF, 0, heading - targetAngle);
 
         if(useFTCDash) {
             telemetry.addData("Distance (Forward Error)", distance);
@@ -311,10 +395,10 @@ public class PositionalMovementSubsystem {
             telemetry.update();
         }
 
-        leftBack.set(speed);
-        leftFront.set(speed);
-        rightBack.set(speed);
-        rightFront.set(speed);
+        leftBack.setPower(speed);
+        leftFront.setPower(speed);
+        rightBack.setPower(speed);
+        rightFront.setPower(speed);
 
         while(opMode.opModeIsActive()) {
             holOdom.updatePose();
@@ -362,10 +446,10 @@ public class PositionalMovementSubsystem {
             adjustedRightSpeed = speed;
 
             //Allow the velocity control to run
-            leftBack.set(adjustedLeftSpeed);
-            leftFront.set(adjustedLeftSpeed);
-            rightBack.set(adjustedRightSpeed);
-            rightFront.set(adjustedRightSpeed);
+            leftBack.setPower(adjustedLeftSpeed);
+            leftFront.setPower(adjustedLeftSpeed);
+            rightBack.setPower(adjustedRightSpeed);
+            rightFront.setPower(adjustedRightSpeed);
 
             opMode.telemetry.addData("Distance", distance);
             opMode.telemetry.addData("Curr X", curX);
@@ -397,10 +481,10 @@ public class PositionalMovementSubsystem {
                 double x_rotated = speed * Math.cos(correctionAngle) /* - y * Math.sin(correctionAngle) */ /*;
                 double y_rotated = speed * Math.sin(correctionAngle) /* + y * Math.cos(correctionAngle) */ /*;
 
-                leftBack.set(x_rotated);
-                leftFront.set(x_rotated);
-                rightBack.set(x_rotated);
-                rightFront.set(x_rotated);
+                leftBack.setPower(x_rotated);
+                leftFront.setPower(x_rotated);
+                rightBack.setPower(x_rotated);
+                rightFront.setPower(x_rotated);
 
                 lastCorrect = Robot.period.time();
             }
@@ -413,14 +497,12 @@ public class PositionalMovementSubsystem {
 
         //drive.stop();
 
-        leftBack.set(0);
-        leftFront.set(0);
-        rightBack.set(0);
-        rightFront.set(0);
+        leftBack.setPower(0);
+        leftFront.setPower(0);
+        rightBack.setPower(0);
+        rightFront.setPower(0);
 
     }
-
-
 
     public static void moveToLocation(double endX, double endY, double speed, boolean turn) {
         if(!opMode.opModeIsActive()) {
@@ -466,8 +548,8 @@ public class PositionalMovementSubsystem {
         PIDFController pidfForward =
                 new PIDFController(FORWARDPIDFF, FORWARDPIDFI, FORWARDPIDFD, FORWARDPIDFI, 0, distance);
         //Input: Angle deviation to target angle, Target: 0 angle deviation, Output: Motor weighting
-        PIDFController pidfTurning =
-                new PIDFController(ANGLEPIDFP, ANGLEPIDFI, ANGLEPIDFD, ANGLEPIDFF, 0, heading - targetAngle);
+//        PIDFController pidfTurning =
+//                new PIDFController(ANGLEPIDFP, ANGLEPIDFI, ANGLEPIDFD, ANGLEPIDFF, 0, heading - targetAngle);
 
         if(useFTCDash) {
             telemetry.addData("Distance (Forward Error)", distance);
@@ -481,10 +563,10 @@ public class PositionalMovementSubsystem {
             telemetry.update();
         }
 
-        leftBack.set(speed);
-        leftFront.set(speed);
-        rightBack.set(speed);
-        rightFront.set(speed);
+        leftBack.setPower(speed);
+        leftFront.setPower(speed);
+        rightBack.setPower(speed);
+        rightFront.setPower(speed);
 
         while(opMode.opModeIsActive()) {
             holOdom.updatePose();
@@ -532,10 +614,10 @@ public class PositionalMovementSubsystem {
             adjustedRightSpeed = speed;
 
             //Allow the velocity control to run
-            leftBack.set(adjustedLeftSpeed);
-            leftFront.set(adjustedLeftSpeed);
-            rightBack.set(adjustedRightSpeed);
-            rightFront.set(adjustedRightSpeed);
+            leftBack.setPower(adjustedLeftSpeed);
+            leftFront.setPower(adjustedLeftSpeed);
+            rightBack.setPower(adjustedRightSpeed);
+            rightFront.setPower(adjustedRightSpeed);
 
             opMode.telemetry.addData("Distance", distance);
             opMode.telemetry.addData("Curr X", curX);
@@ -567,10 +649,10 @@ public class PositionalMovementSubsystem {
                 double x_rotated = speed * Math.cos(correctionAngle) /* - y * Math.sin(correctionAngle) */ /*;
                 double y_rotated = speed * Math.sin(correctionAngle) /* + y * Math.cos(correctionAngle) */ /*;
 
-                leftBack.set(x_rotated);
-                leftFront.set(x_rotated);
-                rightBack.set(x_rotated);
-                rightFront.set(x_rotated);
+                leftBack.setPower(x_rotated);
+                leftFront.setPower(x_rotated);
+                rightBack.setPower(x_rotated);
+                rightFront.setPower(x_rotated);
 
                 lastCorrect = Robot.period.time();
             }
@@ -583,45 +665,99 @@ public class PositionalMovementSubsystem {
 
         //drive.stop();
 
-        leftBack.set(0);
-        leftFront.set(0);
-        rightBack.set(0);
-        rightFront.set(0);
+        leftBack.setPower(0);
+        leftFront.setPower(0);
+        rightBack.setPower(0);
+        rightFront.setPower(0);
 
     }
 
-    public static void moveOneSquare(moveDirection direction, double speed) {
-        Pose2d moving = new Pose2d();
+    public static void moveWithLookAhead(double endX, double endY, double speed, double lookAheadDis) {
         holOdom.updatePose();
-        moving = holOdom.getPose();
+        Pose2d moving = holOdom.getPose();
 
-        double currX = moving.getX(), currY = moving.getY();
+        final double moveTolerance = 1;
+        PIDController pid = new PIDController(DistancePIDFP, DistancePIDFI, DistancePIDFD);
+        final double startX = moving.getX(), startY = moving.getY();
+        double x = moving.getX(), y = moving.getY(), heading = moving.getHeading() + PI;
+        double deltaX = endX - x, deltaY = endY - y;
+        double distance = Math.hypot(deltaX, deltaY);
+        double targetAngle = Math.atan2(deltaY, deltaX);
+        //Cap the output of the PID controller
+        double output = Math.max(pid.calculate(distance, 0), 1);
+        double xPower = output * Math.cos(targetAngle);
+        double yPower = output * Math.sin(targetAngle);
+        double x_rotated = xPower * Math.cos(heading) - yPower * Math.sin(heading);
+        double y_rotated = xPower * Math.sin(heading) + yPower * Math.cos(heading);
 
+        double lfSpeed = speed * (x_rotated + y_rotated + heading);
+        double rfSpeed = speed * (x_rotated - y_rotated - heading);
+        double lbSpeed = speed * (x_rotated - y_rotated + heading);
+        double rbSpeed = speed * (x_rotated + y_rotated - heading);
 
-        int[] XYTarget = getTargetSquareLocation(direction, currX, currY);
-        int[] XYCurrentIdeal = getCurrentSquareCenter(currX,currY);
-        switch (direction) {
-            case UP:
-            case DOWN:
-                if(currX > XYCurrentIdeal[0] + squareFromCenterTolerance) {
-                    moveTo(STRAIGHT_NO_TURN, XYCurrentIdeal[0] + squareFromCenterTolerance, currY, speed);
-                } else if (currX < XYCurrentIdeal[0] - squareFromCenterTolerance) {
-                    moveTo(STRAIGHT_NO_TURN, XYCurrentIdeal[0] - squareFromCenterTolerance, currY, speed);
-                }
-                break;
-            case LEFT:
-            case RIGHT:
-                if(currY > XYCurrentIdeal[1] + squareFromCenterTolerance) {
-                    moveTo(STRAIGHT_NO_TURN, currX, XYCurrentIdeal[1] + squareFromCenterTolerance, speed);
-                } else if (currX < XYCurrentIdeal[0] - squareFromCenterTolerance) {
-                    moveTo(STRAIGHT_NO_TURN, currX, XYCurrentIdeal[0] - squareFromCenterTolerance, speed);
-                }
-                break;
+        Telemetry telemetry = null;
+        if(useFTCDash) {
+            FtcDashboard dashboard = FtcDashboard.getInstance();
+            telemetry = dashboard.getTelemetry();
         }
 
-        moveTo(STRAIGHT_NO_TURN, XYTarget[0], XYTarget[1], speed);
-    }
+        while(opMode.opModeIsActive() && !opMode.gamepad1.x) {
+            telemetry.addData("Distance", distance);
+            telemetry.addData("PID Output", output);
+            telemetry.addData("Left Front", lfSpeed);
+            telemetry.addData("Left Back", lbSpeed);
+            telemetry.addData("Right Front", rfSpeed);
+            telemetry.addData("Right Back", rbSpeed);
+            telemetry.addData("Target Angle", targetAngle);
 
+            telemetry.update();
+        }
+
+        while (opMode.opModeIsActive()) {
+            holOdom.updatePose();
+            moving = holOdom.getPose();
+
+            x = moving.getX();
+            y = moving.getY();
+            heading = moving.getHeading();
+
+            deltaX = endX - x;
+            deltaY = endY - y;
+            distance = Math.hypot(deltaX, deltaY);
+            targetAngle = Math.atan2(deltaY, deltaX);
+            output = pid.calculate(distance, 0);
+            xPower = output * Math.cos(targetAngle);
+            yPower = output * Math.sin(targetAngle);
+            x_rotated = xPower * Math.cos(heading) - yPower * Math.sin(heading);
+            y_rotated = xPower * Math.sin(heading) + yPower * Math.cos(heading);
+
+            lfSpeed = speed * (x_rotated + y_rotated + heading);
+            rfSpeed = speed * (-x_rotated + y_rotated - heading);
+            lbSpeed = speed * (-x_rotated + y_rotated + heading);
+            rbSpeed = speed * (x_rotated + y_rotated - heading);
+
+            if (distance <= moveTolerance) {
+                break;
+            }
+
+            leftFront.setPower(lfSpeed);
+            rightFront.setPower(rfSpeed);
+            leftBack.setPower(lbSpeed);
+            rightBack.setPower(rbSpeed);
+
+            if(useFTCDash) {
+                telemetry.addData("Distance", distance);
+                telemetry.addData("PID Output", output);
+                telemetry.addData("Left Front", lfSpeed);
+                telemetry.addData("Left Back", lbSpeed);
+                telemetry.addData("Right Front", rfSpeed);
+                telemetry.addData("Right Back", rbSpeed);
+
+                telemetry.update();
+            }
+        }
+        drive.stop();
+    }
 
     public static double clip(double input, double bottom, double top) {
         if(input > top) {

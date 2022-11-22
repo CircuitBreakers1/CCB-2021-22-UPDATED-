@@ -2,10 +2,19 @@ package org.firstinspires.ftc.teamcode.Subsystems;
 
 import com.arcrobotics.ftclib.drivebase.MecanumDrive;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 public class DrivetrainSubsystem {
-    private final MotorEx lf, rf, lb, rb;
+    private final DcMotorEx lf, rf, lb, rb;
     public static MecanumDrive mecDrive;
+    private boolean useTuner = false, followMotionRules = false;
+
+
+    private final double[] tuneConstants;
+    private final double[] preloadedTune = {1.0,1.0,1.0,1.0};
+                                    //Max V, Max A, Max J
+                                    //in/s, in/s^2, in/s^3
+    private final double[] motionRules = {1.0, 1.0, 1.0};
 
     /**
      * Initalize the Drivetrain
@@ -14,13 +23,25 @@ public class DrivetrainSubsystem {
      * @param leftb Left Back Motor Reference
      * @param rightb Right Back Motor Reference
      */
-    public DrivetrainSubsystem(MotorEx leftf, MotorEx rightf, MotorEx leftb, MotorEx rightb) {
+    public DrivetrainSubsystem(DcMotorEx leftf, DcMotorEx rightf, DcMotorEx leftb, DcMotorEx rightb) {
+        lf = leftf;
+        rf = rightf;
+        lb = leftb;
+        rb = rightb;
+        this.tuneConstants = new double[]{0, 0, 0, 0};
+
+        useTuner = false;
+    }
+
+    public DrivetrainSubsystem(DcMotorEx leftf, DcMotorEx rightf, DcMotorEx leftb, DcMotorEx rightb, double[] tuneConstants) {
         lf = leftf;
         rf = rightf;
         lb = leftb;
         rb = rightb;
 
-        mecDrive = new MecanumDrive(false, lf, rf, lb, rb);
+        this.tuneConstants = tuneConstants;
+
+        useTuner = true;
     }
 
     /**
@@ -31,10 +52,17 @@ public class DrivetrainSubsystem {
      * @param rbSpeed Right Back Speed
      */
     public void drive(double lfSpeed, double rfSpeed, double lbSpeed, double rbSpeed) {
-        lf.set(lfSpeed);
-        rf.set(rfSpeed);
-        lb.set(lbSpeed);
-        rb.set(rbSpeed);
+        if(useTuner) {
+            lf.setPower(lfSpeed * tuneConstants[0]);
+            rf.setPower(rfSpeed * tuneConstants[1]);
+            lb.setPower(lbSpeed * tuneConstants[2]);
+            rb.setPower(rbSpeed * tuneConstants[3]);
+        } else {
+            lf.setPower(lfSpeed);
+            rf.setPower(rfSpeed);
+            lb.setPower(lbSpeed);
+            rb.setPower(rbSpeed);
+        }
     }
 
     /**
@@ -71,5 +99,21 @@ public class DrivetrainSubsystem {
      */
     public void stop() {
         drive(0,0);
+    }
+
+    public void setFollowMotionRules(boolean followMotionRules) {
+        this.followMotionRules = followMotionRules;
+    }
+
+    public void resetEncoders() {
+        lf.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        rf.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        lb.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+        rb.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
+
+        lf.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        rf.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        lb.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
+        rb.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
     }
 }
