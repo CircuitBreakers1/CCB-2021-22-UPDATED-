@@ -34,9 +34,13 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Gamepad;
+import com.qualcomm.robotcore.hardware.Gamepad.RumbleEffect;
 
 //import static org.firstinspires.ftc.teamcode.Subsystems.ButtonToggleSubsystem.updateButtons;
+import static org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem.LiftTarget.*;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.*;
+import static org.firstinspires.ftc.teamcode.Subsystems.TeleOPTargetingSubsystem.initTargetingSubsystem;
 
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -44,7 +48,11 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
 import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
+import org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
+import org.firstinspires.ftc.teamcode.Subsystems.TeleOPTargetingSubsystem;
+
+import java.util.function.Consumer;
 
 @TeleOp(name = "TeleOP")
 public class IterativeTeleOP extends LinearOpMode {
@@ -53,6 +61,7 @@ public class IterativeTeleOP extends LinearOpMode {
     boolean isIntaking = false;
     boolean isOutputting = false;
     boolean manualControl = false;
+    boolean canDrop = false;
     int[] armLimits = {-2000, -2600, -3560};
 
     //Move into init??
@@ -63,9 +72,26 @@ public class IterativeTeleOP extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap, 0, 0, 0, false);
+        robot.init(hardwareMap, 35.8, 7, 90, false);
+        initTargetingSubsystem(holOdom);
+
+        //Set the first gamepad led to purple, and the second to yellow
+        gamepad1.setLedColor(255, 0, 255, -1);
+        gamepad2.setLedColor(255, 255, 0, -1);
+
+        //Prepare the rumble patterns for driver 2
+        RumbleEffect dropAllowed = new RumbleEffect.Builder().addStep(1,1, 500).build();
+        RumbleEffect dropNotAllowed = new RumbleEffect.Builder().addStep(0.5,0.5, 500).build();
+        RumbleEffect leftSideButtonPress = new RumbleEffect.Builder().addStep(0.5,0, 750).build();
+        RumbleEffect rightSideButtonPress = new RumbleEffect.Builder().addStep(0,0.5, 750).build();
 
         waitForStart();
+
+        gamepad2.setLedColor(255, 165, 0, -1);
+
+        //gamepad1.runRumbleEffect(dropAllowed);
+
+        //TODO: Add driver 2 notice when it is detected dropping is possible?
 
         //drivetrain.resetEncoders();
 
@@ -75,7 +101,11 @@ public class IterativeTeleOP extends LinearOpMode {
             double angle = currentLocation.getHeading();
             angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
 
+            telemetry.addData("Target Junction", TeleOPTargetingSubsystem.targetJunctions.toString());
+            telemetry.addData("Target Drop Spot", TeleOPTargetingSubsystem.targetPosition.toString());
+            telemetry.addData("Distance to Drop", TeleOPTargetingSubsystem.distance);
             telemetry.addData("Arm Position", armLift.getCurrentPosition());
+            telemetry.addData("Arm Target" , armLift.getTargetPosition());
             telemetry.addData("Robot X", currentLocation.getX());
             telemetry.addData("Robot Y", currentLocation.getY());
             telemetry.addData("Robot Angle", angle);
@@ -89,19 +119,29 @@ public class IterativeTeleOP extends LinearOpMode {
             telemetry.addData("Left Back", leftBack.getCurrentPosition());
             telemetry.update();
 
-            //drive.driveRobotCentric(gamepad1.right_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x);
-            //drive.driveFieldCentric(gamepad1.left_stick_x, -gamepad1.left_stick_y, gamepad1.right_stick_x, -angle);
-
             double y = -gamepad1.left_stick_y;
             double x = gamepad1.left_stick_x;
             double rx = gamepad1.right_stick_x;
+
+            Pose2d moving = holOdom.getPose();
+            double heading = moving.getHeading();
+
+            double x_rotated = x * Math.cos(heading) - y * Math.sin(heading);
+            double y_rotated = x * Math.sin(heading) + y * Math.cos(heading);
 
             leftFront.setPower(0.75 * (y + x + rx));
             leftBack.setPower(0.75 * (y - x + rx));
             rightFront.setPower(0.75 * (y - x - rx));
             rightBack.setPower(0.75 * (y + x - rx));
 
-            if(!isIntaking && gamepad2.dpad_up) {
+            if(gamepad2.dpad_up) {
+                pickupLeft.setPower(1);
+                pickupRight.setPower(-1);
+                LiftSubsystem.setTarget(Min);
+                isIntaking = true;
+                isOutputting = false;
+            }
+            if(!isIntaking && gamepad2.left_bumper) {
                 pickupLeft.setPower(1);
                 pickupRight.setPower(-1);
                 isIntaking = true;
@@ -120,45 +160,33 @@ public class IterativeTeleOP extends LinearOpMode {
                 isOutputting = false;
             }
 
-            if(!armTouch.getState() && armLift.getCurrentPosition() != 0) {
-                armLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            if(gamepad2.a) {
+                LiftSubsystem.setTarget(Low);
+            } else if (gamepad2.b) {
+                LiftSubsystem.setTarget(Medium);
+            } else if (gamepad2.x) {
+                LiftSubsystem.setTarget(Intake);
+            } else if (gamepad2.y) {
+                LiftSubsystem.setTarget(High);
+            } else if (gamepad2.right_bumper) {
+                LiftSubsystem.setTarget(Min);
             }
-            armLift.setPower(gamepad2.right_stick_y);
-            rightOdo.set(gamepad2.right_stick_y);
 
-            /*
-            if(Math.abs(gamepad2.right_stick_y) > 0.1) {
-                if(!manualControl) {
-                    manualControl = true;
-                    armLift.setPower(0);
-                    armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+            LiftSubsystem.manualControl(-gamepad2.right_stick_y);
+
+            LiftSubsystem.updatePositional();
+
+            if(TeleOPTargetingSubsystem.canDropCone()) {
+                if(!canDrop) {
+                    canDrop = true;
+                    gamepad2.setLedColor(0,255,0, -1);
+                    gamepad2.runRumbleEffect(dropAllowed);
                 }
-                armLift.setPower(gamepad2.right_stick_y);
-
-            } else if (manualControl) {
-                //armLift.setPower(0);
-                manualControl = false;
-                armLift.setTargetPosition(armLift.getCurrentPosition());
+            } else if (canDrop) {
+                canDrop = false;
+                gamepad2.setLedColor(255, 165, 0, -1);
+                gamepad2.runRumbleEffect(dropNotAllowed);
             }
-
-            if(!manualControl) {
-                if (gamepad2.y) {
-                    armLift.setTargetPosition(armLimits[2]);
-                    armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    armLift.setPower(1);
-                } else if (gamepad2.b) {
-                    armLift.setTargetPosition(armLimits[1]);
-                    armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    armLift.setPower(1);
-                } else if (gamepad2.a) {
-                    armLift.setTargetPosition(armLimits[0]);
-                    armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    armLift.setPower(1);
-                }
-            }
-             */
-
         }
     }
 }

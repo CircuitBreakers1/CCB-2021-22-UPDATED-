@@ -12,11 +12,21 @@ import org.openftc.easyopencv.OpenCvPipeline;
 public class VisionPipeline extends OpenCvPipeline {
 
     public enum SignalColor {
-        RED, GREEN, BLUE
+        RED(0), GREEN(1), BLUE(2);
+
+        private int value;
+
+        SignalColor(int i) {
+            this.value = i;
+        }
+
+        public int getValue() {
+            return value;
+        }
     }
 
-    private static final double rectWidthPercentage = 0.69, rectHeightPercentage = 0.58;
-    private static final int rectangleWidth = 40, rectangleHeight = 75;
+    private static final double rectWidthPercentage = 0.63, rectHeightPercentage = 0.61;
+    private static final int rectangleWidth = 30, rectangleHeight = 50;
     private double average;
     private Mat matAdapted = new Mat(), block = new Mat();
     private Mat matHue = new Mat();

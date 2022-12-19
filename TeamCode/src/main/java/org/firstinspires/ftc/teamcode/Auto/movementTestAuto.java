@@ -29,13 +29,19 @@
 
 package org.firstinspires.ftc.teamcode.Auto;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem.LiftTarget.*;
 import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.moveTo;
+import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.turn;
+import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.turnTo;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.holOdom;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
@@ -45,21 +51,30 @@ public class movementTestAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap, 0, 0, 90, false);
+        robot.init(hardwareMap, 0, 0, 0, false);
 
         FtcDashboard ftcDashboard = FtcDashboard.getInstance();
         Telemetry dashTelemetry = ftcDashboard.getTelemetry();
 
         waitForStart();
 
+
         while(opModeIsActive()) {
             if(gamepad1.a) {
-                PositionalMovementSubsystem.moveTo(30,0,90, 0.5,true, dashTelemetry);
+                PositionalMovementSubsystem.moveTo(30,0,0, 1,true, true, dashTelemetry);
             }
 
             if(gamepad1.b) {
-                PositionalMovementSubsystem.moveTo(0, 0, 0, 0.50, true, dashTelemetry);
+                PositionalMovementSubsystem.moveTo(0, 0, 0, 1, true, true, dashTelemetry);
             }
+
+            holOdom.updatePose();
+            Pose2d moving = holOdom.getPose();
+            telemetry.addData("X", moving.getX());
+            telemetry.addData("Y", moving.getY());
+            telemetry.addData("Angle", moving.getHeading());
+            telemetry.update();
+
 
             idle();
         }

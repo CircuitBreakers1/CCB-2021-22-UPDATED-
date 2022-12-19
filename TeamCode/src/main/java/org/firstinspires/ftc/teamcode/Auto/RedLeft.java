@@ -29,17 +29,21 @@
 
 package org.firstinspires.ftc.teamcode.Auto;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem.LiftTarget.*;
 import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.*;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.*;
 import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.BLUE;
 import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.GREEN;
 import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.RED;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline;
@@ -61,7 +65,7 @@ public class RedLeft extends LinearOpMode {
     public void runOpMode() {
 
 
-        robot.init(hardwareMap, 36.2, 7, 90, true);
+        robot.init(hardwareMap, 35.8, 7, 90, true);
 
         holOdom.updatePose();
         Pose2d moving = holOdom.getPose();
@@ -96,88 +100,170 @@ public class RedLeft extends LinearOpMode {
 
         waitForStart();
 
-         pickupLeft.setPower(1);
-         pickupRight.setPower(-1);
-
-         while(coneTouch.getState()) {
-             idle();
-         }
-
-        pickupLeft.setPower(0);
-        pickupRight.setPower(0);
-
-
-        armLift.setTargetPosition(-3760);
-        armLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        armLift.setPower(1);
-        moveToLocation(36, 55, 0.5);
-
-        double msStartPause = getRuntime();
-
-        while (opModeIsActive() && (armLift.getCurrentPosition() > -3560)) {
-            telemetry.addData("Arm Height", armLift.getCurrentPosition());
-            telemetry.update();
-
-            if(msStartPause + 3 < getRuntime()) {
-                break;
-            }
-
-        }
+        double startTime = getRuntime();
 
         pickupLeft.setPower(1);
         pickupRight.setPower(-1);
 
-        while(coneTouch.getState()) {
-            idle();
+        while(coneTouch.getState() && getRuntime() - startTime < 2) {
         }
 
-        pickupLeft.setPower(0.3);
-        pickupRight.setPower(-0.3);
+//        pickupLeft.setPower(0.2);
+//        pickupRight.setPower(-0.2);
 
-        moveToLocation(52,60,0.25);
+        pickupLeft.setPower(0.1);
+        pickupRight.setPower(-0.1);
 
-        holOdom.updatePose();
-        moving = holOdom.getPose();
+        LiftSubsystem.setTarget(Medium);
 
-        turnTo(moving.getHeading() + Math.toRadians(40), 0.5);
 
+
+        //Move to the medium junction and turn
+        moveTo(36,47, 0.6, false);
+
+        turn(0,0.5);
+
+        //Move into the junction, drop and move out
+        moveTo(40.65, 47, 0.6);
         pickupLeft.setPower(-1);
         pickupRight.setPower(1);
-        sleep(3000);
+        sleep(1500);
         pickupLeft.setPower(0);
         pickupRight.setPower(0);
+        moveTo(36, 47, 0.6, false);
 
-        moveToLocation(37, 56, -0.5, false);
+        //Move to the center of the cycle path and turn
+        moveTo(36, 59.5, 0.6, false);
+        turnTo180(0.5);
+
+        LiftSubsystem.setTarget(ConeStack);
+        //moveTo(16, 60, 0.5);
+
+
+//
+//        moveTo(11.2, 60, 0.5);
+//        pickupLeft.setPower(1);
+//        pickupRight.setPower(-1);
+//        LiftSubsystem.setPosition(coneLevel[5 - conesInStack]);
+//
+//        while(coneTouch.getState() || !LiftSubsystem.isAtTarget()) {
+//            LiftSubsystem.updatePositional();
+//        }
+
+        //Cycle timing information
+        //TODO: Tune this
+        int conesInStack = 5;
+        int[] coneLevel = {300, 220, 140};
+        double pickupTime = 2.5; //Time to lineup and pickup cone when starting in the lined square
+        double movementTime = 4.5; //Time to move from the lined square to location of the junction
+        double dropTime = 0.5; //Time to line up and drop the cone
+        double[] parkFromLine = {0.5, 2, 2.25}; //Time to park from lined square
+        double[] parkFromJunction = {2.25, 1.75, 1}; //Time to park from junction
+
+        //Begin the cycle loop
+        while(opModeIsActive()) {
+            //Set arm height and go to cone stack
+            LiftSubsystem.setTarget(ConeStack);
+            //moveTo(16, 60, 0.5);
+
+            //Check if there is time to pickup cone, otherwise park
+            if(getRemainingTime(startTime, getRuntime()) < pickupTime + parkFromLine[color.getValue()]) {
+                break;
+            }
+
+            //Pickup the cone
+            moveTo(11.25, 59.5, 0.6);
+            pickupLeft.setPower(1);
+            pickupRight.setPower(-1);
+            LiftSubsystem.setPosition(coneLevel[5 - conesInStack]);
+
+            while(coneTouch.getState() && !LiftSubsystem.isAtTarget()) {
+                LiftSubsystem.updatePositional();
+            }
+
+            conesInStack--;
+
+            pickupLeft.setPower(0.1);
+            pickupRight.setPower(-0.1);
+
+            LiftSubsystem.setTarget(High);
+
+            while(opModeIsActive() && armLift.getCurrentPosition() < 700) {
+
+            }
+//
+//            while(armLift.getCurrentPosition() < Intake.getPosition()) {
+//                LiftSubsystem.updatePositional();
+//            }
+//
+//            moveTo(16, 60, 0.5);
+
+//            LiftSubsystem.setTarget(Min);
+
+            //Check if there is time to drop off cone, otherwise park
+            if(getRemainingTime(startTime, getRuntime()) < dropTime + movementTime + parkFromJunction[color.getValue()]) {
+                break;
+            }
+
+            //Drop off the cone
+            moveTo(48.5, 58.25, 0.6);
+            turn(90, 0.5);
+            moveTo(49.25, 61.25, 0.6);
+            pickupLeft.setPower(-1);
+            pickupRight.setPower(1);
+            double startDrop = getRuntime();
+            while (getRuntime() - startDrop < 1.5) {
+                LiftSubsystem.updatePositional();
+            }
+            pickupLeft.setPower(0);
+            pickupRight.setPower(0);
+            moveTo(48, 60, 0.6, false);
+
+            break;
+
+            //Check if there is still time to cycle, otherwise park
+//            if(getRemainingTime(startTime, getRuntime()) < movementTime + pickupTime + parkFromLine[color.getValue()]) {
+//                break;
+//            }
+//
+//            //Make sure there is still a cone in the stack
+//            if(conesInStack <= 0) {
+//                break;
+//            }
+//
+//            turnTo180(0.5);
+        }
 
         sleep(500);
 
-        /*
-        drivetrain.drive(-0.5,-0.5);
+        LiftSubsystem.setTarget(Min);
 
-
-        double move = getRuntime();
-        while(opModeIsActive() && move + 0.3 > getRuntime()) {
-            holOdom.updatePose();
-        }
-        drivetrain.stop();
-
-         */
-
+        //Park in designated spot
         holOdom.updatePose();
+        moving = holOdom.getPose();
+        double x = moving.getX(), y = moving.getY();
 
-        if(color == RED) {
-            //moveToLocation(12, 60, 0.5);
-            //turnTo(0, 0.5);
-            drivetrain.drive(0.5, -0.5);
-            sleep(500);
-            drivetrain.drive(-0.5);
-            sleep(900);
-        } else if(color == GREEN) {
-            drivetrain.drive(0.5, -0.5);
-            sleep(500);
-            drivetrain.drive(0.5);
-            sleep(700);
+        LiftSubsystem.setTarget(Min);
+        switch (color) {
+            case RED:
+                moveTo(12.5, 58, 0.7);
+                break;
+            case BLUE:
+                moveTo(35, 58, 0.7);
+                break;
+            case GREEN:
+                moveTo(60, 56, 0.7);
+                break;
         }
-        drivetrain.stop();
+
+        turn(90, 0.75);
+
+        //Allow the arm to stabilize
+        while (opModeIsActive()) {
+            LiftSubsystem.updatePositional();
+            if (armLift.getCurrentPosition() < 10) {
+                break;
+            }
+        }
     }
 }

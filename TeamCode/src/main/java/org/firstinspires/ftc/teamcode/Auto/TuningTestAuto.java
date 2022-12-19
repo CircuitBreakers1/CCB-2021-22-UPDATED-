@@ -33,11 +33,13 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot.drivetrain;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.holOdom;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.positionalMovement;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
@@ -47,12 +49,11 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot;
  */
 
 @Autonomous(name="Tuning", group="Linear Opmode")
-@Disabled
 public class TuningTestAuto extends LinearOpMode {
 
     MainAuto auto = new MainAuto(autoStartSpot.RED_LEFT, this);
 
-    Robot robot = new Robot(this, true, false);
+    Robot robot = new Robot(this, true, true);
 
     @Override
     public void runOpMode() {
@@ -66,7 +67,7 @@ public class TuningTestAuto extends LinearOpMode {
          */
 
 
-        robot.init(hardwareMap, 36, 7, 0, false);
+        robot.init(hardwareMap, 0, 0, 0, false);
 
         holOdom.updatePose();
         Pose2d moving = holOdom.getPose();
@@ -77,14 +78,14 @@ public class TuningTestAuto extends LinearOpMode {
         telemetry.update();
 
         waitForStart();
-
-        PositionalMovementSubsystem.turnTo(Math.PI / 2, 0.5);
-        sleep(1000);
-        PositionalMovementSubsystem.turnTo(Math.PI, 0.5);
-        sleep(1000);
-        PositionalMovementSubsystem.turnTo(0, 0.5);
-        sleep(1000);
-        PositionalMovementSubsystem.turnTo(-Math.PI / 2, 0.5);
+//
+//        PositionalMovementSubsystem.turnTo(Math.PI / 2, 0.5);
+//        sleep(1000);
+//        PositionalMovementSubsystem.turnTo(Math.PI, 0.5);
+//        sleep(1000);
+//        PositionalMovementSubsystem.turnTo(0, 0.5);
+//        sleep(1000);
+//        PositionalMovementSubsystem.turnTo(-Math.PI / 2, 0.5);
 
         //Robot.moveTo(pathType.STRAIGHT, 36, 55, 0.2);
         //positionalMovement.moveToLocation(36, 55, 0.5);
@@ -104,6 +105,9 @@ public class TuningTestAuto extends LinearOpMode {
 
         boolean isAtStart = true;
 
+        FtcDashboard dash = FtcDashboard.getInstance();
+        Telemetry dashTele = dash.getTelemetry();
+
         while(opModeIsActive()) {
             holOdom.updatePose();
             moving = holOdom.getPose();
@@ -112,6 +116,10 @@ public class TuningTestAuto extends LinearOpMode {
             telemetry.addData("Y Loc", moving.getY());
             telemetry.addData("Heading", moving.getHeading());
             telemetry.update();
+
+
+            PositionalMovementSubsystem.moveTo(30,0, 0, 1, true, true, dashTele);
+
             /*
             if(gamepad1.a) {
                 if (isAtStart) {

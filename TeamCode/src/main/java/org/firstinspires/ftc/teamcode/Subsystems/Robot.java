@@ -161,23 +161,7 @@ public class Robot {
 
         armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-
-//        leftBack.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-//        rightBack.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-//        leftFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-//        rightFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.BRAKE);
-
-
-//        leftBack.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-//        rightBack.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-//        leftFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-//        rightFront.setZeroPowerBehavior(Motor.ZeroPowerBehavior.FLOAT);
-
         armLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-
-//        leftBack.setInverted(true);
-//        leftFront.setInverted(true);
 
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -185,7 +169,6 @@ public class Robot {
         leftOdo.setDistancePerPulse(ticksToIn);
         rightOdo.setDistancePerPulse(ticksToIn);
         backOdo.setDistancePerPulse(ticksToIn);
-
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit           = BNO055IMU.AngleUnit.DEGREES;
@@ -198,22 +181,13 @@ public class Robot {
         imu = hwMap.get(BNO055IMU.class, "imu");
         imu.initialize(parameters);
 
-//        rightBack.resetEncoder();
-//        rightFront.resetEncoder();
-//        leftBack.resetEncoder();
-//        leftFront.resetEncoder();
-
-
-
         rightOdo.resetEncoder();
         leftOdo.resetEncoder();
         backOdo.resetEncoder();
 
-
         leftOdo.setInverted(false);
         rightOdo.setInverted(true);
-        backOdo.setInverted(false);
-
+        backOdo.setInverted(true);
 
         //Apparently it likes the odos flipped???
         holOdom = new HolonomicOdometry(
@@ -228,8 +202,7 @@ public class Robot {
             initCV(hwMap);
         }
 
-        //camera.openCameraDevice();
-
+        LiftSubsystem.init(armLift, rightOdo, armTouch, opMode);
     }
 
     public void init(HardwareMap ahwMap, boolean initCam) {
