@@ -56,7 +56,7 @@ import java.util.function.Consumer;
 
 @TeleOp(name = "TeleOP")
 public class IterativeTeleOP extends LinearOpMode {
-    Robot robot = new Robot(this, false, false);
+    Robot robot = new Robot(this, false, true);
     Orientation angles;
     boolean isIntaking = false;
     boolean isOutputting = false;
@@ -101,8 +101,8 @@ public class IterativeTeleOP extends LinearOpMode {
             double angle = currentLocation.getHeading();
             angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
 
-            telemetry.addData("Target Junction", TeleOPTargetingSubsystem.targetJunctions.toString());
-            telemetry.addData("Target Drop Spot", TeleOPTargetingSubsystem.targetPosition.toString());
+            telemetry.addData("Target Junction", "X: " + TeleOPTargetingSubsystem.targetJunctions[0] + " Y: " + TeleOPTargetingSubsystem.targetJunctions[1]);
+            telemetry.addData("Target Drop Spot", "X: " + TeleOPTargetingSubsystem.targetPosition[0] + " Y: " + TeleOPTargetingSubsystem.targetPosition[1]);
             telemetry.addData("Distance to Drop", TeleOPTargetingSubsystem.distance);
             telemetry.addData("Arm Position", armLift.getCurrentPosition());
             telemetry.addData("Arm Target" , armLift.getTargetPosition());

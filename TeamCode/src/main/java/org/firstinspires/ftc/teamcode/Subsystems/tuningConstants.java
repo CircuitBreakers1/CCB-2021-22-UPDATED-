@@ -17,7 +17,7 @@ public class tuningConstants {
     public static double DistancePIDFP = 1;
     public static double DistancePIDFI = 0;
     public static double DistancePIDFD = 0;
-    public static double ANGLEPIDFP = 1;
+    public static double ANGLEPIDFP = 2;
     public static double ANGLEPIDFI = 0;
     public static double ANGLEPIDFD = 0;
     public static double ANGLEPIDFF = 0;

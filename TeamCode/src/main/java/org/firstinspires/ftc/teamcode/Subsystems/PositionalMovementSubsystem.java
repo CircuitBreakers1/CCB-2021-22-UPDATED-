@@ -161,7 +161,7 @@ public class PositionalMovementSubsystem {
      * Move the robot to a given point from the current location
      * @param endX The X coordinate to go to
      * @param endY The Y cooridnate to go to
-     * @param endAngle The end angle of the movement (In Radians)
+     * @param endAngle The end angle of the movement (In Degrees)
      * @param speed The maximum speed at which to move the motors (0.0 - 1.0)
      * @param holometric Whether the robot should move holometrically (true) or to turn and drive straight (false)
      * @param dashTelemetry Pass the telemetry object from the opmode to this parameter to send data to the dashboard
@@ -169,6 +169,7 @@ public class PositionalMovementSubsystem {
     public static void moveTo(double endX, double endY, double endAngle, @FloatRange(from = 0, to = 1) double speed, boolean holometric, boolean exact, Telemetry dashTelemetry) {
         final double distanceTol = exact ? 0.25 : 2;
         final double turnTol = toRadians(5);
+        final double radTarget = toRadians(endAngle);
 
         if (!holometric) {
             moveToLocation(endX, endY, speed);
@@ -185,19 +186,19 @@ public class PositionalMovementSubsystem {
 
         pidX.setTolerance(distanceTol);
         pidY.setTolerance(distanceTol);
-        pidT.setTolerance(turnTol);
+        //pidT.setTolerance(turnTol);
 
         double x = pidX.calculate(startX, endX);
         double y = pidY.calculate(startY, endY);
-        double t = 0;
+        //double t = pidT.calculate(-heading, radTarget);
 
         double x_rotated = x * Math.cos(heading) - y * Math.sin(heading);
         double y_rotated = x * Math.sin(heading) + y * Math.cos(heading);
 
-        double lfSpeed = x_rotated - y_rotated + t;
-        double lbSpeed = x_rotated + y_rotated + t;
-        double rfSpeed = x_rotated + y_rotated - t;
-        double rbSpeed = x_rotated - y_rotated - t;
+        double lfSpeed = x_rotated - y_rotated;
+        double lbSpeed = x_rotated + y_rotated;
+        double rfSpeed = x_rotated + y_rotated;
+        double rbSpeed = x_rotated - y_rotated;
 
         double lfTemp = abs(lfSpeed);
         double lbTemp = abs(lbSpeed);
@@ -213,6 +214,25 @@ public class PositionalMovementSubsystem {
             rbSpeed /= maxSpeed;
         }
 
+//        lfSpeed -= t;
+//        lbSpeed -= t;
+//        rfSpeed += t;
+//        rbSpeed += t;
+//
+//        lfTemp = abs(lfSpeed);
+//        lbTemp = abs(lbSpeed);
+//        rfTemp = abs(rfSpeed);
+//        rbTemp = abs(rbSpeed);
+//
+//        maxSpeed = max(lfTemp, max(lbTemp, max(rfTemp, rbTemp)));
+//
+//        if(maxSpeed > 1) {
+//            lfSpeed /= maxSpeed;
+//            lbSpeed /= maxSpeed;
+//            rfSpeed /= maxSpeed;
+//            rbSpeed /= maxSpeed;
+//        }
+
         double curX, curY, curT;
 
         //Allow time to setup tracking on FTCDashboard
@@ -222,14 +242,14 @@ public class PositionalMovementSubsystem {
 
             curX = moving.getX();
             curY = moving.getY();
-            curT = -moving.getHeading();
+            curT = moving.getHeading();
 
             dashTelemetry.addData("X Error", endX - curX);
             dashTelemetry.addData("X PID Output", x);
             dashTelemetry.addData("Y Error", endY - curY);
             dashTelemetry.addData("Y PID Output", y);
             dashTelemetry.addData("T Error", pidT.getPositionError());
-            dashTelemetry.addData("T PID Output", t);
+            //dashTelemetry.addData("T PID Output", t);
             dashTelemetry.addData("Angle", curT);
             dashTelemetry.addData("LF Speed", lfSpeed * speed);
             dashTelemetry.addData("LB Speed", rfSpeed * speed);
@@ -252,16 +272,16 @@ public class PositionalMovementSubsystem {
 
             x = pidX.calculate(curX);
             y = pidY.calculate(curY);
-            t = 0;
+//            t = pidT.calculate(-curT);
 
             x_rotated = x * Math.cos(heading) - y * Math.sin(heading);
             y_rotated = x * Math.sin(heading) + y * Math.cos(heading);
 
             // x, y, theta input mixing
-            lfSpeed = x_rotated - y_rotated + t;
-            lbSpeed = x_rotated + y_rotated + t;
-            rfSpeed = x_rotated + y_rotated - t;
-            rbSpeed = x_rotated - y_rotated - t;
+            lfSpeed = x_rotated - y_rotated;
+            lbSpeed = x_rotated + y_rotated;
+            rfSpeed = x_rotated + y_rotated;
+            rbSpeed = x_rotated - y_rotated;
 
             lfTemp = abs(lfSpeed);
             lbTemp = abs(lbSpeed);
@@ -276,6 +296,25 @@ public class PositionalMovementSubsystem {
                 rfSpeed /= maxSpeed;
                 rbSpeed /= maxSpeed;
             }
+
+//            lfSpeed -= t;
+//            lbSpeed -= t;
+//            rfSpeed += t;
+//            rbSpeed += t;
+//
+//            lfTemp = abs(lfSpeed);
+//            lbTemp = abs(lbSpeed);
+//            rfTemp = abs(rfSpeed);
+//            rbTemp = abs(rbSpeed);
+//
+//            maxSpeed = max(lfTemp, max(lbTemp, max(rfTemp, rbTemp)));
+//
+//            if(maxSpeed > 1) {
+//                lfSpeed /= maxSpeed;
+//                lbSpeed /= maxSpeed;
+//                rfSpeed /= maxSpeed;
+//                rbSpeed /= maxSpeed;
+//            }
 
             drive.drive(lfSpeed * speed, rfSpeed * speed, lbSpeed * speed, rbSpeed * speed);
 
@@ -298,8 +337,8 @@ public class PositionalMovementSubsystem {
                 dashTelemetry.addData("X PID Output", x);
                 dashTelemetry.addData("Y Error", endY - curY);
                 dashTelemetry.addData("Y PID Output", y);
-//            dashTelemetry.addData("T Error", pidT.getPositionError());
-//            dashTelemetry.addData("T PID Output", t);
+                //dashTelemetry.addData("T Error", pidT.getPositionError());
+                //dashTelemetry.addData("T PID Output", t);
                 dashTelemetry.addData("Angle", curT);
                 dashTelemetry.addData("LF Speed", lfSpeed * speed);
                 dashTelemetry.addData("LB Speed", rfSpeed * speed);
@@ -331,6 +370,7 @@ public class PositionalMovementSubsystem {
         moveTo(endX, endY, speed, true);
     }
 
+    @Deprecated
     public static void moveToLocation(double endX, double endY, double speed) {
         if(!opMode.opModeIsActive()) {
             return;
@@ -660,93 +700,6 @@ public class PositionalMovementSubsystem {
         rightBack.setPower(0);
         rightFront.setPower(0);
 
-    }
-
-    public static void moveWithLookAhead(double endX, double endY, double speed, double lookAheadDis) {
-        holOdom.updatePose();
-        Pose2d moving = holOdom.getPose();
-
-        final double moveTolerance = 1;
-        PIDController pid = new PIDController(DistancePIDFP, DistancePIDFI, DistancePIDFD);
-        final double startX = moving.getX(), startY = moving.getY();
-        double x = moving.getX(), y = moving.getY(), heading = moving.getHeading() + PI;
-        double deltaX = endX - x, deltaY = endY - y;
-        double distance = Math.hypot(deltaX, deltaY);
-        double targetAngle = Math.atan2(deltaY, deltaX);
-        //Cap the output of the PID controller
-        double output = Math.max(pid.calculate(distance, 0), 1);
-        double xPower = output * Math.cos(targetAngle);
-        double yPower = output * Math.sin(targetAngle);
-        double x_rotated = xPower * Math.cos(heading) - yPower * Math.sin(heading);
-        double y_rotated = xPower * Math.sin(heading) + yPower * Math.cos(heading);
-
-        double lfSpeed = speed * (x_rotated + y_rotated + heading);
-        double rfSpeed = speed * (x_rotated - y_rotated - heading);
-        double lbSpeed = speed * (x_rotated - y_rotated + heading);
-        double rbSpeed = speed * (x_rotated + y_rotated - heading);
-
-        Telemetry telemetry = null;
-        if(useFTCDash) {
-            FtcDashboard dashboard = FtcDashboard.getInstance();
-            telemetry = dashboard.getTelemetry();
-        }
-
-        while(opMode.opModeIsActive() && !opMode.gamepad1.x) {
-            telemetry.addData("Distance", distance);
-            telemetry.addData("PID Output", output);
-            telemetry.addData("Left Front", lfSpeed);
-            telemetry.addData("Left Back", lbSpeed);
-            telemetry.addData("Right Front", rfSpeed);
-            telemetry.addData("Right Back", rbSpeed);
-            telemetry.addData("Target Angle", targetAngle);
-
-            telemetry.update();
-        }
-
-        while (opMode.opModeIsActive()) {
-            holOdom.updatePose();
-            moving = holOdom.getPose();
-
-            x = moving.getX();
-            y = moving.getY();
-            heading = moving.getHeading();
-
-            deltaX = endX - x;
-            deltaY = endY - y;
-            distance = Math.hypot(deltaX, deltaY);
-            targetAngle = Math.atan2(deltaY, deltaX);
-            output = pid.calculate(distance, 0);
-            xPower = output * Math.cos(targetAngle);
-            yPower = output * Math.sin(targetAngle);
-            x_rotated = xPower * Math.cos(heading) - yPower * Math.sin(heading);
-            y_rotated = xPower * Math.sin(heading) + yPower * Math.cos(heading);
-
-            lfSpeed = speed * (x_rotated + y_rotated + heading);
-            rfSpeed = speed * (-x_rotated + y_rotated - heading);
-            lbSpeed = speed * (-x_rotated + y_rotated + heading);
-            rbSpeed = speed * (x_rotated + y_rotated - heading);
-
-            if (distance <= moveTolerance) {
-                break;
-            }
-
-            leftFront.setPower(lfSpeed);
-            rightFront.setPower(rfSpeed);
-            leftBack.setPower(lbSpeed);
-            rightBack.setPower(rbSpeed);
-
-            if(useFTCDash) {
-                telemetry.addData("Distance", distance);
-                telemetry.addData("PID Output", output);
-                telemetry.addData("Left Front", lfSpeed);
-                telemetry.addData("Left Back", lbSpeed);
-                telemetry.addData("Right Front", rfSpeed);
-                telemetry.addData("Right Back", rbSpeed);
-
-                telemetry.update();
-            }
-        }
-        drive.stop();
     }
 
     public static double getRemainingTime(double timeSinceStart) {

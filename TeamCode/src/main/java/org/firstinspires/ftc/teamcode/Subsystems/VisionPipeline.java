@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.Subsystems;
 
 import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.*;
 
+import androidx.appcompat.app.AppCompatDelegate;
+
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Rect;
@@ -34,8 +36,6 @@ public class VisionPipeline extends OpenCvPipeline {
 
     @Override
     public Mat processFrame(Mat input) {
-
-
         //First, create the Mat used to find the hue of the box
         Imgproc.cvtColor(input, matAdapted, Imgproc.COLOR_RGB2HSV);
 
@@ -54,8 +54,7 @@ public class VisionPipeline extends OpenCvPipeline {
 
         average = mean.val[0];
 
-
-        //This if uses what hopefully comes out to the HSV value that is needed to check the color
+        //Checks which range the hue is in
         if(average <= 30 || (average >= 140 && average <= 180)) {
             predictedColor = RED;
         } else if (average > 30 && average <= 90) {
@@ -63,7 +62,6 @@ public class VisionPipeline extends OpenCvPipeline {
         } else if (average > 90 && average < 140) {
             predictedColor = BLUE;
         }
-
 
         //Then create the Mat used for the viewport
         //"Evan Proof Viewing"
