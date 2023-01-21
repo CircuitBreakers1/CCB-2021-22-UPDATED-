@@ -29,34 +29,17 @@
 
 package org.firstinspires.ftc.teamcode.Tuning;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.armLift;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.armTouch;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.backOdo;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.coneTouch;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.cameraInit.NO_CAM;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.drivetrain;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.holOdom;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.imu;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.leftBack;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.leftFront;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.leftOdo;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.pickupLeft;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.pickupRight;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightBack;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightFront;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightOdo;
 
-import com.arcrobotics.ftclib.geometry.Pose2d;
-import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 import java.util.ArrayList;
@@ -69,7 +52,7 @@ public class MotorSpeedTuning extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap, 0, 0, 0, false);
+        robot.init(hardwareMap, 0, 0, 0, NO_CAM);
 
         waitForStart();
 

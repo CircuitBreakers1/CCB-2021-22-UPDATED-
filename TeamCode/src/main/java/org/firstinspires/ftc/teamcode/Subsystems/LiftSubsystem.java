@@ -153,9 +153,9 @@ public class LiftSubsystem extends Thread {
         Min(0),
         Intake(400),
         ConeStack(800),
-        Ground(300),
-        Low(940),
-        Medium(1450),
+        Ground(240),
+        Low(1060),
+        Medium(1350),
         High(1975),
         ;
 

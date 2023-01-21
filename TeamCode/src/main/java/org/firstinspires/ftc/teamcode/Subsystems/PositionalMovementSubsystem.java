@@ -167,7 +167,7 @@ public class PositionalMovementSubsystem {
      * @param dashTelemetry Pass the telemetry object from the opmode to this parameter to send data to the dashboard
      */
     public static void moveTo(double endX, double endY, double endAngle, @FloatRange(from = 0, to = 1) double speed, boolean holometric, boolean exact, Telemetry dashTelemetry) {
-        final double distanceTol = exact ? 0.25 : 2;
+        final double distanceTol = exact ? 0.75 : 2;
         final double turnTol = toRadians(5);
         final double radTarget = toRadians(endAngle);
 
@@ -262,7 +262,11 @@ public class PositionalMovementSubsystem {
 
         drive.drive(lfSpeed * speed, rfSpeed * speed, lbSpeed * speed, rbSpeed * speed);
 
+        double cycleTime;
+        double lastCycle;
+
         while(opMode.opModeIsActive()) {
+            lastCycle = opMode.getRuntime();
             holOdom.updatePose();
             moving = holOdom.getPose();
 
@@ -322,6 +326,9 @@ public class PositionalMovementSubsystem {
                 break;
             }
 
+            cycleTime = 1000 * (opMode.getRuntime() - lastCycle);
+
+            opMode.telemetry.addData("Cycle Time", cycleTime);
             opMode.telemetry.addData("X", curX);
             opMode.telemetry.addData("Y", curY);
             opMode.telemetry.addData("T", curT);
@@ -738,7 +745,7 @@ public class PositionalMovementSubsystem {
                 remainingDegrees = Math.toDegrees(remainingDegrees);
 
                 double p = 0.01;
-                double rampDownSpeed = Math.max(abs(p * remainingDegrees), 0.2);
+                double rampDownSpeed = Math.max(abs(p * remainingDegrees), 0.35);
 
                 if(turnLeft) {
                     drive.drive(-rampDownSpeed, rampDownSpeed);
@@ -792,7 +799,7 @@ public class PositionalMovementSubsystem {
                 remainingDegrees = Math.toDegrees(remainingDegrees);
 
                 double p = 0.01;
-                double rampDownSpeed = Math.max(abs(p * remainingDegrees), 0.25);
+                double rampDownSpeed = Math.max(abs(p * remainingDegrees), 0.35);
 
                 if(turnLeft) {
                     drive.drive(-rampDownSpeed, rampDownSpeed);

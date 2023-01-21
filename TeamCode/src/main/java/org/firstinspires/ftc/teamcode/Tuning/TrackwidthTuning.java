@@ -30,6 +30,7 @@
 package org.firstinspires.ftc.teamcode.Tuning;
 
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.backOdo;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.cameraInit.NO_CAM;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.drivetrain;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.imu;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.leftBack;
@@ -39,7 +40,6 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightBack;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightFront;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightOdo;
 
-import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
@@ -49,8 +49,6 @@ import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
-import java.util.ArrayList;
-
 @Autonomous(name = "Track Speed Tuning", group = "Tuning")
 public class TrackwidthTuning extends LinearOpMode {
     Robot robot = new Robot(this, false, false);
@@ -59,7 +57,7 @@ public class TrackwidthTuning extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap, 0, 0, 0, false);
+        robot.init(hardwareMap, 0, 0, 0, NO_CAM);
 
         waitForStart();
 

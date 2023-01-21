@@ -29,35 +29,12 @@
 
 package org.firstinspires.ftc.teamcode.Auto;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem.LiftTarget.ConeStack;
-import static org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem.LiftTarget.High;
-import static org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem.LiftTarget.Medium;
-import static org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem.LiftTarget.Min;
 import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.getRemainingTime;
 import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.moveTo;
 import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.moveToLocation;
-import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.turn;
-import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.turnTo;
-import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.turnTo180;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.armLift;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.armTouch;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.coneTouch;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.drivetrain;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.holOdom;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.pickupLeft;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.pickupRight;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.visionPipeline;
-import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.GREEN;
-import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.RED;
 
-import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-
-import org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem;
-import org.firstinspires.ftc.teamcode.Subsystems.Robot;
-import org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline;
 
 
 /**
@@ -68,205 +45,210 @@ import org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline;
 
 public class RightTest extends LinearOpMode {
 
-    MainAuto auto = new MainAuto(autoStartSpot.RED_LEFT, this);
 
-    Robot robot = new Robot(this, true, true);
+    MainAuto mainAuto = new MainAuto(autoStartSpot.RIGHT, this);
+
+    //Robot robot = new Robot(this, true, true);
 
     @Override
     public void runOpMode() {
-
-
-        robot.init(hardwareMap, 35.8, 7, 90, true);
-
-        holOdom.updatePose();
-        Pose2d moving = holOdom.getPose();
-
-        telemetry.addData("X Loc", moving.getX());
-        telemetry.addData("Y Loc", moving.getY());
-        telemetry.addData("Heading", moving.getHeading());
-        telemetry.addData("Color Guess", visionPipeline.getPredictedColor().toString());
-        telemetry.addData("Hue Average", visionPipeline.getAverage());
-        telemetry.update();
-
-        VisionPipeline.SignalColor color = visionPipeline.getPredictedColor();
-
-
-        while (opModeInInit()) {
-            if(!armTouch.getState() && armLift.getCurrentPosition() != 0) {
-                armLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-            }
-
-            telemetry.addData("X Loc", moving.getX());
-            telemetry.addData("Y Loc", moving.getY());
-            telemetry.addData("Heading", moving.getHeading());
-            telemetry.addData("Arm Value", armLift.getCurrentPosition());
-            telemetry.addData("Color Guess", visionPipeline.getPredictedColor().toString());
-            telemetry.addData("Hue Average", visionPipeline.getAverage());
-
-            color = visionPipeline.getPredictedColor();
-
-            telemetry.update();
-        }
-
+        mainAuto.initAuto();
         waitForStart();
-
-        double startTime = getRuntime();
-
-        pickupLeft.setPower(1);
-        pickupRight.setPower(-1);
-
-        while(coneTouch.getState() && getRuntime() - startTime < 2) {
-        }
-
-//        pickupLeft.setPower(0.2);
-//        pickupRight.setPower(-0.2);
-
-        pickupLeft.setPower(0.1);
-        pickupRight.setPower(-0.1);
-
-        LiftSubsystem.setTarget(Medium);
-
-
-
-        //Move to the medium junction and turn
-        moveTo(36,47, 0.6, false);
-
-        turnTo180(0.5);
-
-        //Move into the junction, drop and move out
-        moveTo(32.75, 47, 0.6);
-        pickupLeft.setPower(-1);
-        pickupRight.setPower(1);
-        sleep(1500);
-        pickupLeft.setPower(0);
-        pickupRight.setPower(0);
-        moveTo(36, 47, 0.6, false);
-
-        //Move to the center of the cycle path and turn
-        moveTo(36, 59.5, 0.6, false);
-        turn(0, 0.5);
-
-        LiftSubsystem.setTarget(ConeStack);
-        //moveTo(16, 60, 0.5);
-
-
+        mainAuto.runAuto();
+    }
 //
-//        moveTo(11.2, 60, 0.5);
+//
+//        robot.init(hardwareMap, 35.8, 7, 90, true);
+//
+//        holOdom.updatePose();
+//        Pose2d moving = holOdom.getPose();
+//
+//        telemetry.addData("X Loc", moving.getX());
+//        telemetry.addData("Y Loc", moving.getY());
+//        telemetry.addData("Heading", moving.getHeading());
+//        telemetry.addData("Color Guess", visionPipeline.getPredictedColor().toString());
+//        telemetry.addData("Hue Average", visionPipeline.getAverage());
+//        telemetry.update();
+//
+//        VisionPipeline.SignalColor color = visionPipeline.getPredictedColor();
+//
+//
+//        while (opModeInInit()) {
+//            if(!armTouch.getState() && armLift.getCurrentPosition() != 0) {
+//                armLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//                armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+//            }
+//
+//            telemetry.addData("X Loc", moving.getX());
+//            telemetry.addData("Y Loc", moving.getY());
+//            telemetry.addData("Heading", moving.getHeading());
+//            telemetry.addData("Arm Value", armLift.getCurrentPosition());
+//            telemetry.addData("Color Guess", visionPipeline.getPredictedColor().toString());
+//            telemetry.addData("Hue Average", visionPipeline.getAverage());
+//
+//            color = visionPipeline.getPredictedColor();
+//
+//            telemetry.update();
+//        }
+//
+//        waitForStart();
+//
+//        double startTime = getRuntime();
+//
 //        pickupLeft.setPower(1);
 //        pickupRight.setPower(-1);
-//        LiftSubsystem.setPosition(coneLevel[5 - conesInStack]);
 //
-//        while(coneTouch.getState() || !LiftSubsystem.isAtTarget()) {
-//            LiftSubsystem.updatePositional();
+//        while(coneTouch.getState() && getRuntime() - startTime < 2) {
 //        }
-
-        //Cycle timing information
-        //TODO: Tune this
-        int conesInStack = 5;
-        int[] coneLevel = {300, 220, 140};
-        double pickupTime = 2.5; //Time to lineup and pickup cone when starting in the lined square
-        double movementTime = 2; //Time to move from the lined square to location of the junction
-        double dropTime = 0.5; //Time to line up and drop the cone
-        double[] parkFromLine = {2.5, 2, 1.5}; //Time to park from lined square
-        double[] parkFromJunction = {1, 1.5, 2}; //Time to park from junction
-
-        //Begin the cycle loop
-        while(opModeIsActive()) {
-            //Set arm height and go to cone stack
-            LiftSubsystem.setTarget(ConeStack);
-            //moveTo(16, 60, 0.5);
-
-            //Check if there is time to pickup cone, otherwise park
-            if(getRemainingTime(startTime, getRuntime()) < pickupTime + parkFromLine[color.getValue()]) {
-                break;
-            }
-
-            //Pickup the cone
-            moveTo(62.25, 59.5, 0.6);
-            pickupLeft.setPower(1);
-            pickupRight.setPower(-1);
-            LiftSubsystem.setPosition(coneLevel[5 - conesInStack]);
-
-            while(coneTouch.getState() && !LiftSubsystem.isAtTarget()) {
-                LiftSubsystem.updatePositional();
-            }
-
-            conesInStack--;
-
-            pickupLeft.setPower(0.1);
-            pickupRight.setPower(-0.1);
-
-            LiftSubsystem.setTarget(High);
-
-            while(opModeIsActive() && armLift.getCurrentPosition() < 700) {
-
-            }
-
-            //Check if there is time to drop off cone, otherwise park
-            if(getRemainingTime(startTime, getRuntime()) < dropTime + movementTime + parkFromJunction[color.getValue()]) {
-                break;
-            }
-
-            //Drop off the cone
-            moveTo(24.5, 59, 0.6);
-            turn(90, 0.5);
-            moveTo(23.75, 61.5, 0.6);
-            pickupLeft.setPower(-1);
-            pickupRight.setPower(1);
-            double startDrop = getRuntime();
-            while (getRuntime() - startDrop < 1.5) {
-                LiftSubsystem.updatePositional();
-            }
-            pickupLeft.setPower(0);
-            pickupRight.setPower(0);
-            moveTo(24, 60, 0.6, false);
-
-            if(true) {
-                break;
-            }
-
-            //Check if there is still time to cycle, otherwise park
-            if(getRemainingTime(startTime, getRuntime()) < movementTime + pickupTime + parkFromLine[color.getValue()]) {
-                break;
-            }
-
-            //Make sure there is still a cone in the stack
-            if(conesInStack <= 0) {
-                break;
-            }
-
-            turn(0,0.5);
-        }
-
-        LiftSubsystem.setTarget(Min);
-
-        //Park in designated spot
-        holOdom.updatePose();
-        moving = holOdom.getPose();
-        double x = moving.getX(), y = moving.getY();
-
-        LiftSubsystem.setTarget(Min);
-        switch (color) {
-            case RED:
-                moveTo(12, 58, 0.7);
-                break;
-            case BLUE:
-                moveTo(36, 58, 0.7);
-                break;
-            case GREEN:
-                moveTo(60, 56, 0.7);
-                break;
-        }
-
-        //turn(0, 0.75);
-
-        //Allow the arm to stabilize
-        while (opModeIsActive()) {
-            LiftSubsystem.updatePositional();
-            if (armLift.getCurrentPosition() < 10) {
-                break;
-            }
-        }
-    }
+//
+////        pickupLeft.setPower(0.2);
+////        pickupRight.setPower(-0.2);
+//
+//        pickupLeft.setPower(0.1);
+//        pickupRight.setPower(-0.1);
+//
+//        LiftSubsystem.setTarget(Medium);
+//
+//
+//
+//        //Move to the medium junction and turn
+//        moveTo(36,47, 0.6, false);
+//
+//        turnTo180(0.5);
+//
+//        //Move into the junction, drop and move out
+//        moveTo(32.75, 47, 0.6);
+//        pickupLeft.setPower(-1);
+//        pickupRight.setPower(1);
+//        sleep(1500);
+//        pickupLeft.setPower(0);
+//        pickupRight.setPower(0);
+//        moveTo(36, 47, 0.6, false);
+//
+//        //Move to the center of the cycle path and turn
+//        moveTo(36, 59.5, 0.6, false);
+//        turn(0, 0.5);
+//
+//        LiftSubsystem.setTarget(ConeStack);
+//        //moveTo(16, 60, 0.5);
+//
+//
+////
+////        moveTo(11.2, 60, 0.5);
+////        pickupLeft.setPower(1);
+////        pickupRight.setPower(-1);
+////        LiftSubsystem.setPosition(coneLevel[5 - conesInStack]);
+////
+////        while(coneTouch.getState() || !LiftSubsystem.isAtTarget()) {
+////            LiftSubsystem.updatePositional();
+////        }
+//
+//        //Cycle timing information
+//        //TODO: Tune this
+//        int conesInStack = 5;
+//        int[] coneLevel = {300, 220, 140};
+//        double pickupTime = 2.5; //Time to lineup and pickup cone when starting in the lined square
+//        double movementTime = 2; //Time to move from the lined square to location of the junction
+//        double dropTime = 0.5; //Time to line up and drop the cone
+//        double[] parkFromLine = {2.5, 2, 1.5}; //Time to park from lined square
+//        double[] parkFromJunction = {1, 1.5, 2}; //Time to park from junction
+//
+//        //Begin the cycle loop
+//        while(opModeIsActive()) {
+//            //Set arm height and go to cone stack
+//            LiftSubsystem.setTarget(ConeStack);
+//            //moveTo(16, 60, 0.5);
+//
+//            //Check if there is time to pickup cone, otherwise park
+//            if(getRemainingTime(startTime, getRuntime()) < pickupTime + parkFromLine[color.getValue()]) {
+//                break;
+//            }
+//
+//            //Pickup the cone
+//            moveTo(62.25, 59.5, 0.6);
+//            pickupLeft.setPower(1);
+//            pickupRight.setPower(-1);
+//            LiftSubsystem.setPosition(coneLevel[5 - conesInStack]);
+//
+//            while(coneTouch.getState() && !LiftSubsystem.isAtTarget()) {
+//                LiftSubsystem.updatePositional();
+//            }
+//
+//            conesInStack--;
+//
+//            pickupLeft.setPower(0.1);
+//            pickupRight.setPower(-0.1);
+//
+//            LiftSubsystem.setTarget(High);
+//
+//            while(opModeIsActive() && armLift.getCurrentPosition() < 700) {
+//
+//            }
+//
+//            //Check if there is time to drop off cone, otherwise park
+//            if(getRemainingTime(startTime, getRuntime()) < dropTime + movementTime + parkFromJunction[color.getValue()]) {
+//                break;
+//            }
+//
+//            //Drop off the cone
+//            moveTo(24.5, 59, 0.6);
+//            turn(90, 0.5);
+//            moveTo(23.75, 61.5, 0.6);
+//            pickupLeft.setPower(-1);
+//            pickupRight.setPower(1);
+//            double startDrop = getRuntime();
+//            while (getRuntime() - startDrop < 1.5) {
+//                LiftSubsystem.updatePositional();
+//            }
+//            pickupLeft.setPower(0);
+//            pickupRight.setPower(0);
+//            moveTo(24, 60, 0.6, false);
+//
+//            if(true) {
+//                break;
+//            }
+//
+//            //Check if there is still time to cycle, otherwise park
+//            if(getRemainingTime(startTime, getRuntime()) < movementTime + pickupTime + parkFromLine[color.getValue()]) {
+//                break;
+//            }
+//
+//            //Make sure there is still a cone in the stack
+//            if(conesInStack <= 0) {
+//                break;
+//            }
+//
+//            turn(0,0.5);
+//        }
+//
+//        LiftSubsystem.setTarget(Min);
+//
+//        //Park in designated spot
+//        holOdom.updatePose();
+//        moving = holOdom.getPose();
+//        double x = moving.getX(), y = moving.getY();
+//
+//        LiftSubsystem.setTarget(Min);
+//        switch (color) {
+//            case RED:
+//                moveTo(12, 58, 0.7);
+//                break;
+//            case BLUE:
+//                moveTo(36, 58, 0.7);
+//                break;
+//            case GREEN:
+//                moveTo(60, 56, 0.7);
+//                break;
+//        }
+//
+//        //turn(0, 0.75);
+//
+//        //Allow the arm to stabilize
+//        while (opModeIsActive()) {
+//            LiftSubsystem.updatePositional();
+//            if (armLift.getCurrentPosition() < 10) {
+//                break;
+//            }
+//        }
+//    }
 }

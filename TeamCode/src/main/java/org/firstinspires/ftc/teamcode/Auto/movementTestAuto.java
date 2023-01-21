@@ -29,10 +29,8 @@
 
 package org.firstinspires.ftc.teamcode.Auto;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem.LiftTarget.*;
 import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.moveTo;
-import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.turn;
-import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.turnTo;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.cameraInit.NO_CAM;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.holOdom;
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -41,7 +39,6 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
@@ -51,7 +48,7 @@ public class movementTestAuto extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap, 0, 0, 0, false);
+        robot.init(hardwareMap, 0, 0, 0, NO_CAM);
 
         FtcDashboard ftcDashboard = FtcDashboard.getInstance();
         Telemetry dashTelemetry = ftcDashboard.getTelemetry();

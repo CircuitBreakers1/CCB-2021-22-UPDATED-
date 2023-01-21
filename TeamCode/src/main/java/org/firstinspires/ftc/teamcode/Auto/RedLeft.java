@@ -32,21 +32,20 @@ package org.firstinspires.ftc.teamcode.Auto;
 import static org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem.LiftTarget.*;
 import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.*;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.*;
-import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.BLUE;
-import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.GREEN;
-import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.RED;
+import static org.firstinspires.ftc.teamcode.Subsystems.ColorSleevePipeline.SignalColor.BLUE;
+import static org.firstinspires.ftc.teamcode.Subsystems.ColorSleevePipeline.SignalColor.GREEN;
+import static org.firstinspires.ftc.teamcode.Subsystems.ColorSleevePipeline.SignalColor.RED;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.cameraInit.NO_CAM;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem;
-import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
-import org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline;
+import org.firstinspires.ftc.teamcode.Subsystems.ColorSleevePipeline;
 
 
 /**
@@ -57,7 +56,6 @@ import org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline;
 
 public class RedLeft extends LinearOpMode {
 
-    MainAuto auto = new MainAuto(autoStartSpot.RED_LEFT, this);
 
     Robot robot = new Robot(this, true, true);
 
@@ -65,7 +63,7 @@ public class RedLeft extends LinearOpMode {
     public void runOpMode() {
 
 
-        robot.init(hardwareMap, 35.8, 7, 90, true);
+        robot.init(hardwareMap, 35.8, 7, 90, NO_CAM);
 
         holOdom.updatePose();
         Pose2d moving = holOdom.getPose();
@@ -73,11 +71,11 @@ public class RedLeft extends LinearOpMode {
         telemetry.addData("X Loc", moving.getX());
         telemetry.addData("Y Loc", moving.getY());
         telemetry.addData("Heading", moving.getHeading());
-        telemetry.addData("Color Guess", visionPipeline.getPredictedColor().toString());
-        telemetry.addData("Hue Average", visionPipeline.getAverage());
+        telemetry.addData("Color Guess", colorSleevePipeline.getPredictedColor().toString());
+        telemetry.addData("Hue Average", colorSleevePipeline.getAverage());
         telemetry.update();
 
-        VisionPipeline.SignalColor color = visionPipeline.getPredictedColor();
+        ColorSleevePipeline.SignalColor color = colorSleevePipeline.getPredictedColor();
 
 
         while (opModeInInit()) {
@@ -90,10 +88,20 @@ public class RedLeft extends LinearOpMode {
             telemetry.addData("Y Loc", moving.getY());
             telemetry.addData("Heading", moving.getHeading());
             telemetry.addData("Arm Value", armLift.getCurrentPosition());
-            telemetry.addData("Color Guess", visionPipeline.getPredictedColor().toString());
-            telemetry.addData("Hue Average", visionPipeline.getAverage());
+            telemetry.addData("Color Guess", colorSleevePipeline.getPredictedColor().toString());
+            telemetry.addData("Hue Average", colorSleevePipeline.getAverage());
 
-            color = visionPipeline.getPredictedColor();
+            color = colorSleevePipeline.getPredictedColor();
+
+            if(color == RED) {
+                pattern = RevBlinkinLedDriver.BlinkinPattern.LIGHT_CHASE_RED;
+            } else if (color == BLUE) {
+                pattern = RevBlinkinLedDriver.BlinkinPattern.LIGHT_CHASE_BLUE;
+            } else if (color == GREEN) {
+                pattern = RevBlinkinLedDriver.BlinkinPattern.CP2_LIGHT_CHASE;
+            }
+
+            blinkinLedDriver.setPattern(pattern);
 
             telemetry.update();
         }
@@ -105,7 +113,7 @@ public class RedLeft extends LinearOpMode {
         pickupLeft.setPower(1);
         pickupRight.setPower(-1);
 
-        while(coneTouch.getState() && getRuntime() - startTime < 2) {
+        while(coneTouch.getState() && getRuntime() - startTime < 0.5) {
         }
 
 //        pickupLeft.setPower(0.2);
@@ -119,21 +127,22 @@ public class RedLeft extends LinearOpMode {
 
 
         //Move to the medium junction and turn
-        moveTo(36,47, 0.6, false);
+        moveTo(36,47, 0.7, false);
 
-        turn(0,0.5);
+        turn(0,0.8);
 
         //Move into the junction, drop and move out
-        moveTo(40.65, 47, 0.6);
+        //Dropping
+        moveTo(39, 47, 0.6);
         pickupLeft.setPower(-1);
         pickupRight.setPower(1);
         sleep(1500);
         pickupLeft.setPower(0);
         pickupRight.setPower(0);
-        moveTo(36, 47, 0.6, false);
+        moveTo(36, 47, 0.7, false);
 
         //Move to the center of the cycle path and turn
-        moveTo(36, 59.5, 0.6, false);
+        moveTo(36, 59.5, 0.7, false);
         turnTo180(0.5);
 
         LiftSubsystem.setTarget(ConeStack);
@@ -153,7 +162,7 @@ public class RedLeft extends LinearOpMode {
         //Cycle timing information
         //TODO: Tune this
         int conesInStack = 5;
-        int[] coneLevel = {300, 220, 140};
+        int[] coneLevel = {250, 180, 140};
         double pickupTime = 2.5; //Time to lineup and pickup cone when starting in the lined square
         double movementTime = 4.5; //Time to move from the lined square to location of the junction
         double dropTime = 0.5; //Time to line up and drop the cone
@@ -172,7 +181,7 @@ public class RedLeft extends LinearOpMode {
             }
 
             //Pickup the cone
-            moveTo(11.25, 59.5, 0.6);
+            moveTo(11.8, 59.25, 0.7);
             pickupLeft.setPower(1);
             pickupRight.setPower(-1);
             LiftSubsystem.setPosition(coneLevel[5 - conesInStack]);
@@ -206,9 +215,9 @@ public class RedLeft extends LinearOpMode {
             }
 
             //Drop off the cone
-            moveTo(48.5, 58.25, 0.6);
-            turn(90, 0.5);
-            moveTo(49.25, 61.25, 0.6);
+            moveTo(48.5, 58.25, 0.7);
+            turn(90, 0.7);
+            moveTo(49, 61.25, 0.7);
             pickupLeft.setPower(-1);
             pickupRight.setPower(1);
             double startDrop = getRuntime();
@@ -217,21 +226,19 @@ public class RedLeft extends LinearOpMode {
             }
             pickupLeft.setPower(0);
             pickupRight.setPower(0);
-            moveTo(48, 60, 0.6, false);
-
-            break;
+            moveTo(48, 60, 0.7, false);
 
             //Check if there is still time to cycle, otherwise park
-//            if(getRemainingTime(startTime, getRuntime()) < movementTime + pickupTime + parkFromLine[color.getValue()]) {
-//                break;
-//            }
-//
-//            //Make sure there is still a cone in the stack
-//            if(conesInStack <= 0) {
-//                break;
-//            }
-//
-//            turnTo180(0.5);
+            if(getRemainingTime(startTime, getRuntime()) < movementTime + pickupTime + parkFromLine[color.getValue()]) {
+                break;
+            }
+
+            //Make sure there is still a cone in the stack
+            if(conesInStack <= 0) {
+                break;
+            }
+
+            turnTo180(0.7);
         }
 
         sleep(500);
@@ -256,7 +263,7 @@ public class RedLeft extends LinearOpMode {
                 break;
         }
 
-        turn(90, 0.75);
+        //turn(90, 0.75);
 
         //Allow the arm to stabilize
         while (opModeIsActive()) {

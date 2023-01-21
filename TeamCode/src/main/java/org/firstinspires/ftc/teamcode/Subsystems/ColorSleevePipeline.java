@@ -1,8 +1,6 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline.SignalColor.*;
-
-import androidx.appcompat.app.AppCompatDelegate;
+import static org.firstinspires.ftc.teamcode.Subsystems.ColorSleevePipeline.SignalColor.*;
 
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
@@ -11,7 +9,7 @@ import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.openftc.easyopencv.OpenCvPipeline;
 
-public class VisionPipeline extends OpenCvPipeline {
+public class ColorSleevePipeline extends OpenCvPipeline {
 
     public enum SignalColor {
         RED(0), GREEN(1), BLUE(2);

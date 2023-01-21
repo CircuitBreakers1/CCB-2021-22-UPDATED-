@@ -29,20 +29,17 @@
 
 package org.firstinspires.ftc.teamcode.Tuning;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.cameraInit.NO_CAM;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.leftBack;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.leftFront;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightBack;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightFront;
 
-import com.arcrobotics.ftclib.hardware.motors.Motor;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
-
-import java.util.ArrayList;
 
 @Autonomous(name = "Friction Variance", group = "Tuning")
 public class FrictionVarianceTest extends LinearOpMode {
@@ -50,7 +47,7 @@ public class FrictionVarianceTest extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap, 0, 0, 0, false);
+        robot.init(hardwareMap, 0, 0, 0, NO_CAM);
 
         //Set the motors zero power behavior to float
         leftFront.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);

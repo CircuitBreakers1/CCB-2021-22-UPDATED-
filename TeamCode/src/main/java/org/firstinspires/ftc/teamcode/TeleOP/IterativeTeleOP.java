@@ -30,16 +30,16 @@
 package org.firstinspires.ftc.teamcode.TeleOP;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.Gamepad.RumbleEffect;
 
 //import static org.firstinspires.ftc.teamcode.Subsystems.ButtonToggleSubsystem.updateButtons;
 import static org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem.LiftTarget.*;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.*;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.cameraInit.NO_CAM;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.cameraInit.TWO_CAM_JUNCTION;
 import static org.firstinspires.ftc.teamcode.Subsystems.TeleOPTargetingSubsystem.initTargetingSubsystem;
 
 
@@ -52,8 +52,6 @@ import org.firstinspires.ftc.teamcode.Subsystems.LiftSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.Subsystems.TeleOPTargetingSubsystem;
 
-import java.util.function.Consumer;
-
 @TeleOp(name = "TeleOP")
 public class IterativeTeleOP extends LinearOpMode {
     Robot robot = new Robot(this, false, true);
@@ -64,36 +62,32 @@ public class IterativeTeleOP extends LinearOpMode {
     boolean canDrop = false;
     int[] armLimits = {-2000, -2600, -3560};
 
-    //Move into init??
-    Telemetry.Item intake = telemetry.addData("Is intaking?", isIntaking);
-    Telemetry.Item output = telemetry.addData("Is outputting?", isOutputting);
-
-    //ButtonToggleSubsystem a1 = new ButtonToggleSubsystem(() -> gamepad1.a);
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap, 35.8, 7, 90, false);
-        initTargetingSubsystem(holOdom);
+        robot.init(hardwareMap, 35.8, 7, 90, TWO_CAM_JUNCTION);
+        //initTargetingSubsystem(holOdom);
 
         //Set the first gamepad led to purple, and the second to yellow
         gamepad1.setLedColor(255, 0, 255, -1);
         gamepad2.setLedColor(255, 255, 0, -1);
 
+        pattern = RevBlinkinLedDriver.BlinkinPattern.CP1_LIGHT_CHASE;
+
+        blinkinLedDriver.setPattern(pattern);
+
         //Prepare the rumble patterns for driver 2
-        RumbleEffect dropAllowed = new RumbleEffect.Builder().addStep(1,1, 500).build();
-        RumbleEffect dropNotAllowed = new RumbleEffect.Builder().addStep(0.5,0.5, 500).build();
+        RumbleEffect dropAllowed = new RumbleEffect.Builder().addStep(1,1, 100).addStep(0,0,50).addStep(1,1,100).build();
+        RumbleEffect dropNotAllowed = new RumbleEffect.Builder().addStep(0.5,0.5, 150).build();
         RumbleEffect leftSideButtonPress = new RumbleEffect.Builder().addStep(0.5,0, 750).build();
         RumbleEffect rightSideButtonPress = new RumbleEffect.Builder().addStep(0,0.5, 750).build();
 
         waitForStart();
 
+        //Orange
+        gamepad1.setLedColor(255, 165, 0, -1);
         gamepad2.setLedColor(255, 165, 0, -1);
 
-        //gamepad1.runRumbleEffect(dropAllowed);
-
-        //TODO: Add driver 2 notice when it is detected dropping is possible?
-
-        //drivetrain.resetEncoders();
 
         while (opModeIsActive()) {
             holOdom.updatePose();
@@ -176,16 +170,20 @@ public class IterativeTeleOP extends LinearOpMode {
 
             LiftSubsystem.updatePositional();
 
-            if(TeleOPTargetingSubsystem.canDropCone()) {
+            if(colorJunctionLeftPipeline.isJunctionDetected() && colorJunctionRightPipeline.isJunctionDetected()) {
                 if(!canDrop) {
                     canDrop = true;
+                    gamepad1.setLedColor(0, 255, 0, -1);
                     gamepad2.setLedColor(0,255,0, -1);
                     gamepad2.runRumbleEffect(dropAllowed);
+                    gamepad1.runRumbleEffect(dropAllowed);
                 }
             } else if (canDrop) {
                 canDrop = false;
+                gamepad1.setLedColor(255, 165, 0, -1);
                 gamepad2.setLedColor(255, 165, 0, -1);
                 gamepad2.runRumbleEffect(dropNotAllowed);
+                gamepad1.runRumbleEffect(dropNotAllowed);
             }
         }
     }

@@ -29,109 +29,46 @@
 
 package org.firstinspires.ftc.teamcode.Auto;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.getRemainingTime;
 import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.moveTo;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.cameraInit.NO_CAM;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot.holOdom;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
 
 
 /**
- *
+ *  The autonomous for the Left side of the field.
  */
 
-@Autonomous(name="Tuning", group="Linear Opmode")
-@Disabled
-public class TuningTestAuto extends LinearOpMode {
+@Autonomous(name="PID Tuning", group="Linear Opmode")
+
+public class PIDTuning extends LinearOpMode {
 
 
     Robot robot = new Robot(this, true, true);
 
     @Override
     public void runOpMode() {
-
-
-        /*
-         * TODO: Tune trackwidth
-         * TODO: Fix pathing
-         * TODO: Finish Auto run
-         * TODO: Implement Auto switcher
-         */
-
-
-        robot.init(hardwareMap, 0, 5, 0, NO_CAM);
+        robot.init(hardwareMap, 35.8, 7, 90, NO_CAM);
 
         holOdom.updatePose();
         Pose2d moving = holOdom.getPose();
 
-        telemetry.addData("X Loc", moving.getX());
-        telemetry.addData("Y Loc", moving.getY());
-        telemetry.addData("Heading", moving.getHeading());
-        telemetry.update();
 
-        waitForStart();
-//
-//        PositionalMovementSubsystem.turnTo(Math.PI / 2, 0.5);
-//        sleep(1000);
-//        PositionalMovementSubsystem.turnTo(Math.PI, 0.5);
-//        sleep(1000);
-//        PositionalMovementSubsystem.turnTo(0, 0.5);
-//        sleep(1000);
-//        PositionalMovementSubsystem.turnTo(-Math.PI / 2, 0.5);
-
-        //Robot.moveTo(pathType.STRAIGHT, 36, 55, 0.2);
-        //positionalMovement.moveToLocation(36, 55, 0.5);
-        //Robot.moveToLocation(0,0,0.2);
-        /*
-        turnTo(PI/2, 0.5);
-        sleep(1000);
-        turnTo(0, 0.5);
-        sleep(1000);
-        turnTo((3*PI)/2, 0.5);
-        sleep(1000);
-        turnTo((3*PI)/2, 0.5);
-        */
-
-
-        //drivetrain.stop();
-
-        boolean isAtStart = true;
-
-        FtcDashboard dash = FtcDashboard.getInstance();
-        Telemetry dashTele = dash.getTelemetry();
-
-        while(opModeIsActive()) {
-            holOdom.updatePose();
-            moving = holOdom.getPose();
-            telemetry.addData("Press A to move", moving.getX());
+        while (opModeInInit()) {
             telemetry.addData("X Loc", moving.getX());
             telemetry.addData("Y Loc", moving.getY());
             telemetry.addData("Heading", moving.getHeading());
             telemetry.update();
-
-
-            moveTo(30,5, 0.8);
-
-            /*
-            if(gamepad1.a) {
-                if (isAtStart) {
-                    positionalMovement.moveToLocation(36, 55, 0.5);
-                    isAtStart = false;
-                } else {
-                    positionalMovement.moveToLocation(36, 10, 0.5);
-                    isAtStart = true;
-                }
-            }
-
-             */
-
         }
+
+        moveTo(36,47, 0.7);
+
+
     }
 }

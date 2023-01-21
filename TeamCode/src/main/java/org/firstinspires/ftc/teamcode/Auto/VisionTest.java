@@ -29,21 +29,14 @@
 
 package org.firstinspires.ftc.teamcode.Auto;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.drivetrain;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.holOdom;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.visionPipeline;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.apriltagSleevePipeline;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.colorSleevePipeline;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot.contourStackPipeline;
 
-import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot;
-import org.firstinspires.ftc.teamcode.Subsystems.VisionPipeline;
-import org.openftc.easyopencv.OpenCvCamera;
-import org.openftc.easyopencv.OpenCvCameraFactory;
-import org.openftc.easyopencv.OpenCvCameraRotation;
 
 
 /**
@@ -51,25 +44,28 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
  */
 
 @Autonomous(name="Vision Test", group="Linear Opmode")
-
 public class VisionTest extends LinearOpMode {
 
-    //Robot robot = new Robot(this, true);
+    Robot robot = new Robot(this, true, true);
 
 
     @Override
     public void runOpMode() {
 
 
-        //robot.init(hardwareMap, 36, 7, 90, true);
+        robot.init(hardwareMap, 36, 7, 90, Robot.cameraInit.APRIL_SLEEVE);
 
-        Robot.initCV(hardwareMap);
 
         waitForStart();
 
         while(opModeIsActive()) {
-            telemetry.addData("Color Guess", visionPipeline.getPredictedColor().toString());
-            telemetry.addData("Hue Average", visionPipeline.getAverage());
+//            telemetry.addData("Location Guess", apriltagSleevePipeline.getPrediction());
+//            telemetry.addData("Tag ID", apriltagSleevePipeline.getLatestDetections().get(0).id);
+            if (contourStackPipeline.canSeeStack()) {
+                telemetry.addData("Stack Offset", contourStackPipeline.getStackOffset());
+            } else {
+                telemetry.addData("Stack Offset", "Can't See Stack");
+            }
             telemetry.update();
 
             sleep(10);

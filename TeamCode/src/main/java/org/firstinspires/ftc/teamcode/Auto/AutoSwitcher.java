@@ -1,28 +1,70 @@
 package org.firstinspires.ftc.teamcode.Auto;
 
-import static org.firstinspires.ftc.teamcode.Auto.switchType.*;
+import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.moveTo;
+import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.turn;
+import static org.firstinspires.ftc.teamcode.Subsystems.PositionalMovementSubsystem.turnTo180;
 
 /**
  * This class provides the framework to allow opposite alliance autos to be created in one program
  * and simply switch certain values depending on if the opmode is run from blue or red side.
  */
-public interface AutoSwitcher {
+public class AutoSwitcher {
+    static double x;
+    static double y;
+    static double heading;
+    static autoStartSpot startSpot;
 
-     static double switchable(double value, switchType SwitchMethod, boolean shouldSwitch) {
-        if(SwitchMethod == INVERT_VALUE) {
-            return -value;
-        } else if (SwitchMethod == MIRROR_ANGLE) {
-            return -value;
-        }
+     static double mirror(double input, double reflectionPoint) {
+         if(startSpot == autoStartSpot.LEFT) {
+             return input;
+         }
+         return reflectionPoint - (input - reflectionPoint);
+     }
 
-        return 0;
+     static double mirrorX(double input) {
+        return mirror(input, x);
+     }
+
+     static double mirrorY(double input) {
+         return mirror(input, y);
+     }
+
+     static double mirrorHeading(double input) {
+         return mirror(input, heading);
+     }
+
+     static void setMirror(double xIn, double yIn, double theta) {
+         x = xIn;
+         y = yIn;
+         heading = theta;
+     }
+
+     static void moveToMirrored(double endX, double endY, double speed, boolean exact) {
+         moveTo(mirrorX(endX), endY, speed, exact);
+     }
+
+     static void moveToMirrored(double endX, double endY, double speed) {
+         moveToMirrored(endX, endY, speed, true);
+     }
+
+     static void turnMirrored(double endHeading, double speed) {
+         double mirroredHeading = mirrorHeading(endHeading);
+         if(mirroredHeading == 180) {
+             turnTo180(speed);
+         } else {
+             turn(mirrorHeading(endHeading), speed);
+         }
+     }
+
+
+    /**
+     * Setting non-null values will enable dynamic mirroring, which will mirror the values if the
+     * right side is selected. Setting this to null will always mirror the values.
+     * @param startSpot
+     */
+    static void setStartSpot(autoStartSpot startSpot) {
+        AutoSwitcher.startSpot = startSpot;
     }
 }
 
-/**
- * Mirror angle inverts the angle across 0, Invert value negates the value
- */
-enum switchType {
-    MIRROR_ANGLE, INVERT_VALUE
-}
 
