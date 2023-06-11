@@ -29,17 +29,17 @@
 
 package org.firstinspires.ftc.teamcode.Tuning;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.cameraInit.NO_CAM;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.leftBack;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.leftFront;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightBack;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot.rightFront;
+import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.cameraInit.NO_CAM;
+import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.leftBack;
+import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.leftFront;
+import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.rightBack;
+import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.rightFront;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.teamcode.Subsystems.Robot;
+import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
 
 @Autonomous(name = "Friction Variance", group = "Tuning")
 public class FrictionVarianceTest extends LinearOpMode {
