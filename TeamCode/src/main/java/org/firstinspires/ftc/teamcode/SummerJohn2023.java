@@ -9,6 +9,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.DrivetrainSubsystem;
@@ -32,6 +33,8 @@ public class SummerJohn2023 {
     public static DcMotorEx leftLift;
     public static DcMotorEx rightLift;
     public static DcMotorEx rotate;
+
+    public static Servo grab;
 
     public static DigitalChannel rotateTrigger;
 
@@ -65,7 +68,18 @@ public class SummerJohn2023 {
         leftBack = hwMap.get(DcMotorEx.class, "leftBack");
         rightBack = hwMap.get(DcMotorEx.class, "rightBack");
 
+        rotate = hwMap.get(DcMotorEx.class, "rotate");
+        leftLift = hwMap.get(DcMotorEx.class, "leftLift");
+        rightLift = hwMap.get(DcMotorEx.class, "rightLift");
+
+        grab = hwMap.get(Servo.class, "grab");
+
         rotateTrigger = hwMap.get(DigitalChannel.class, "rotateTrigger");
+
+        leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        rotate.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         //Set the drivemotors to run without encoder
         leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -82,10 +96,13 @@ public class SummerJohn2023 {
         //Set the motors to reverse direction
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
+
+        rightLift.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public void setArmHeight(int position) {
         leftLift.setTargetPosition(position);
+        leftLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightLift.setPower(leftLift.getPower());
     }
 
