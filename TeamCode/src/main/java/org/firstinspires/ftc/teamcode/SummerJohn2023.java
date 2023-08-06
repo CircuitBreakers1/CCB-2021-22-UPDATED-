@@ -34,7 +34,8 @@ public class SummerJohn2023 {
     public static DcMotorEx rightLift;
     public static DcMotorEx rotate;
 
-    public static Servo grab;
+    public static Servo rightGrab;
+    public static Servo leftGrab;
 
     public static DigitalChannel rotateTrigger;
 
@@ -72,9 +73,12 @@ public class SummerJohn2023 {
         leftLift = hwMap.get(DcMotorEx.class, "leftLift");
         rightLift = hwMap.get(DcMotorEx.class, "rightLift");
 
-        grab = hwMap.get(Servo.class, "grab");
+        rightGrab = hwMap.get(Servo.class, "rightGrab");
+        leftGrab = hwMap.get(Servo.class, "leftGrab");
 
         rotateTrigger = hwMap.get(DigitalChannel.class, "rotateTrigger");
+
+        leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -97,7 +101,10 @@ public class SummerJohn2023 {
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        rightLift.setDirection(DcMotorSimple.Direction.REVERSE);
+        leftLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightLift.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
+        //rightLift.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public void setArmHeight(int position) {
