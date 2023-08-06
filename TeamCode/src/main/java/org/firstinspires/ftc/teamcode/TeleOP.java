@@ -40,12 +40,30 @@ public class TeleOP extends LinearOpMode {
     SummerJohn2023 robot = new SummerJohn2023();
 
     //Constants
-    int armLevels[] = {500, 1000, 1500};
-
+    final int armLevels[] = {500, 1000, 1500};
+    final int armMax = 4000;
+    final int armRotateLevel = 500;
+    boolean yes = false, yes2 = false;
 
     @Override
     public void runOpMode() throws InterruptedException {
         robot.init(hardwareMap);
+
+        leftGrab.setPosition(0.15); //Closed 0.1, Open 0.15
+        rightGrab.setPosition(0.1); //Closed 0.15, Open 0.1
+//        sleep(1000);
+//        rightGrab.setPosition(0.3);
+//        sleep(1000);
+//        rightGrab.setPosition(0.5);
+//        sleep(1000);
+//        rightGrab.setPosition(0.7);
+//        sleep(1000);
+//        rightGrab.setPosition(0.9);
+
+
+
+        sleep(1000);
+
 
         rotate.setPower(0.5);
         while(rotateTrigger.getState()) {
@@ -58,7 +76,7 @@ public class TeleOP extends LinearOpMode {
         rotate.setTargetPosition(0);
 
         rotate.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-
+//
 //        leftLift.setTargetPosition(0);
 //        leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 //        leftLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -66,10 +84,28 @@ public class TeleOP extends LinearOpMode {
         leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rightLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-        robot.setArmHeight(0);
+        //robot.setArmHeight(0);
 
         telemetry.addData("Status", "Initialized");
         telemetry.update();
+
+//        leftLift.setPower(0.2);
+//        //rightLift.setPower(0.2);
+//
+//        sleep(1000);
+//
+//        leftLift.setPower(0);
+//        rightLift.setPower(0);
+//
+//        sleep(500);
+//
+//        leftLift.setPower(-0.2);
+//        //rightLift.setPower(-0.2);
+//
+//        sleep(1000);
+
+        leftLift.setPower(0);
+        rightLift.setPower(0);
 
         //Set the first gamepad led to purple, and the second to yellow
         gamepad1.setLedColor(255, 0, 255, -1);
@@ -92,36 +128,94 @@ public class TeleOP extends LinearOpMode {
             rightFront.setPower(1 * (y - x - rx));
             rightBack.setPower(1 * (y + x - rx));
 
-            rotate.setPower(-gamepad2.left_stick_x * 0.5);
 
 
-            if(gamepad2.a) {
-                robot.setArmHeight(armLevels[0]);
+
+            if(leftLift.getCurrentPosition() >= armRotateLevel || Math.abs(rotate.getCurrentPosition()) - 40 < 0) {
+                if((gamepad2.left_stick_x < 0 && rotate.getCurrentPosition() <= 470) || (gamepad2.left_stick_x > 0 && rotate.getCurrentPosition() >= -470)) {
+                    rotate.setPower(-gamepad2.left_stick_x * 0.25);
+                } else {
+                    rotate.setPower(0);
+                }
+            } else {
+                rotate.setPower(0);
             }
-            if(gamepad2.b) {
-                robot.setArmHeight(armLevels[1]);
+            /* else if (Math.abs(rotate.getCurrentPosition()) > 100) {
+                //noinspection IntegerDivisionInFloatingPointContext
+                rotate.setPower(Math.min(0.1 * (rotate.getCurrentPosition() / Math.abs(rotate.getCurrentPosition())), 0.25));
+            } */
+
+//            if(gamepad2.a) {
+//                robot.setArmHeight(armLevels[0]);
+//            } else if(gamepad2.b) {
+//                robot.setArmHeight(armLevels[1]);
+//            } else if(gamepad2.y) {
+//                robot.setArmHeight(armLevels[2]);
+//            } else if(gamepad2.x) {
+//                robot.setArmHeight(0);
+//            }
+
+
+            yes = (-gamepad2.right_stick_y > 0 && leftLift.getCurrentPosition() < armMax);
+            yes2 = -gamepad2.right_stick_y < 0 && (Math.abs(rotate.getCurrentPosition()) < 75 || leftLift.getCurrentPosition() > armRotateLevel);
+
+            if(yes || yes2) {
+                leftLift.setPower(-gamepad2.right_stick_y);
+                rightLift.setPower(gamepad2.right_stick_y);
+
+            } else if (gamepad2.right_stick_y == 0) {
+                if(leftLift.getCurrentPosition() > 1000) {
+                    leftLift.setPower(0.1);
+                    rightLift.setPower(-0.1);
+                } else {
+                    leftLift.setPower(0);
+                    rightLift.setPower(0);
+                }
+            } else {
+                leftLift.setPower(0);
+                rightLift.setPower(0);
             }
-            if(gamepad2.y) {
-                robot.setArmHeight(armLevels[2]);
-            }
-            if(gamepad2.x) {
-                robot.setArmHeight(0);
-            }
-//            leftLift.setPower(-gamepad2.left_stick_y);
-//            rightLift.setPower(gamepad2.left_stick_y);
+
+
+            //Prevent changing arm power if leftlift position is above armMax
+
+
+//            leftLift.setPower(-gamepad2.right_stick_y);
+//            rightLift.setPower(gamepad2.right_stick_y);
+
+//
+//            if(gamepad2.dpad_up) {
+//                leftLift.setPower(0.5);
+//                rightLift.setPower(-0.5);
+//            }else if(gamepad2.dpad_down) {
+//                leftLift.setPower(-0.5);
+//                rightLift.setPower(.5);
+//            } else {
+//                leftLift.setPower(0);
+//                rightLift.setPower(0);
+//            }
 
             if(gamepad2.left_bumper) {
-                grab.setPosition(0);
+                //Close
+                rightGrab.setPosition(0.17);
+                leftGrab.setPosition(0.08);
             }
             if(gamepad2.right_bumper) {
-                grab.setPosition(1);
+                //Open
+                rightGrab.setPosition(0.1);
+                leftGrab.setPosition(0.15);
             }
 
-            robot.maintainArm();
+            //robot.maintainArm();
 
-            telemetry.addData("Left Arm Speed", leftLift.getPower());
-            telemetry.addData("Right Arm Speed", rightLift.getPower());
+            telemetry.addData("Left Arm Speed", leftLift.getVelocity());
+            telemetry.addData("Right Arm Speed", rightLift.getVelocity());
+            telemetry.addData("Arm Height", leftLift.getCurrentPosition());
             telemetry.addData("Turret Location", rotate.getCurrentPosition());
+            telemetry.addData("Inverted Gamepad", -gamepad2.right_stick_y);
+            telemetry.addData("Left Pos", leftGrab.getPosition());
+            telemetry.addData("YES?", yes);
+            telemetry.addData("YES2?", yes2);
             telemetry.update();
         }
     }

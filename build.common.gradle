@@ -122,9 +122,11 @@ android {
 }
 
 repositories {
+
     flatDir {
         dirs rootProject.file('libs')
         mavenCentral()
     }
+
 }
 
