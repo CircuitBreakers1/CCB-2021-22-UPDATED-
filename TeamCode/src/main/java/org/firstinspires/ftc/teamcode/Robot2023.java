@@ -2,7 +2,9 @@ package org.firstinspires.ftc.teamcode;
 
 import static org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase.getCurrentGameTagLibrary;
 import static java.lang.Math.PI;
+import static java.lang.Math.abs;
 import static java.lang.Math.cos;
+import static java.lang.Math.signum;
 import static java.lang.Math.sin;
 
 import android.util.Size;
@@ -11,7 +13,9 @@ import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 
 import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
@@ -32,11 +36,12 @@ import javax.annotation.Nullable;
 
 /**
  * Tested and Working Features:
+ * - Holonomic Odometry
+ * - Smooth Deceleration
  * <p>
  * Implemented, but not tested/working:
  * - AprilTag Positioning
- * - Holonomic Odometry
- * - Smooth Deceleration
+ *
  * <p>
  * Untested/Unimplemented Features:
  * - Error Storage & Logs
@@ -45,16 +50,18 @@ import javax.annotation.Nullable;
  */
 public class Robot2023 {
     //All values in IN
-    private static final float wheelRadius = (float) 1.49606 / 2;
+    private static final float wheelRadius = (float) 1.37795 / 2;
     private static final float ticksPerRev = 1440;
     public static final float ticksToIn = (float) ((2 * PI * wheelRadius) / ticksPerRev);
 
     public static HolonomicOdometry holOdom;
 
-    private MotorEx leftFront;
-    private MotorEx leftBack;
-    private MotorEx rightFront;
-    private MotorEx rightBack;
+    public static MotorEx leftFront;
+    public static MotorEx leftBack;
+    public static MotorEx rightFront;
+    public static MotorEx rightBack;
+
+    public static IMU imu;
 
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
@@ -83,6 +90,13 @@ public class Robot2023 {
         rightFront = new MotorEx(ahwMap, "rightFront");
         rightBack = new MotorEx(ahwMap, "rightBack");
 
+        imu = ahwMap.get(IMU.class, "imu");
+
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD;
+        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
+        RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
+
         leftFront.setInverted(true);
         leftBack.setInverted(true);
 
@@ -100,13 +114,21 @@ public class Robot2023 {
         leftBack.setDistancePerPulse(ticksToIn);
         rightFront.setDistancePerPulse(ticksToIn);
 
+        leftFront.resetEncoder();
+        leftBack.resetEncoder();
+        rightFront.resetEncoder();
+
         holOdom = new HolonomicOdometry(
-                leftFront::getCurrentPosition,
-                leftBack::getCurrentPosition,
-                rightFront::getCurrentPosition,
-                6.0,
-                -3.0
+                () -> (leftBack.getCurrentPosition() * -ticksToIn),
+                () -> leftFront.getCurrentPosition() * ticksToIn,
+                () -> rightFront.getCurrentPosition() * ticksToIn,
+                10.375,
+                -3.8125
         );
+
+        holOdom.updatePose();
+        holOdom.updatePose(new Pose2d());
+
         if(initVision) {
             aprilTagProcessor = new AprilTagProcessor.Builder()
                     .setDrawTagID(true)
@@ -115,10 +137,9 @@ public class Robot2023 {
                     .setDrawCubeProjection(false)
                     .setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
                     .setTagLibrary(getCurrentGameTagLibrary())
+                    .setLensIntrinsics(520.549, 520.549, 313.018, 237.164)
                     .build();
 
-            //TODO: Calibrate Lens Intrinsics
-//            aprilTagBuilder.setLensIntrinsics();
 
             visionPortal = new VisionPortal.Builder()
                     .addProcessor(aprilTagProcessor)
@@ -148,7 +169,7 @@ public class Robot2023 {
     }
 
     @Nullable
-    private Pose2d getPoseFromAprilTag() {
+    public Pose2d getPoseFromAprilTag() {
         List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
 
         for (AprilTagDetection detection: detections) {
@@ -197,8 +218,8 @@ public class Robot2023 {
         double[] angles = rotationExtract.getAngles(RotationOrder.ZYX, RotationConvention.VECTOR_OPERATOR);
 
         return new Pose2d(
-                tCamToAprilMatrix.getEntry(0, 3),
                 tCamToAprilMatrix.getEntry(1, 3),
+                tCamToAprilMatrix.getEntry(0, 3),
                 new Rotation2d(angles[0])
         );
     }
@@ -211,12 +232,12 @@ public class Robot2023 {
      * @param targetPower The power to set the motor to
      */
     public void smoothDecelerate(MotorEx motor, double targetPower) {
-        double maxDecelerate = 0.1;
+        double maxDecelerate = 0.25;
         double currentPower = motor.get();
-        if (targetPower > currentPower - maxDecelerate) {
+        if (abs(targetPower) > abs(currentPower) - abs(maxDecelerate)) {
             motor.set(targetPower);
         } else {
-            motor.set(currentPower - maxDecelerate);
+            motor.set(currentPower + (maxDecelerate * (-1 * signum(currentPower))));
         }
     }
 
@@ -226,8 +247,8 @@ public class Robot2023 {
         double rightFrontPower = y - x - turn;
         double rightBackPower = y + x - turn;
 
-        double maxPower = Math.max(Math.max(Math.abs(leftFrontPower), Math.abs(leftBackPower)),
-                Math.max(Math.abs(rightFrontPower), Math.abs(rightBackPower)));
+        double maxPower = Math.max(Math.max(abs(leftFrontPower), abs(leftBackPower)),
+                Math.max(abs(rightFrontPower), abs(rightBackPower)));
 
         if (maxPower > 1) {
             leftFrontPower /= maxPower;
