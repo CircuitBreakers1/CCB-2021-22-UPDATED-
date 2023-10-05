@@ -29,12 +29,18 @@
 
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.teamcode.Robot2023.*;
+import static org.firstinspires.ftc.teamcode.Robot2023.armAngle;
+import static org.firstinspires.ftc.teamcode.Robot2023.armExtend;
 import static org.firstinspires.ftc.teamcode.Robot2023.holOdom;
+import static org.firstinspires.ftc.teamcode.Robot2023.imu;
+import static org.firstinspires.ftc.teamcode.Robot2023.intake;
+import static org.firstinspires.ftc.teamcode.Robot2023.leftBack;
 import static org.firstinspires.ftc.teamcode.Robot2023.leftFront;
+import static org.firstinspires.ftc.teamcode.Robot2023.lift;
+import static org.firstinspires.ftc.teamcode.Robot2023.liftRaise;
+import static org.firstinspires.ftc.teamcode.Robot2023.rightBack;
 import static org.firstinspires.ftc.teamcode.Robot2023.rightFront;
-
-import static java.lang.Thread.sleep;
+import static org.firstinspires.ftc.teamcode.Robot2023.wrist;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
@@ -42,25 +48,19 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
 
 /**
  * Demonstrates new features
  */
-@TeleOp(name = "Test TeleOP", group = "")
-@Disabled
-public class OdoTestTeleOp extends OpMode {
+@TeleOp(name = "TeleOP", group = "")
+public class LastJohnTeleOp extends OpMode {
 
     Robot2023 robot = new Robot2023();
-
-    double aprilX = 0;
-    double aprilY = 0;
-    double aprilHeading = 0;
 
     @Override
     public void init() {
         telemetry.addData("Status", "Initialized");
-        robot.init(hardwareMap, true);
+        robot.init(hardwareMap, false);
 
     }
 
@@ -78,29 +78,40 @@ public class OdoTestTeleOp extends OpMode {
         double x = -gamepad1.left_stick_x;
         double y = gamepad1.left_stick_y;
         double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-        double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
-        double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
-        robot.smoothDrive(rotX, rotY, -gamepad1.right_stick_x);
-        holOdom.updatePose();
-        Pose2d aprilPose = robot.getPoseFromAprilTag();
-        if (aprilPose != null) {
-            aprilX = aprilPose.getX();
-            aprilY = aprilPose.getY();
-            aprilHeading = aprilPose.getHeading();
-        }
-        telemetry.addData("April X", aprilX);
-        telemetry.addData("April Y", aprilY);
-        telemetry.addData("April Heading", aprilHeading);
-        telemetry.addData("Left Odo", leftFront.getCurrentPosition());
-        telemetry.addData("Right Odo", leftBack.getCurrentPosition() * -1);
-        telemetry.addData("Back Odo", rightFront.getCurrentPosition());
-        telemetry.addData("X", holOdom.getPose().getX());
-        telemetry.addData("Y", holOdom.getPose().getY());
-        telemetry.addData("Heading", holOdom.getPose().getHeading());
-        telemetry.addData("Left Front", leftFront.get());
-        telemetry.addData("Right Front", rightFront.get());
-        telemetry.addData("Left Back", leftBack.get());
-        telemetry.addData("Right Back", rightBack.get());
+//        double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
+//        double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+        robot.smoothDrive(x, y, gamepad1.right_stick_x);
 
+        if(gamepad1.a || gamepad2.a) {
+            intake.setPower(-1);
+        } else if (gamepad1.b || gamepad2.b) {
+            intake.setPower(0);
+        }
+
+        if (gamepad2.dpad_up) {
+            lift.setPower(1);
+        } else if (gamepad2.dpad_down) {
+            lift.setPower(-1);
+        } else {
+            lift.setPower(0);
+        }
+
+        if(gamepad2.right_bumper) {
+            wrist.setPosition(0);
+        } else if (gamepad2.left_bumper) {
+            wrist.setPosition(1);
+        }
+
+        if(gamepad2.dpad_left) {
+            liftRaise.setPosition(0);
+        } else if (gamepad2.dpad_right) {
+            liftRaise.setPosition(0.1);
+        }
+
+        armAngle.setPower(gamepad2.left_stick_y);
+        armExtend.setPower(gamepad2.right_stick_y);
+
+        telemetry.addData("Arm Length:", armExtend.getCurrentPosition());
+        telemetry.update();
     }
 }

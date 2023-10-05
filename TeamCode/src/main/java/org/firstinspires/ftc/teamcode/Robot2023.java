@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase.getCurr
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.cos;
+import static java.lang.Math.max;
 import static java.lang.Math.signum;
 import static java.lang.Math.sin;
 
@@ -14,8 +15,11 @@ import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
 import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
@@ -55,11 +59,23 @@ public class Robot2023 {
     public static final float ticksToIn = (float) ((2 * PI * wheelRadius) / ticksPerRev);
 
     public static HolonomicOdometry holOdom;
+    /**
+     * Max acceptable deviation when moving using odometry. Functions as the radius of a circle
+     */
+    private static double precision = 0.5;
 
     public static MotorEx leftFront;
     public static MotorEx leftBack;
     public static MotorEx rightFront;
     public static MotorEx rightBack;
+
+    public static DcMotor intake;
+    public static DcMotor lift;
+    public static DcMotor armAngle;
+    public static DcMotor armExtend;
+
+    public static Servo liftRaise;
+    public static Servo wrist;
 
     public static IMU imu;
 
@@ -69,6 +85,8 @@ public class Robot2023 {
     private boolean visionInit = false;
     private boolean startLocationBasedOnApril = false;
     private double recalibrateTime = 0;
+
+    public static String logcatTag = "Robot Logging: ";
 
     /**
      *
@@ -89,6 +107,14 @@ public class Robot2023 {
         leftBack = new MotorEx(ahwMap, "leftBack");
         rightFront = new MotorEx(ahwMap, "rightFront");
         rightBack = new MotorEx(ahwMap, "rightBack");
+
+        intake = ahwMap.get(DcMotor.class, "intake");
+        lift = ahwMap.get(DcMotor.class, "lift");
+        armAngle = ahwMap.get(DcMotor.class, "armAngle");
+        armExtend = ahwMap.get(DcMotor.class, "armExtend");
+
+        liftRaise = ahwMap.get(Servo.class, "liftRaise");
+        wrist = ahwMap.get(Servo.class, "wrist");
 
         imu = ahwMap.get(IMU.class, "imu");
 
@@ -261,5 +287,80 @@ public class Robot2023 {
         smoothDecelerate(leftBack, leftBackPower);
         smoothDecelerate(rightFront, rightFrontPower);
         smoothDecelerate(rightBack, rightBackPower);
+    }
+
+    public void moveTo(double x, double y, double theta, double maxSpeed) {
+        RobotLog.d(logcatTag + "Moving to " + x + ", " + y + ", " + theta);
+        double distance = Math.hypot(x - holOdom.getPose().getX(), y - holOdom.getPose().getY());
+        RobotLog.v(logcatTag + "Distance: " + distance);
+
+        double xSpeed, ySpeed, turnSpeed, xDistance, yDistance, turnDistance, heading;
+        Pose2d pose;
+        while(distance > precision) {
+            holOdom.updatePose();
+            pose = holOdom.getPose();
+            xDistance = x - pose.getX();
+            yDistance = y - pose.getY();
+            heading = pose.getHeading();
+            turnDistance = theta - heading;
+            distance = Math.hypot(xDistance, yDistance);
+            xSpeed = getSpeedFromDistance(xDistance);
+            ySpeed = getSpeedFromDistance(yDistance);
+
+            if(xSpeed > maxSpeed) {
+                xSpeed = maxSpeed;
+            }
+            if(ySpeed > maxSpeed) {
+                ySpeed = maxSpeed;
+            }
+            if(ySpeed < 0.001) {
+                ySpeed = 0;
+            }
+            if(xSpeed < 0.001) {
+                xSpeed = 0;
+            }
+
+            double x_rotated = xSpeed * Math.cos(heading) - ySpeed * Math.sin(heading);
+            double y_rotated = xSpeed * Math.sin(heading) + ySpeed * Math.cos(heading);
+
+            double lfSpeed = x_rotated - y_rotated;
+            double lbSpeed = x_rotated + y_rotated;
+            double rfSpeed = x_rotated + y_rotated;
+            double rbSpeed = x_rotated - y_rotated;
+
+            double lfTemp = abs(lfSpeed);
+            double lbTemp = abs(lbSpeed);
+            double rfTemp = abs(rfSpeed);
+            double rbTemp = abs(rbSpeed);
+
+            double maxMotorSpeed = max(lfTemp, max(lbTemp, max(rfTemp, rbTemp)));
+
+            if(maxMotorSpeed > 1) {
+                lfSpeed /= maxMotorSpeed;
+                lbSpeed /= maxMotorSpeed;
+                rfSpeed /= maxMotorSpeed;
+                rbSpeed /= maxMotorSpeed;
+            }
+
+            leftFront.set(lfSpeed);
+            leftBack.set(lbSpeed);
+            rightFront.set(rfSpeed);
+            rightBack.set(rbSpeed);
+
+            RobotLog.v(logcatTag + "X Speed: " + xSpeed + ", Y Speed: " + ySpeed + ", X Distance: " + xDistance + ", Y Distance: " + yDistance + ", Heading: " + heading + ", Turn Distance: " + turnDistance + ", Distance: " + distance);
+        }
+        RobotLog.d(logcatTag + "Finished moving to " + x + ", " + y + ", " + theta + ". Actual Position: " + holOdom.getPose().toString());
+        leftFront.set(0);
+        leftBack.set(0);
+        rightFront.set(0);
+        rightBack.set(0);
+
+    }
+
+    private double getSpeedFromDistance(double distance) {
+        //TODO: Use log growth function to get speed from distance, round 0.999 or greater to 1
+
+
+        return 0;
     }
 }
