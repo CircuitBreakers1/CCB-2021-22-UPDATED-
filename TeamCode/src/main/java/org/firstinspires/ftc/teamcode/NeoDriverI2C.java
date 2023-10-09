@@ -51,7 +51,7 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
         BUF(0x04),
         SHOW(0x05);
 
-        public final int bVal;
+        public int bVal;
 
         Register(int bVal) {
             this.bVal = bVal;
