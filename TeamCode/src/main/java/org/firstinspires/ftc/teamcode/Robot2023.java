@@ -76,7 +76,8 @@ public class Robot2023 {
 
     public static Servo liftRaise;
     public static Servo wrist;
-
+    public static Servo shotRelease;
+    public static Servo gripper;
     public static IMU imu;
 
     private AprilTagProcessor aprilTagProcessor;
@@ -115,6 +116,8 @@ public class Robot2023 {
 
         liftRaise = ahwMap.get(Servo.class, "liftRaise");
         wrist = ahwMap.get(Servo.class, "wrist");
+        shotRelease = ahwMap.get(Servo.class, "shotRelease");
+        gripper = ahwMap.get(Servo.class, "gripper");
 
         imu = ahwMap.get(IMU.class, "imu");
 
@@ -169,7 +172,7 @@ public class Robot2023 {
 
             visionPortal = new VisionPortal.Builder()
                     .addProcessor(aprilTagProcessor)
-                    .enableCameraMonitoring(true)
+                    //.enableCameraMonitoring(true)
                     .setAutoStopLiveView(true)
                     .setCamera(ahwMap.get(WebcamName.class, "Webcam"))
                     .setCameraResolution(new Size(640, 480))
