@@ -42,6 +42,7 @@ import static org.firstinspires.ftc.teamcode.Robot2023.liftRaise;
 import static org.firstinspires.ftc.teamcode.Robot2023.rightBack;
 import static org.firstinspires.ftc.teamcode.Robot2023.rightFront;
 import static org.firstinspires.ftc.teamcode.Robot2023.shotRelease;
+import static org.firstinspires.ftc.teamcode.Robot2023.slidePush;
 import static org.firstinspires.ftc.teamcode.Robot2023.wrist;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
@@ -84,17 +85,23 @@ public class LastJohnTeleOp extends OpMode {
 //        double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
         robot.smoothDrive(x, y, gamepad1.right_stick_x);
 
+        if(gamepad1.x) {
+            slidePush.setPosition(0.64);
+        } else if (gamepad1.y) {
+            slidePush.setPosition(0.75);
+        }
+
         if(gamepad1.a || gamepad2.a) {
             intake.setPower(-1);
         } else if (gamepad1.b || gamepad2.b) {
             intake.setPower(0);
         }
-
-        if(gamepad1.x) {
-            shotRelease.setPosition(0);
-        } else if (gamepad1.y) {
-            shotRelease.setPosition(0.1);
-        }
+//
+//        if(gamepad1.x) {
+//            shotRelease.setPosition(0);
+//        } else if (gamepad1.y) {
+//            shotRelease.setPosition(0.1);
+//        }
 
         if(gamepad2.x) {
             gripper.setPosition(0);

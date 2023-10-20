@@ -78,6 +78,7 @@ public class Robot2023 {
     public static Servo wrist;
     public static Servo shotRelease;
     public static Servo gripper;
+    public static Servo slidePush;
     public static IMU imu;
 
     private AprilTagProcessor aprilTagProcessor;
@@ -118,6 +119,7 @@ public class Robot2023 {
         wrist = ahwMap.get(Servo.class, "wrist");
         shotRelease = ahwMap.get(Servo.class, "shotRelease");
         gripper = ahwMap.get(Servo.class, "gripper");
+        slidePush = ahwMap.get(Servo.class, "slidePush");
 
         imu = ahwMap.get(IMU.class, "imu");
 
