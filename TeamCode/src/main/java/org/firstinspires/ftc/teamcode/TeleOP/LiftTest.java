@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.TeleOP;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -39,7 +39,7 @@ import com.qualcomm.robotcore.util.RobotLog;
 /**
  * Demonstrates empty OpMode
  */
-@TeleOp(name = "Concept: Lift", group = "Concept")
+@TeleOp(name = "Single Motor Test", group = "Concept")
 public class LiftTest extends OpMode {
 
   private ElapsedTime runtime = new ElapsedTime();

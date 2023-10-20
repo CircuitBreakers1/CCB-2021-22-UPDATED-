@@ -27,18 +27,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.firstinspires.ftc.teamcode;
+package org.firstinspires.ftc.teamcode.archive;
 
-import static org.firstinspires.ftc.teamcode.SummerJohn2023.*;
+import static org.firstinspires.ftc.teamcode.archive.SummerJohn2023.*;
 
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.teamcode.archive.SummerJohn2023;
+
 @TeleOp(name = "Old TeleOP")
 @Disabled
-public class TeleOP extends LinearOpMode {
+public class SummerTeleOP extends LinearOpMode {
     SummerJohn2023 robot = new SummerJohn2023();
 
     //Constants
