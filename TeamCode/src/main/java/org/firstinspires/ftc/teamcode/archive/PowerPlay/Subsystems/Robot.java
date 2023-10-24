@@ -5,7 +5,7 @@ import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.
 import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.cameraInit.CONE_STACK;
 import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.cameraInit.ONE_CAM_JUNCTION;
 import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.cameraInit.TWO_CAM_JUNCTION;
-import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.tuningConstants.trackTuning;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants.trackTuning;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Rotation2d;

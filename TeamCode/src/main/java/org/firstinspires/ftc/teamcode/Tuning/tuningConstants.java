@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems;
+package org.firstinspires.ftc.teamcode.Tuning;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
@@ -7,6 +7,11 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 public class tuningConstants {
 
     //Values are: kP, kI, kD, kF
+    public static double NEWPIDFP = 0.85;
+    public static double NEWPIDFI = 0;
+    public static double NEWPIDFD = 0;
+
+
     public static double FORWARDPIDFP = 0.85;
     public static double FORWARDPIDFI = 1.62;
     public static double FORWARDPIDFD = 0.095;

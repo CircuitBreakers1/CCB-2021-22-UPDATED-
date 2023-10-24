@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems;
 
-import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.tuningConstants.*;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants.*;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.atan;
