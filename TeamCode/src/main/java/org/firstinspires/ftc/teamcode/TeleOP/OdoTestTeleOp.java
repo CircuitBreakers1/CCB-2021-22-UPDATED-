@@ -37,72 +37,154 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.rightFront;
 import static java.lang.Thread.sleep;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.arcrobotics.ftclib.hardware.motors.MotorEx;
+import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.Subsystems.HoloDrivetrainSubsystem;
+import org.firstinspires.ftc.teamcode.Subsystems.MovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 
 /**
  * Demonstrates new features
  */
-@TeleOp(name = "Test TeleOP", group = "")
-@Disabled
-public class OdoTestTeleOp extends OpMode {
+@TeleOp(name = "Odo Test TeleOP", group = "")
+public class OdoTestTeleOp extends LinearOpMode {
 
-    Robot2023 robot = new Robot2023();
+//    Robot2023 robot = new Robot2023();
+
+    public static MotorEx leftFront;
+    public static MotorEx leftBack;
+    public static MotorEx rightFront;
+    public static MotorEx rightBack;
+
+    MovementSubsystem movementSubsystem;
+    HoloDrivetrainSubsystem holoDrivetrain;
 
     double aprilX = 0;
     double aprilY = 0;
     double aprilHeading = 0;
 
     @Override
-    public void init() {
+    public void runOpMode() throws InterruptedException {
+        leftFront = new MotorEx(hardwareMap, "leftFront");
+        leftBack = new MotorEx(hardwareMap, "leftBack");
+        rightFront = new MotorEx(hardwareMap, "rightFront");
+        rightBack = new MotorEx(hardwareMap, "rightBack");
+
+        rightFront.setInverted(true);
+        rightBack.setInverted(true);
+
+        leftBack.setZeroPowerBehavior(MotorEx.ZeroPowerBehavior.BRAKE);
+        leftFront.setZeroPowerBehavior(MotorEx.ZeroPowerBehavior.BRAKE);
+        rightBack.setZeroPowerBehavior(MotorEx.ZeroPowerBehavior.BRAKE);
+        rightFront.setZeroPowerBehavior(MotorEx.ZeroPowerBehavior.BRAKE);
+
+        leftBack.setRunMode(MotorEx.RunMode.RawPower);
+        leftFront.setRunMode(MotorEx.RunMode.RawPower);
+        rightBack.setRunMode(MotorEx.RunMode.RawPower);
+        rightFront.setRunMode(MotorEx.RunMode.RawPower);
+
+        leftFront.setDistancePerPulse(ticksToIn);
+        leftBack.setDistancePerPulse(ticksToIn);
+        rightFront.setDistancePerPulse(ticksToIn);
+
+        leftFront.resetEncoder();
+        leftBack.resetEncoder();
+        rightFront.resetEncoder();
+
+        holOdom = new HolonomicOdometry(
+                () -> (leftBack.getCurrentPosition() * ticksToIn),
+                () -> leftFront.getCurrentPosition() * -ticksToIn,
+                () -> rightFront.getCurrentPosition() * -ticksToIn,
+                10.375,
+                -3.8125
+        );
+
+
+        holOdom.updatePose();
+        holOdom.updatePose(new Pose2d());
+
+        holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
+        movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, this);
+
         telemetry.addData("Status", "Initialized");
-        robot.init(hardwareMap, true);
+        Pose2d pose = holOdom.getPose();
+        telemetry.addData("X", pose.getX());
+        telemetry.addData("Y", pose.getY());
+        telemetry.addData("Heading", pose.getHeading());
 
+        while(opModeInInit()) {
+            double x = -gamepad1.left_stick_x;
+            double y = -gamepad1.left_stick_y;
+
+            holoDrivetrain.smoothDrive(x, y, -gamepad1.right_stick_x);
+            holOdom.updatePose();
+            telemetry.addData("Left Odo", leftFront.getCurrentPosition());
+            telemetry.addData("Right Odo", leftBack.getCurrentPosition() * -1);
+            telemetry.addData("Back Odo", rightFront.getCurrentPosition());
+            telemetry.addData("X", holOdom.getPose().getX());
+            telemetry.addData("Y", holOdom.getPose().getY());
+            telemetry.addData("Heading", holOdom.getPose().getHeading());
+            telemetry.update();
+////
+        }
+
+        waitForStart();
+
+        movementSubsystem.moveTo(10, 0, 0, 0.4);
     }
 
-    @Override
-    public void init_loop() {
-    }
+//    @Override
+//    public void init() {
+////        robot.init(hardwareMap, true);
+//
+//    }
+//
+//    @Override
+//    public void init_loop() {
+//    }
+//
+//    @Override
+//    public void start() {
+//
+//    }
+//
+//    @Override
+//    public void loop() {
+////        double x = -gamepad1.left_stick_x;
+////        double y = gamepad1.left_stick_y;
+////        double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
+////        double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
+////        double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
+////        robot.holoDrivetrain.smoothDrive(rotX, rotY, -gamepad1.right_stick_x);
+////        holOdom.updatePose();
+////        Pose2d aprilPose = robot.getPoseFromAprilTag();
+////        if (aprilPose != null) {
+////            aprilX = aprilPose.getX();
+////            aprilY = aprilPose.getY();
+////            aprilHeading = aprilPose.getHeading();
+////        }
+////        telemetry.addData("April X", aprilX);
+////        telemetry.addData("April Y", aprilY);
+////        telemetry.addData("April Heading", aprilHeading);
+////        telemetry.addData("Left Odo", leftFront.getCurrentPosition());
+////        telemetry.addData("Right Odo", leftBack.getCurrentPosition() * -1);
+////        telemetry.addData("Back Odo", rightFront.getCurrentPosition());
+////        telemetry.addData("X", holOdom.getPose().getX());
+////        telemetry.addData("Y", holOdom.getPose().getY());
+////        telemetry.addData("Heading", holOdom.getPose().getHeading());
+////        telemetry.addData("Left Front", leftFront.get());
+////        telemetry.addData("Right Front", rightFront.get());
+////        telemetry.addData("Left Back", leftBack.get());
+////        telemetry.addData("Right Back", rightBack.get());
 
-    @Override
-    public void start() {
 
-    }
 
-    @Override
-    public void loop() {
-//        double x = -gamepad1.left_stick_x;
-//        double y = gamepad1.left_stick_y;
-//        double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-//        double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
-//        double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
-//        robot.holoDrivetrain.smoothDrive(rotX, rotY, -gamepad1.right_stick_x);
-//        holOdom.updatePose();
-//        Pose2d aprilPose = robot.getPoseFromAprilTag();
-//        if (aprilPose != null) {
-//            aprilX = aprilPose.getX();
-//            aprilY = aprilPose.getY();
-//            aprilHeading = aprilPose.getHeading();
-//        }
-//        telemetry.addData("April X", aprilX);
-//        telemetry.addData("April Y", aprilY);
-//        telemetry.addData("April Heading", aprilHeading);
-//        telemetry.addData("Left Odo", leftFront.getCurrentPosition());
-//        telemetry.addData("Right Odo", leftBack.getCurrentPosition() * -1);
-//        telemetry.addData("Back Odo", rightFront.getCurrentPosition());
-//        telemetry.addData("X", holOdom.getPose().getX());
-//        telemetry.addData("Y", holOdom.getPose().getY());
-//        telemetry.addData("Heading", holOdom.getPose().getHeading());
-//        telemetry.addData("Left Front", leftFront.get());
-//        telemetry.addData("Right Front", rightFront.get());
-//        telemetry.addData("Left Back", leftBack.get());
-//        telemetry.addData("Right Back", rightBack.get());
 
-        robot.movementSubsystem.moveTo(10, 0, 0, 0.8);
-
-    }
 }

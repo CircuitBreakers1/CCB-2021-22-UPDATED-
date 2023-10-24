@@ -36,14 +36,14 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.imu;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.intake;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.lift;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.liftRaise;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.shotRelease;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.slidePush;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.wrist;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.Subsystems.ArmSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.ArmSubsystem.ArmState;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 
@@ -55,50 +55,95 @@ public class LastJohnTeleOp extends OpMode {
 
     Robot2023 robot = new Robot2023();
     boolean toggleStart = false, autoWrist = false;
+    boolean toggleIntake = false, toggleDown = false;
 
 
-
-    ArmState armState;
+    ArmState armState = ArmState.Ready;
     double gripTime = 0;
 
 
     @Override
     public void init() {
         telemetry.addData("Status", "Initialized");
-        robot.init(hardwareMap, false);
+        robot.init(hardwareMap, false, null);
 
-
+//        armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     @Override
     public void init_loop() {
+        gripper.setPosition(1);
 
+        telemetry.addData("Angle:", Math.abs(robot.armSubsystem.getAngle() - 7));
+        telemetry.addData("Current Position:", armExtend.getCurrentPosition());
+
+        robot.armSubsystem.setWristAngle(0);
+
+        if(!(Math.abs(robot.armSubsystem.getAngle() - 7) < 1 /*Angle not in position*/)) {
+            armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - 7));
+            telemetry.addData("Moving Arm", "True");
+        } else {
+            armAngle.setPower(0);
+            telemetry.addData("Moving Arm", "False");
+        }
+
+        if(!(armExtend.getCurrentPosition() < -220 && armExtend.getCurrentPosition() > -228 /*Length not in position*/)) {
+            armExtend.setPower((armExtend.getCurrentPosition() - -224 )/ -10.0);
+            telemetry.addData("Moving Angle", "True");
+        } else {
+            armExtend.setPower(0);
+            telemetry.addData("Moving Angle", "False");
+        }
+
+        if(gamepad2.a) {
+            armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        }
     }
 
     @Override
     public void start() {
-
+//        armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     @Override
     public void loop() {
-        double x = -gamepad1.left_stick_x;
-        double y = gamepad1.left_stick_y;
+        double x = gamepad1.left_stick_x;
+        double y = -gamepad1.left_stick_y;
         double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
 //        double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
 //        double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
         robot.holoDrivetrain.smoothDrive(x, y, gamepad1.right_stick_x);
 
-        if(gamepad1.a || gamepad2.a) {
-            intake.setPower(-1);
-        } else if (gamepad1.b || gamepad2.b) {
-            intake.setPower(0);
+//        if(gamepad1.a || gamepad2.a) {
+//            intake.setPower(-1);
+//        } else if (gamepad1.b || gamepad2.b) {
+//            intake.setPower(0);
+//        }
+
+        if(gamepad2.a) {
+            if(!toggleDown) {
+                toggleDown = true;
+                toggleIntake = !toggleIntake;
+                double power = toggleIntake ? -1 : 0;
+                intake.setPower(power);
+            }
+        } else {
+            toggleDown = false;
         }
 
+//        if(gamepad1.x) {
+//            shotRelease.setPosition(0);
+//        } else if (gamepad1.y) {
+//            shotRelease.setPosition(0.1);
+//        }
+
         if(gamepad1.x) {
-            shotRelease.setPosition(0);
+            slidePush.setPosition(0);
         } else if (gamepad1.y) {
-            shotRelease.setPosition(0.1);
+            slidePush.setPosition(0.1);
         }
 
         if(gamepad2.x) {
@@ -127,8 +172,8 @@ public class LastJohnTeleOp extends OpMode {
             liftRaise.setPosition(0.1);
         }
 
-        armAngle.setPower(-gamepad2.left_stick_y);
-        armExtend.setPower(gamepad2.right_stick_y);
+//        armAngle.setPower(-gamepad2.left_stick_y);
+//        armExtend.setPower(gamepad2.right_stick_y);
 
         if(gamepad2.start && !toggleStart) {
             toggleStart = true;
@@ -144,16 +189,16 @@ public class LastJohnTeleOp extends OpMode {
 
         switch (armState) {
             case Ready:
-                if(false /*Button to initiate grabbing pixel*/) {
+                if(gamepad2.triangle /*Button to initiate grabbing pixel*/) {
                     armState = ArmState.LowerArm;
                 }
-                if(false /*Stick Pushed Up*/) {
+                if(gamepad2.left_stick_y < 0 /*Stick Pushed Up*/) {
                     armState = ArmState.FreeMovement;
                 }
                 break;
             case LowerArm:
-                armAngle.setPower(-0.2);
-                if(false /*Arm is lowered*/) {
+                armAngle.setPower(-0.5);
+                if(Math.abs(robot.armSubsystem.getAngle() - 2) < 1) {
                     armAngle.setPower(0);
                     armState = ArmState.Grip;
                 }
@@ -169,53 +214,58 @@ public class LastJohnTeleOp extends OpMode {
                 }
                 break;
             case RaiseArm:
-                armAngle.setPower(0.2);
-                if(false /*Arm is raised*/) {
+                armAngle.setPower(0.5);
+                if(robot.armSubsystem.getAngle() > 23 /*Arm is raised*/) {
                     armAngle.setPower(0);
                     armState = ArmState.FreeMovement;
                 }
                 break;
             case FreeMovement:
-                if(false /*Angle Stick Pushed up and not at max angle, or down and not at min angle*/) {
+                robot.armSubsystem.setAbsoluteWristAngle(30);
+
+                if(true /*Angle Stick Pushed up and not at max angle, or down and not at min angle*/) {
                     armAngle.setPower(-gamepad2.left_stick_y);
                 } else {
                     armAngle.setPower(0);
                 }
 
-                if(false /*Length Stick Pushed up and not at max length, or down and not at min length*/) {
+                if(true /*Length Stick Pushed up and not at max length, or down and not at min length*/) {
                     armExtend.setPower(gamepad2.right_stick_y);
                 } else {
                     armExtend.setPower(0);
                 }
 
-                if(false /*Button to Move arm into ready state*/) {
+                if(gamepad2.triangle /*Button to Move arm into ready state*/) {
                     armState = ArmState.FreeReadyTransition;
                     armAngle.setPower(0);
                     armExtend.setPower(0);
                 }
                 break;
             case FreeReadyTransition:
-                gripper.setPosition(0);
-                if(false /*Arm is in ready position*/) {
-                    armState = ArmState.Ready;
-                }
-
-                if(false /*Angle not in position*/) {
-                    armAngle.setPower(-0.2 * Math.signum(robot.armSubsystem.getAngle()));
+                gripper.setPosition(1);
+                robot.armSubsystem.setWristAngle(0);
+                if(!(Math.abs(robot.armSubsystem.getAngle() - 7) < 1 /*Angle not in position*/)) {
+                    armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - 7));
+                    telemetry.addData("Moving Arm", "True");
                 } else {
                     armAngle.setPower(0);
+                    telemetry.addData("Moving Arm", "False");
                 }
 
-                if(false /*Length not in position*/) {
-                    armExtend.setPower(Math.max(armExtend.getCurrentPosition() / 100.0, 0.2));
+                if(!(armExtend.getCurrentPosition() < -220 && armExtend.getCurrentPosition() > -228 /*Length not in position*/)) {
+                    armExtend.setPower((armExtend.getCurrentPosition() - -224 )/ -10.0);
+                    telemetry.addData("Moving Angle", "True");
                 } else {
                     armExtend.setPower(0);
+                    telemetry.addData("Moving Angle", "False");
                 }
 
                 break;
         }
 
         telemetry.addData("Arm Length:", armExtend.getCurrentPosition());
+        telemetry.addData("Arm Angle:", robot.armSubsystem.getAngle());
+        telemetry.addData("State", armState);
         telemetry.update();
     }
 }

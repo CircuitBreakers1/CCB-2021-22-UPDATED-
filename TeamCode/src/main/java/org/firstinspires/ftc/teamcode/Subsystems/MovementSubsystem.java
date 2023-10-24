@@ -5,12 +5,21 @@ import static java.lang.Math.abs;
 import static java.lang.Math.exp;
 import static java.lang.Math.max;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.RobotLog;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class MovementSubsystem {
     private final HoloDrivetrainSubsystem holoDrivetrain;
+
+    private final LinearOpMode opMode;
+    private Telemetry telemetry;
     private final HolonomicOdometry holOdom;
 
     private static final double precision = 0.5;
@@ -23,9 +32,13 @@ public class MovementSubsystem {
     private final double A = V1 / (1 - V1);
     private final double K = (1 / D2) * Math.log(V2 / (A * (1 / V2)));
 
-    public MovementSubsystem(HoloDrivetrainSubsystem holoDrivetrain, HolonomicOdometry holOdom) {
+    public MovementSubsystem(HoloDrivetrainSubsystem holoDrivetrain, HolonomicOdometry holOdom, LinearOpMode OpMode) {
         this.holoDrivetrain = holoDrivetrain;
         this.holOdom = holOdom;
+        this.opMode = OpMode;
+        this.telemetry = OpMode.telemetry;
+        FtcDashboard dashboard = FtcDashboard.getInstance();
+        this.telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
     }
 
     public void moveTo(double x, double y, double theta, double maxSpeed) {
@@ -35,16 +48,37 @@ public class MovementSubsystem {
 
         double xSpeed, ySpeed, turnSpeed, xDistance, yDistance, turnDistance, heading;
         Pose2d pose;
-        while(distance > precision) {
+
+    while(opMode.opModeIsActive() && !opMode.gamepad1.a) {
+        telemetry.addData("X Distance", 0);
+        telemetry.addData("Y Distance", 0);
+        telemetry.addData("X Speed", 0);
+        telemetry.addData("Y Speed", 0);
+        }
+
+        while(distance > precision && opMode.opModeIsActive()) {
             holOdom.updatePose();
             pose = holOdom.getPose();
             xDistance = x - pose.getX();
-            yDistance = y - pose.getY();
+//            yDistance = y - pose.getY();
+            yDistance = 0;
             heading = pose.getHeading();
             turnDistance = theta - heading;
             distance = Math.hypot(xDistance, yDistance);
             xSpeed = getSpeedFromDistance(xDistance);
             ySpeed = getSpeedFromDistance(yDistance);
+
+
+            telemetry.addData("X Distance", xDistance);
+            telemetry.addData("Y Distance", yDistance);
+            telemetry.addData("X Speed", xSpeed);
+            telemetry.addData("Y Speed", ySpeed);
+//            telemetry.addData("Turn Speed", turnSpeed);
+
+            telemetry.addData("Turn Distance", turnDistance);
+            telemetry.addData("Heading", heading);
+            telemetry.addData("Distance", distance);
+            telemetry.update();
 
             if(xSpeed > maxSpeed) {
                 xSpeed = maxSpeed;
@@ -52,10 +86,10 @@ public class MovementSubsystem {
             if(ySpeed > maxSpeed) {
                 ySpeed = maxSpeed;
             }
-            if(ySpeed < 0.001) {
+            if(abs(ySpeed) < 0.001) {
                 ySpeed = 0;
             }
-            if(xSpeed < 0.001) {
+            if(abs(xSpeed) < 0.001) {
                 xSpeed = 0;
             }
 

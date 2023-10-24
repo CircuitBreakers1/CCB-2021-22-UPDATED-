@@ -15,6 +15,8 @@ import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -114,7 +116,7 @@ public class Robot2023 {
         recalibrateTime = -1;
     }
 
-    public void init(HardwareMap ahwMap, boolean initVision) {
+    public void init(HardwareMap ahwMap, boolean initVision, LinearOpMode opMode) {
         leftFront = new MotorEx(ahwMap, "leftFront");
         leftBack = new MotorEx(ahwMap, "leftBack");
         rightFront = new MotorEx(ahwMap, "rightFront");
@@ -140,8 +142,8 @@ public class Robot2023 {
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
-        leftFront.setInverted(true);
-        leftBack.setInverted(true);
+        rightFront.setInverted(true);
+        rightBack.setInverted(true);
 
         leftBack.setZeroPowerBehavior(MotorEx.ZeroPowerBehavior.BRAKE);
         leftFront.setZeroPowerBehavior(MotorEx.ZeroPowerBehavior.BRAKE);
@@ -162,9 +164,9 @@ public class Robot2023 {
         rightFront.resetEncoder();
 
         holOdom = new HolonomicOdometry(
-                () -> (leftBack.getCurrentPosition() * -ticksToIn),
-                () -> leftFront.getCurrentPosition() * ticksToIn,
-                () -> rightFront.getCurrentPosition() * ticksToIn,
+                () -> (leftBack.getCurrentPosition() * ticksToIn),
+                () -> leftFront.getCurrentPosition() * -ticksToIn,
+                () -> rightFront.getCurrentPosition() * -ticksToIn,
                 10.375,
                 -3.8125
         );
@@ -173,7 +175,7 @@ public class Robot2023 {
         holOdom.updatePose(new Pose2d());
 
         holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
-        movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom);
+        if(opMode != null) movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode);
         armSubsystem = new ArmSubsystem(wrist, gripper, armAngle, armAngleEncoder, armExtend);
 
         if(initVision) {
