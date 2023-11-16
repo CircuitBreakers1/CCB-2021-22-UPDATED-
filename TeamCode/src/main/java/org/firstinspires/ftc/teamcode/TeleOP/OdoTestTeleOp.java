@@ -31,21 +31,25 @@ package org.firstinspires.ftc.teamcode.TeleOP;
 
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.*;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.holOdom;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.leftFront;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.rightFront;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.endThetaPI;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.endX;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.endY;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.startThetaPI;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.startX;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.startY;
 
+import static java.lang.Math.PI;
 import static java.lang.Thread.sleep;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Subsystems.HoloDrivetrainSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.MovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
@@ -56,15 +60,8 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 @TeleOp(name = "Odo Test TeleOP", group = "")
 public class OdoTestTeleOp extends LinearOpMode {
 
-//    Robot2023 robot = new Robot2023();
+    Robot2023 robot = new Robot2023();
 
-    public static MotorEx leftFront;
-    public static MotorEx leftBack;
-    public static MotorEx rightFront;
-    public static MotorEx rightBack;
-
-    MovementSubsystem movementSubsystem;
-    HoloDrivetrainSubsystem holoDrivetrain;
 
     double aprilX = 0;
     double aprilY = 0;
@@ -72,46 +69,7 @@ public class OdoTestTeleOp extends LinearOpMode {
 
     @Override
     public void runOpMode() throws InterruptedException {
-        leftFront = new MotorEx(hardwareMap, "leftFront");
-        leftBack = new MotorEx(hardwareMap, "leftBack");
-        rightFront = new MotorEx(hardwareMap, "rightFront");
-        rightBack = new MotorEx(hardwareMap, "rightBack");
-
-        rightFront.setInverted(true);
-        rightBack.setInverted(true);
-
-        leftBack.setZeroPowerBehavior(MotorEx.ZeroPowerBehavior.BRAKE);
-        leftFront.setZeroPowerBehavior(MotorEx.ZeroPowerBehavior.BRAKE);
-        rightBack.setZeroPowerBehavior(MotorEx.ZeroPowerBehavior.BRAKE);
-        rightFront.setZeroPowerBehavior(MotorEx.ZeroPowerBehavior.BRAKE);
-
-        leftBack.setRunMode(MotorEx.RunMode.RawPower);
-        leftFront.setRunMode(MotorEx.RunMode.RawPower);
-        rightBack.setRunMode(MotorEx.RunMode.RawPower);
-        rightFront.setRunMode(MotorEx.RunMode.RawPower);
-
-        leftFront.setDistancePerPulse(ticksToIn);
-        leftBack.setDistancePerPulse(ticksToIn);
-        rightFront.setDistancePerPulse(ticksToIn);
-
-        leftFront.resetEncoder();
-        leftBack.resetEncoder();
-        rightFront.resetEncoder();
-
-        holOdom = new HolonomicOdometry(
-                () -> (leftBack.getCurrentPosition() * ticksToIn),
-                () -> leftFront.getCurrentPosition() * -ticksToIn,
-                () -> rightFront.getCurrentPosition() * -ticksToIn,
-                10.375,
-                -3.8125
-        );
-
-
-        holOdom.updatePose();
-        holOdom.updatePose(new Pose2d());
-
-        holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
-        movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, this);
+        robot.init(hardwareMap, false, this);
 
         telemetry.addData("Status", "Initialized");
         Pose2d pose = holOdom.getPose();
@@ -123,7 +81,7 @@ public class OdoTestTeleOp extends LinearOpMode {
             double x = -gamepad1.left_stick_x;
             double y = -gamepad1.left_stick_y;
 
-            holoDrivetrain.smoothDrive(x, y, -gamepad1.right_stick_x);
+            robot.holoDrivetrain.smoothDrive(x, y, -gamepad1.right_stick_x);
             holOdom.updatePose();
             telemetry.addData("Left Odo", leftFront.getCurrentPosition());
             telemetry.addData("Right Odo", leftBack.getCurrentPosition() * -1);
@@ -132,12 +90,17 @@ public class OdoTestTeleOp extends LinearOpMode {
             telemetry.addData("Y", holOdom.getPose().getY());
             telemetry.addData("Heading", holOdom.getPose().getHeading());
             telemetry.update();
-////
+//
         }
 
         waitForStart();
+//
+//        robot.movementSubsystem.moveToPose(16,0,0,1);
+//        robot.movementSubsystem.moveToPose(16,16,0,1);
+//        robot.movementSubsystem.moveToPose(0,16,PI,1);
+//        robot.movementSubsystem.moveToPose(0,0, PI * 0.25, 1);
 
-        movementSubsystem.moveTo(10, 0, 0, 0.4);
+        robot.movementSubsystem.moveToPose(endX, endY, endThetaPI * PI, 1);
     }
 
 //    @Override

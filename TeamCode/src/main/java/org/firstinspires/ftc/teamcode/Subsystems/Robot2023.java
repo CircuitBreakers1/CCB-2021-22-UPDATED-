@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.BACKMULT;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.LEFTMULT;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.OFFSETMULT;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.RIGHTMULT;
 import static org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase.getCurrentGameTagLibrary;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
@@ -16,9 +20,9 @@ import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -56,8 +60,8 @@ import javax.annotation.Nullable;
  */
 public class Robot2023 {
     //All values in IN
-    private static final float wheelRadius = (float) 1.37795 / 2;
-    private static final float ticksPerRev = 1440;
+    public static final float wheelRadius = (float) 1.37795 / 2;
+    public static final float ticksPerRev = 1440;
     public static final float ticksToIn = (float) ((2 * PI * wheelRadius) / ticksPerRev);
 
     /**
@@ -75,7 +79,13 @@ public class Robot2023 {
     public static DcMotor armAngle;
     public static DcMotor armExtend;
 
+    public static MotorEx leftOdo;
+    public static MotorEx rightOdo;
+    public static MotorEx frontOdo;
+
     public static AnalogInput armAngleEncoder;
+
+    public static DigitalChannel viperTouch;
 
     public static Servo liftRaise;
     public static Servo wrist;
@@ -83,9 +93,6 @@ public class Robot2023 {
     public static Servo gripper;
     public static Servo slidePush;
     public static IMU imu;
-
-    private AprilTagProcessor aprilTagProcessor;
-    private VisionPortal visionPortal;
 
     private boolean visionInit = false;
     private boolean startLocationBasedOnApril = false;
@@ -98,6 +105,7 @@ public class Robot2023 {
     public static HolonomicOdometry holOdom;
     public MovementSubsystem movementSubsystem;
     public ArmSubsystem armSubsystem;
+    public CameraSubsystem cameraSubsystem;
 
 
 
@@ -127,6 +135,15 @@ public class Robot2023 {
         armAngle = ahwMap.get(DcMotor.class, "armAngle");
         armExtend = ahwMap.get(DcMotor.class, "armExtend");
 
+        //Left is on armAngle, Right is on intake, Front is on lift
+        leftOdo = new MotorEx(ahwMap, "armAngle");
+        rightOdo = new MotorEx(ahwMap, "intake");
+        frontOdo = new MotorEx(ahwMap, "lift");
+
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        lift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        armAngle.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
         liftRaise = ahwMap.get(Servo.class, "liftRaise");
         wrist = ahwMap.get(Servo.class, "wrist");
         shotRelease = ahwMap.get(Servo.class, "shotRelease");
@@ -135,12 +152,16 @@ public class Robot2023 {
 
         imu = ahwMap.get(IMU.class, "imu");
 
-        armAngleEncoder = ahwMap.get(AnalogInput.class, "armAngleEncoder");
 
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
+
+        armAngleEncoder = ahwMap.get(AnalogInput.class, "armAngleEncoder");
+
+        viperTouch = ahwMap.get(DigitalChannel.class, "viperTouch");
+
 
         rightFront.setInverted(true);
         rightBack.setInverted(true);
@@ -155,125 +176,32 @@ public class Robot2023 {
         rightBack.setRunMode(MotorEx.RunMode.RawPower);
         rightFront.setRunMode(MotorEx.RunMode.RawPower);
 
-        leftFront.setDistancePerPulse(ticksToIn);
-        leftBack.setDistancePerPulse(ticksToIn);
-        rightFront.setDistancePerPulse(ticksToIn);
+        leftOdo.setDistancePerPulse(ticksToIn);
+        rightOdo.setDistancePerPulse(ticksToIn);
+        frontOdo.setDistancePerPulse(ticksToIn);
 
-        leftFront.resetEncoder();
-        leftBack.resetEncoder();
-        rightFront.resetEncoder();
+        leftOdo.resetEncoder();
+        rightOdo.resetEncoder();
+        frontOdo.resetEncoder();
 
         holOdom = new HolonomicOdometry(
-                () -> (leftBack.getCurrentPosition() * ticksToIn),
-                () -> leftFront.getCurrentPosition() * -ticksToIn,
-                () -> rightFront.getCurrentPosition() * -ticksToIn,
-                10.375,
-                -3.8125
+                () -> (leftOdo.getCurrentPosition() * ticksToIn * LEFTMULT),
+                () -> rightOdo.getCurrentPosition() * -ticksToIn * RIGHTMULT,
+                () -> frontOdo.getCurrentPosition() * ticksToIn * BACKMULT,
+                14.14,
+                6.5515 * OFFSETMULT
         );
 
         holOdom.updatePose();
-        holOdom.updatePose(new Pose2d());
+        holOdom.updatePose(new Pose2d(0,0, new Rotation2d(3.14)));
 
         holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
-        if(opMode != null) movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode);
+        if(opMode != null) movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode, imu);
         armSubsystem = new ArmSubsystem(wrist, gripper, armAngle, armAngleEncoder, armExtend);
 
         if(initVision) {
-            aprilTagProcessor = new AprilTagProcessor.Builder()
-                    .setDrawTagID(true)
-                    .setDrawAxes(false)
-                    .setDrawTagOutline(true)
-                    .setDrawCubeProjection(false)
-                    .setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
-                    .setTagLibrary(getCurrentGameTagLibrary())
-                    .setLensIntrinsics(520.549, 520.549, 313.018, 237.164)
-                    .build();
-
-
-            visionPortal = new VisionPortal.Builder()
-                    .addProcessor(aprilTagProcessor)
-                    .enableLiveView(true)
-                    .setAutoStopLiveView(true)
-                    .setCamera(ahwMap.get(WebcamName.class, "Webcam"))
-                    .setCameraResolution(new Size(640, 480))
-                    .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
-                    .build();
-
-
+            cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));
             visionInit = true;
-            //Try and set location based on AprilTag. If it fails, set to 0,0,0
-            initFindPosition();
-        }
-
-
-    }
-
-    public void initFindPosition() {
-        Pose2d pose = getPoseFromAprilTag();
-        if(pose != null) {
-            holOdom.updatePose(pose);
-            startLocationBasedOnApril = true;
-
         }
     }
-
-    @Nullable
-    public Pose2d getPoseFromAprilTag() {
-        List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
-
-        for (AprilTagDetection detection: detections) {
-            if (detection.metadata != null) {
-                return translateToCam(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll);
-            }
-        }
-
-        return null;
-    }
-
-    private Pose2d translateToCam(double x, double y, double z, double yaw, double pitch, double roll) {
-        yaw = Math.toRadians(yaw);
-        pitch = Math.toRadians(pitch);
-        roll = Math.toRadians(roll);
-
-        RealMatrix yawMatrix = new Array2DRowRealMatrix(new double[][] {
-                {cos(yaw), -sin(yaw), 0},
-                {sin(yaw), cos(yaw), 0},
-                {0, 0, 1}
-        });
-        RealMatrix pitchMatrix = new Array2DRowRealMatrix(new double[][] {
-                {cos(pitch), 0, sin(pitch)},
-                {0, 1, 0},
-                {-sin(pitch), 0, cos(pitch)}
-        });
-        RealMatrix rollMatrix = new Array2DRowRealMatrix(new double[][] {
-                {1, 0, 0},
-                {0, cos(roll), -sin(roll)},
-                {0, sin(roll), cos(roll)}
-        });
-        RealMatrix rotationMatrix = yawMatrix.multiply(pitchMatrix).multiply(rollMatrix);
-
-        RealMatrix tAprilToCamMatrix = new Array2DRowRealMatrix(new double[][] {
-                {rotationMatrix.getEntry(0, 0), rotationMatrix.getEntry(0, 1), rotationMatrix.getEntry(0, 2), x},
-                {rotationMatrix.getEntry(1, 0), rotationMatrix.getEntry(1, 1), rotationMatrix.getEntry(1, 2), y},
-                {rotationMatrix.getEntry(2, 0), rotationMatrix.getEntry(2, 1), rotationMatrix.getEntry(2, 2), z},
-                {0, 0, 0, 1}
-        });
-
-        RealMatrix tCamToAprilMatrix = MatrixUtils.inverse(tAprilToCamMatrix);
-
-        //What threshold to use? Not sure if it matters
-        Rotation rotationExtract = new Rotation(tCamToAprilMatrix.getSubMatrix(0, 2, 0, 2).getData(), 0.1);
-
-        double[] angles = rotationExtract.getAngles(RotationOrder.ZYX, RotationConvention.VECTOR_OPERATOR);
-
-        return new Pose2d(
-                tCamToAprilMatrix.getEntry(1, 3),
-                tCamToAprilMatrix.getEntry(0, 3),
-                new Rotation2d(angles[0])
-        );
-    }
-
-
-
-
 }

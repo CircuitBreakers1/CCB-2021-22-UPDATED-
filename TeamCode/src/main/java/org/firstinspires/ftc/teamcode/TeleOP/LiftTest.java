@@ -29,12 +29,26 @@
 
 package org.firstinspires.ftc.teamcode.TeleOP;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armAngle;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armExtend;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.intake;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.leftBack;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.leftFront;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.lift;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.rightBack;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.rightFront;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.slidePush;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.viperTouch;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.wrist;
+
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
+
+import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 
 /**
  * Demonstrates empty OpMode
@@ -44,12 +58,14 @@ public class LiftTest extends OpMode {
 
   private ElapsedTime runtime = new ElapsedTime();
 
-  DcMotor liftMotor;
+
+  Robot2023 robot = new Robot2023();
 
   @Override
   public void init() {
-    liftMotor = hardwareMap.get(DcMotor.class, "liftMotor");
+    robot.init(hardwareMap, false, null);
     telemetry.addData("Status", "Initialized");
+
   }
 
   @Override
@@ -59,12 +75,60 @@ public class LiftTest extends OpMode {
   @Override
   public void start() {
     runtime.reset();
+    armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
   }
 
   @Override
   public void loop() {
-    liftMotor.setPower(gamepad1.left_stick_y);
+//    armExtend.setPower(gamepad2.left_stick_y);
+
+    armAngle.setPower(gamepad2.left_stick_y);
+
+    telemetry.addData("Touch Sensor", viperTouch.getState());
+
+    if(gamepad2.a) {
+      slidePush.setPosition(0.63);
+    } else if (gamepad2.b) {
+      slidePush.setPosition(0.77); //Out
+    }
+
+    if(gamepad1.a) {
+      leftFront.set(0.5);
+    } else {
+      leftFront.set(0);
+    }
+    if(gamepad1.b) {
+      rightFront.set(0.5);
+    } else {
+      rightFront.set(0);
+    }
+    if (gamepad1.x) {
+      leftBack.set(0.5);
+    } else {
+      leftBack.set(0);
+    }
+    if (gamepad1.y) {
+      rightBack.set(0.5);
+    } else {
+      rightBack.set(0);
+    }
+    if (gamepad1.left_bumper) {
+      intake.setPower(0.5);
+    } else {
+      intake.setPower(0);
+    }
+
+
+
     telemetry.addData("Status", "Run Time: " + runtime.toString());
+    telemetry.addData("LF", leftFront.getCurrentPosition());
+    telemetry.addData("RF", rightFront.getCurrentPosition());
+    telemetry.addData("LB", leftBack.getCurrentPosition());
+    telemetry.addData("RB", rightBack.getCurrentPosition());
+    telemetry.addData("Intake", intake.getCurrentPosition());
+    telemetry.addData("Lift", lift.getCurrentPosition());
+    telemetry.addData("armAngle", armAngle.getCurrentPosition());
+    telemetry.addData("Extend", armExtend.getCurrentPosition());
     RobotLog.d("Run Time: " + runtime.toString());
   }
 }

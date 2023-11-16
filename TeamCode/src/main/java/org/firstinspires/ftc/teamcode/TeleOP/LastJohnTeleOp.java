@@ -32,20 +32,35 @@ package org.firstinspires.ftc.teamcode.TeleOP;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armAngle;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armExtend;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.gripper;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.holOdom;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.imu;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.intake;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.lift;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.liftRaise;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.shotRelease;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.slidePush;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.viperTouch;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.wrist;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMBASE;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMD;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMI;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMP;
 
+import static java.lang.Math.abs;
+
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.arcrobotics.ftclib.controller.PIDController;
+import com.arcrobotics.ftclib.controller.PIDFController;
+import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Subsystems.ArmSubsystem.ArmState;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
+import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.ApriltagSleevePipeline;
 
 /**
  * Demonstrates new features
@@ -56,31 +71,52 @@ public class LastJohnTeleOp extends OpMode {
     Robot2023 robot = new Robot2023();
     boolean toggleStart = false, autoWrist = false;
     boolean toggleIntake = false, toggleDown = false;
+    boolean toggleSweep = false, toggleSweepDown = false;
+    boolean toggleWrist = false, toggleWristDown = false;
+    boolean breakMode = false;
+
+    boolean extendZeroed = false;
+
+    int base = ARMBASE;
+
+    PIDController armPID = new PIDController(ARMP, ARMI, ARMD);
 
 
     ArmState armState = ArmState.Ready;
     double gripTime = 0;
 
+    boolean driveField = false;
+    boolean driveDown = false;
+
+    Telemetry dashTele = FtcDashboard.getInstance().getTelemetry();
 
     @Override
     public void init() {
         telemetry.addData("Status", "Initialized");
         robot.init(hardwareMap, false, null);
 
-//        armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        wrist.setPosition(1);
+
+        armPID.setSetPoint(-224);
+//        armExtend.setTargetPosition(base);
+//        armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     @Override
     public void init_loop() {
-        gripper.setPosition(1);
 
-        telemetry.addData("Angle:", Math.abs(robot.armSubsystem.getAngle() - 7));
+
+        telemetry.addData("Angle Error:", abs(robot.armSubsystem.getAngle() - 7));
         telemetry.addData("Current Position:", armExtend.getCurrentPosition());
+        telemetry.addData("Moving Arm", extendZeroed ? "Moving to " + base : "Zeroing");
+        telemetry.addData("Touch State", viperTouch.getState());
 
         robot.armSubsystem.setWristAngle(0);
 
-        if(!(Math.abs(robot.armSubsystem.getAngle() - 7) < 1 /*Angle not in position*/)) {
+        if(!(abs(robot.armSubsystem.getAngle() - 7) < 1 /*Angle not in position*/)) {
             armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - 7));
             telemetry.addData("Moving Arm", "True");
         } else {
@@ -88,34 +124,70 @@ public class LastJohnTeleOp extends OpMode {
             telemetry.addData("Moving Arm", "False");
         }
 
-        if(!(armExtend.getCurrentPosition() < -220 && armExtend.getCurrentPosition() > -228 /*Length not in position*/)) {
-            armExtend.setPower((armExtend.getCurrentPosition() - -224 )/ -10.0);
-            telemetry.addData("Moving Angle", "True");
+        if(!extendZeroed) {
+            if(!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */ ) {
+                armExtend.setPower(0);
+                armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                extendZeroed = true;
+            }
+            armExtend.setPower(0.25);
         } else {
-            armExtend.setPower(0);
-            telemetry.addData("Moving Angle", "False");
+            armExtend.setTargetPosition(base);
+            armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            armExtend.setPower(0.8);
         }
 
-        if(gamepad2.a) {
-            armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        }
+//        double armOutput = armPID.calculate(armExtend.getCurrentPosition());
+//        if(abs(armOutput) < 0.001) {
+//            armOutput = 0;
+//            telemetry.addData("Moving Angle", "False");
+//        } else {
+//            telemetry.addData("Moving Angle", "True");
+//        }
+
+        //armExtend.setPower(0.8);
+
+//        if(!(armExtend.getCurrentPosition() < -220 && armExtend.getCurrentPosition() > -228 /*Length not in position*/)) {
+//            armExtend.setPower((armExtend.getCurrentPosition() - -224 )/ -10.0);
+//            telemetry.addData("Moving Angle", "True");
+//        } else {
+//            armExtend.setPower(0);
+//            telemetry.addData("Moving Angle", "False");
+//        }
+//
+//        if(!viperTouch.getState() && armExtend.getCurrentPosition() != 0) {
+//            armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//            armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        }
     }
 
     @Override
     public void start() {
-//        armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//        armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        armExtend.setPower(0);
+        armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     @Override
     public void loop() {
+        if(gamepad1.start) {
+            if(!driveDown) {
+                driveField = !driveField;
+                driveDown = true;
+            }
+        } else {
+            driveDown = false;
+        }
+
+        telemetry.addData("Drive Mode", driveField ? "Field Centric" : "Robot Centric");
+
         double x = gamepad1.left_stick_x;
         double y = -gamepad1.left_stick_y;
         double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-//        double rotX = x * Math.cos(-botHeading) - y * Math.sin(-botHeading);
-//        double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
-        robot.holoDrivetrain.smoothDrive(x, y, gamepad1.right_stick_x);
+        double rotX = driveField ? x * Math.cos(-botHeading) - y * Math.sin(-botHeading) : x;
+        double rotY = driveField ? x * Math.sin(-botHeading) + y * Math.cos(-botHeading) : y;
+        robot.holoDrivetrain.smoothDrive(rotX, rotY, -gamepad1.right_stick_x);
 
 //        if(gamepad1.a || gamepad2.a) {
 //            intake.setPower(-1);
@@ -134,23 +206,38 @@ public class LastJohnTeleOp extends OpMode {
             toggleDown = false;
         }
 
+        if(gamepad1.x) {
+            shotRelease.setPosition(0);
+        } else if (gamepad1.y) {
+            shotRelease.setPosition(0.1);
+        }
+
 //        if(gamepad1.x) {
-//            shotRelease.setPosition(0);
+//            slidePush.setPosition(0);
 //        } else if (gamepad1.y) {
-//            shotRelease.setPosition(0.1);
+//            slidePush.setPosition(0.1);
 //        }
 
-        if(gamepad1.x) {
-            slidePush.setPosition(0);
-        } else if (gamepad1.y) {
-            slidePush.setPosition(0.1);
+        if(gamepad2.b) {
+            if(!toggleSweepDown) {
+                toggleSweepDown = true;
+                toggleSweep = !toggleSweep;
+            }
+        } else {
+            toggleSweepDown = false;
         }
 
-        if(gamepad2.x) {
-            gripper.setPosition(0);
-        } else if (gamepad2.y) {
-            gripper.setPosition(1);
+        if(!toggleSweep) {
+            slidePush.setPosition(0.64);
+        } else {
+            slidePush.setPosition(0.77);
         }
+
+//        if(gamepad2.x) {
+//            gripper.setPosition(0);
+//        } else if (gamepad2.y) {
+//            gripper.setPosition(1);
+//        }
 
         if (gamepad2.dpad_up) {
             lift.setPower(1);
@@ -160,11 +247,11 @@ public class LastJohnTeleOp extends OpMode {
             lift.setPower(0);
         }
 
-        if(gamepad2.right_bumper) {
-            wrist.setPosition(0);
-        } else if (gamepad2.left_bumper) {
-            wrist.setPosition(1);
-        }
+//        if(gamepad2.right_bumper) {
+//            wrist.setPosition(0);
+//        } else if (gamepad2.left_bumper) {
+//            wrist.setPosition(1);
+//        }
 
         if(gamepad2.dpad_left) {
             liftRaise.setPosition(0);
@@ -172,23 +259,43 @@ public class LastJohnTeleOp extends OpMode {
             liftRaise.setPosition(0.1);
         }
 
-//        armAngle.setPower(-gamepad2.left_stick_y);
-//        armExtend.setPower(gamepad2.right_stick_y);
+        //armAngle.setPower(-gamepad2.left_stick_y);
+        //armExtend.setPower(gamepad2.right_stick_y);
 
-        if(gamepad2.start && !toggleStart) {
-            toggleStart = true;
-            autoWrist = !autoWrist;
+//        double armExtendPower = gamepad2.right_stick_y;
+//        if(armExtendPower != 0) {
+//            armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//            armExtend.setPower(gamepad2.right_stick_y);
+//            breakMode = false;
+//        } else {
+//            if(!breakMode) {
+//                armExtend.setTargetPosition(armExtend.getCurrentPosition());
+//                armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//                armExtend.setPower(0.8);
+//                breakMode = true;
+//            }
+//        }
 
-        } else if(!gamepad2.start && toggleStart) {
-            toggleStart = false;
-        }
+//        if(gamepad2.start && !toggleStart) {
+//            toggleStart = true;
+//            autoWrist = !autoWrist;
+//
+//        } else if(!gamepad2.start && toggleStart) {
+//            toggleStart = false;
+//        }
 
-        if(autoWrist) {
-            robot.armSubsystem.setAbsoluteWristAngle(30);
-        }
+//        if(autoWrist) {
+//            robot.armSubsystem.setAbsoluteWristAngle(35);
+//            gamepad2.setLedColor(0,255,0,-1);
+//        } else {
+//            wrist.setPosition(0);
+//            gamepad2.setLedColor(255,0,0,-1);
+//        }
 
         switch (armState) {
             case Ready:
+                gripper.setPosition(1);
+                gamepad2.setLedColor(0,0,255,-1);
                 if(gamepad2.triangle /*Button to initiate grabbing pixel*/) {
                     armState = ArmState.LowerArm;
                 }
@@ -197,13 +304,15 @@ public class LastJohnTeleOp extends OpMode {
                 }
                 break;
             case LowerArm:
-                armAngle.setPower(-0.5);
-                if(Math.abs(robot.armSubsystem.getAngle() - 2) < 1) {
+                gamepad2.setLedColor(255,0,0,-1);
+                armAngle.setPower(-0.85);
+                if(abs(robot.armSubsystem.getAngle() - 2) < 1) {
                     armAngle.setPower(0);
                     armState = ArmState.Grip;
                 }
                 break;
             case Grip:
+                gamepad2.setLedColor(255,0,0,-1);
                 if(gripTime == 0) {
                     gripTime = System.currentTimeMillis();
                 }
@@ -214,14 +323,30 @@ public class LastJohnTeleOp extends OpMode {
                 }
                 break;
             case RaiseArm:
-                armAngle.setPower(0.5);
+                gamepad2.setLedColor(255,0,0,-1);
+                armAngle.setPower(0.85);
                 if(robot.armSubsystem.getAngle() > 23 /*Arm is raised*/) {
                     armAngle.setPower(0);
                     armState = ArmState.FreeMovement;
+                    armAngle.setPower(0);
+                    armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    armExtend.setTargetPosition(armExtend.getCurrentPosition());
+                    breakMode = false;
                 }
                 break;
             case FreeMovement:
+                gamepad2.setLedColor(0,255,0,-1);
                 robot.armSubsystem.setAbsoluteWristAngle(30);
+                //armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+                if(!viperTouch.getState() && armExtend.getCurrentPosition() != 0) {
+                    armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                    armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
+
+                if(gamepad2.square) {
+                    gripper.setPosition(1);
+                }
 
                 if(true /*Angle Stick Pushed up and not at max angle, or down and not at min angle*/) {
                     armAngle.setPower(-gamepad2.left_stick_y);
@@ -229,43 +354,88 @@ public class LastJohnTeleOp extends OpMode {
                     armAngle.setPower(0);
                 }
 
-                if(true /*Length Stick Pushed up and not at max length, or down and not at min length*/) {
+                double armExtendPower = gamepad2.right_stick_y;
+
+                if(armExtendPower != 0) {
+                    armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     armExtend.setPower(gamepad2.right_stick_y);
+                    breakMode = false;
                 } else {
-                    armExtend.setPower(0);
+                    if(!breakMode) {
+                        armExtend.setPower(0);
+                        armExtend.setTargetPosition(armExtend.getCurrentPosition());
+                        armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                        armExtend.setPower(0.9);
+                        breakMode = true;
+                    }
                 }
+//
+//                if(true /*Length Stick Pushed up and not at max length, or down and not at min length*/) {
+//                    armExtend.setPower(gamepad2.right_stick_y);
+//                } else {
+//                    armExtend.setPower(0);
+//                }
 
                 if(gamepad2.triangle /*Button to Move arm into ready state*/) {
                     armState = ArmState.FreeReadyTransition;
                     armAngle.setPower(0);
                     armExtend.setPower(0);
+                    armExtend.setTargetPosition(base);
+                    armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    extendZeroed = false;
                 }
                 break;
             case FreeReadyTransition:
+                gamepad2.setLedColor(255,255,0,-1);
                 gripper.setPosition(1);
                 robot.armSubsystem.setWristAngle(0);
-                if(!(Math.abs(robot.armSubsystem.getAngle() - 7) < 1 /*Angle not in position*/)) {
-                    armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - 7));
+
+                if(abs(robot.armSubsystem.getAngle() - 10) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
+                    armState = ArmState.Ready;
+                }
+
+                if(!(abs(robot.armSubsystem.getAngle() - 10) < 1 /*Angle not in position*/)) {
+                    armAngle.setPower(-0.85 * Math.signum(robot.armSubsystem.getAngle() - 10));
                     telemetry.addData("Moving Arm", "True");
                 } else {
                     armAngle.setPower(0);
                     telemetry.addData("Moving Arm", "False");
                 }
 
-                if(!(armExtend.getCurrentPosition() < -220 && armExtend.getCurrentPosition() > -228 /*Length not in position*/)) {
-                    armExtend.setPower((armExtend.getCurrentPosition() - -224 )/ -10.0);
-                    telemetry.addData("Moving Angle", "True");
+//                if(!(armExtend.getCurrentPosition() < -220 && armExtend.getCurrentPosition() > -228 /*Length not in position*/)) {
+//                    armExtend.setPower((armExtend.getCurrentPosition() - -224 )/ -10.0);
+//                    telemetry.addData("Moving Angle", "True");
+//                } else {
+//                    armExtend.setPower(0);
+//                    telemetry.addData("Moving Angle", "False");
+//                }
+                if(!extendZeroed) {
+                    if(!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */ ) {
+                        armExtend.setPower(0);
+                        armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                        extendZeroed = true;
+                    }
+                    armExtend.setPower(0.25);
                 } else {
-                    armExtend.setPower(0);
-                    telemetry.addData("Moving Angle", "False");
+                    armExtend.setTargetPosition(base);
+                    armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    armExtend.setPower(0.8);
                 }
 
                 break;
         }
 
+        holOdom.updatePose();
+        Pose2d pose = holOdom.getPose();
+
         telemetry.addData("Arm Length:", armExtend.getCurrentPosition());
         telemetry.addData("Arm Angle:", robot.armSubsystem.getAngle());
+        telemetry.addData("IMU", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
         telemetry.addData("State", armState);
+        telemetry.addData("X", pose.getX());
+        telemetry.addData("Y", pose.getY());
+        telemetry.addData("Heading", pose.getHeading());
         telemetry.update();
     }
 }
