@@ -344,7 +344,7 @@ public class MovementSubsystem {
                 rbSpeed /= maxMotorSpeed;
             }
 
-            holoDrivetrain.drive(lfSpeed, rfSpeed, lbSpeed, rbSpeed);
+            holoDrivetrain.drive(-lfSpeed, -rfSpeed, -lbSpeed, -rbSpeed);
 
             if(opMode.gamepad1.b) {
                 break;

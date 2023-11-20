@@ -33,6 +33,7 @@ public class CameraSubsystem {
     private ColorBlobDetector colorBlobDetector;
 
     public CameraSubsystem(WebcamName webcamName, ColorBlobDetector.PropColor color) {
+
         aprilTagProcessor = new AprilTagProcessor.Builder()
                 .setDrawTagID(true)
                 .setDrawAxes(false)
@@ -79,7 +80,6 @@ public class CameraSubsystem {
     /**
      * Returns a <b>relative</b> pose to the AprilTag
      * @param preferred The preferred AprilTag to use
-     * @param secondary List of acceptable AprilTags to use if the preferred one is not found
      * @return The relative pose to the preferred AprilTag.
      *          If the preferred AprilTag is not found, the first AprilTag in the secondary list will be used,
      *          and it will attempt to translate into a relevant pose to the preferred AprilTag. If none are found,
@@ -151,5 +151,9 @@ public class CameraSubsystem {
                 tCamToAprilMatrix.getEntry(0, 3),
                 new Rotation2d(angles[0])
         );
+    }
+
+    public ColorBlobDetector.PropGuess getPropGuess() {
+        return colorBlobDetector.getGuess();
     }
 }

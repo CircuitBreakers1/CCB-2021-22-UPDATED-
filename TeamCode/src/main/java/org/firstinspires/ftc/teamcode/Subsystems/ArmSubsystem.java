@@ -50,6 +50,8 @@ public class ArmSubsystem {
 
         double position = (angle - WRIST_MIN) / (WRIST_MAX - WRIST_MIN);
 
+        if(position < 0.1) position = 0.1;
+
         wrist.setPosition(position);
     }
 

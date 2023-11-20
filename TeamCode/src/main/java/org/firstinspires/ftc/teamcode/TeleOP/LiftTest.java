@@ -118,6 +118,11 @@ public class LiftTest extends OpMode {
       intake.setPower(0);
     }
 
+    if(gamepad2.x) {
+      wrist.setPosition(0.1);
+    } else if (gamepad2.y) {
+      wrist.setPosition(1);
+    }
 
 
     telemetry.addData("Status", "Run Time: " + runtime.toString());

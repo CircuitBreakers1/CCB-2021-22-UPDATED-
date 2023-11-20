@@ -37,6 +37,7 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.imu;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.intake;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.lift;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.liftRaise;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.shooterRaise;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.shotRelease;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.slidePush;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.viperTouch;
@@ -72,7 +73,6 @@ public class LastJohnTeleOp extends OpMode {
     boolean toggleStart = false, autoWrist = false;
     boolean toggleIntake = false, toggleDown = false;
     boolean toggleSweep = false, toggleSweepDown = false;
-    boolean toggleWrist = false, toggleWristDown = false;
     boolean breakMode = false;
 
     boolean extendZeroed = false;
@@ -98,8 +98,8 @@ public class LastJohnTeleOp extends OpMode {
         wrist.setPosition(1);
 
         armPID.setSetPoint(-224);
-//        armExtend.setTargetPosition(base);
-//        armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        shooterRaise.setPosition(0);
 
         armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -107,8 +107,6 @@ public class LastJohnTeleOp extends OpMode {
 
     @Override
     public void init_loop() {
-
-
         telemetry.addData("Angle Error:", abs(robot.armSubsystem.getAngle() - 7));
         telemetry.addData("Current Position:", armExtend.getCurrentPosition());
         telemetry.addData("Moving Arm", extendZeroed ? "Moving to " + base : "Zeroing");
@@ -137,29 +135,6 @@ public class LastJohnTeleOp extends OpMode {
             armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             armExtend.setPower(0.8);
         }
-
-//        double armOutput = armPID.calculate(armExtend.getCurrentPosition());
-//        if(abs(armOutput) < 0.001) {
-//            armOutput = 0;
-//            telemetry.addData("Moving Angle", "False");
-//        } else {
-//            telemetry.addData("Moving Angle", "True");
-//        }
-
-        //armExtend.setPower(0.8);
-
-//        if(!(armExtend.getCurrentPosition() < -220 && armExtend.getCurrentPosition() > -228 /*Length not in position*/)) {
-//            armExtend.setPower((armExtend.getCurrentPosition() - -224 )/ -10.0);
-//            telemetry.addData("Moving Angle", "True");
-//        } else {
-//            armExtend.setPower(0);
-//            telemetry.addData("Moving Angle", "False");
-//        }
-//
-//        if(!viperTouch.getState() && armExtend.getCurrentPosition() != 0) {
-//            armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//            armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//        }
     }
 
     @Override
@@ -189,11 +164,11 @@ public class LastJohnTeleOp extends OpMode {
         double rotY = driveField ? x * Math.sin(-botHeading) + y * Math.cos(-botHeading) : y;
         robot.holoDrivetrain.smoothDrive(rotX, rotY, -gamepad1.right_stick_x);
 
-//        if(gamepad1.a || gamepad2.a) {
-//            intake.setPower(-1);
-//        } else if (gamepad1.b || gamepad2.b) {
-//            intake.setPower(0);
-//        }
+        if(gamepad1.dpad_up) {
+            shooterRaise.setPosition(0.4);
+        } else if (gamepad1.dpad_down) {
+            shooterRaise.setPosition(0);
+        }
 
         if(gamepad2.a) {
             if(!toggleDown) {
@@ -206,17 +181,11 @@ public class LastJohnTeleOp extends OpMode {
             toggleDown = false;
         }
 
-        if(gamepad1.x) {
+        if(gamepad1.dpad_left) {
             shotRelease.setPosition(0);
-        } else if (gamepad1.y) {
-            shotRelease.setPosition(0.1);
+        } else if (gamepad1.dpad_right) {
+            shotRelease.setPosition(0.5);
         }
-
-//        if(gamepad1.x) {
-//            slidePush.setPosition(0);
-//        } else if (gamepad1.y) {
-//            slidePush.setPosition(0.1);
-//        }
 
         if(gamepad2.b) {
             if(!toggleSweepDown) {
@@ -233,12 +202,6 @@ public class LastJohnTeleOp extends OpMode {
             slidePush.setPosition(0.77);
         }
 
-//        if(gamepad2.x) {
-//            gripper.setPosition(0);
-//        } else if (gamepad2.y) {
-//            gripper.setPosition(1);
-//        }
-
         if (gamepad2.dpad_up) {
             lift.setPower(1);
         } else if (gamepad2.dpad_down) {
@@ -247,50 +210,11 @@ public class LastJohnTeleOp extends OpMode {
             lift.setPower(0);
         }
 
-//        if(gamepad2.right_bumper) {
-//            wrist.setPosition(0);
-//        } else if (gamepad2.left_bumper) {
-//            wrist.setPosition(1);
-//        }
-
         if(gamepad2.dpad_left) {
             liftRaise.setPosition(0);
         } else if (gamepad2.dpad_right) {
             liftRaise.setPosition(0.1);
         }
-
-        //armAngle.setPower(-gamepad2.left_stick_y);
-        //armExtend.setPower(gamepad2.right_stick_y);
-
-//        double armExtendPower = gamepad2.right_stick_y;
-//        if(armExtendPower != 0) {
-//            armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//            armExtend.setPower(gamepad2.right_stick_y);
-//            breakMode = false;
-//        } else {
-//            if(!breakMode) {
-//                armExtend.setTargetPosition(armExtend.getCurrentPosition());
-//                armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-//                armExtend.setPower(0.8);
-//                breakMode = true;
-//            }
-//        }
-
-//        if(gamepad2.start && !toggleStart) {
-//            toggleStart = true;
-//            autoWrist = !autoWrist;
-//
-//        } else if(!gamepad2.start && toggleStart) {
-//            toggleStart = false;
-//        }
-
-//        if(autoWrist) {
-//            robot.armSubsystem.setAbsoluteWristAngle(35);
-//            gamepad2.setLedColor(0,255,0,-1);
-//        } else {
-//            wrist.setPosition(0);
-//            gamepad2.setLedColor(255,0,0,-1);
-//        }
 
         switch (armState) {
             case Ready:

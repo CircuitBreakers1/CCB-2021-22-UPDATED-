@@ -16,27 +16,19 @@ import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 
 /**
- * Tested and Working Features:
- * - Holonomic Odometry
- * - Smooth Deceleration
- * <p>
- * Implemented, but not tested/working:
- * - AprilTag Positioning
- *
- * <p>
- * Untested/Unimplemented Features:
- * - Error Storage & Logs
- * - Movement Library
- * - Error correction
+ * The main class for the robot. Controls everything, however larger and
+ * more complex functionality is passed off into different subsystems
  */
 public class Robot2023 {
     //All values in IN
@@ -47,7 +39,6 @@ public class Robot2023 {
     /**
      * Max acceptable deviation when moving using odometry. Functions as the radius of a circle
      */
-
 
     public static MotorEx leftFront;
     public static MotorEx leftBack;
@@ -66,12 +57,14 @@ public class Robot2023 {
     public static AnalogInput armAngleEncoder;
 
     public static DigitalChannel viperTouch;
-
+    public static NormalizedColorSensor leftBay;
+    public static NormalizedColorSensor rightBay;
     public static Servo liftRaise;
     public static Servo wrist;
     public static Servo shotRelease;
     public static Servo gripper;
     public static Servo slidePush;
+    public static Servo shooterRaise;
     public static IMU imu;
 
     private boolean visionInit = false;
@@ -80,16 +73,17 @@ public class Robot2023 {
 
     public static final String LOGCATTAG = "Robot Logging: ";
 
+    //Tuning Values
+    float colorGain = 2;
+    double trackwidth = 14.14;
+    double odoOffset = 6.5515;
+
     //Subsystems
     public HoloDrivetrainSubsystem holoDrivetrain;
     public static HolonomicOdometry holOdom;
     public MovementSubsystem movementSubsystem;
     public ArmSubsystem armSubsystem;
     public CameraSubsystem cameraSubsystem;
-
-
-
-
     /**
      *
      * @param s The minimum time between recalibrating position based on AprilTag.
@@ -129,9 +123,15 @@ public class Robot2023 {
         shotRelease = ahwMap.get(Servo.class, "shotRelease");
         gripper = ahwMap.get(Servo.class, "gripper");
         slidePush = ahwMap.get(Servo.class, "slidePush");
+        shooterRaise = ahwMap.get(Servo.class, "shooterRaise");
 
         imu = ahwMap.get(IMU.class, "imu");
 
+        rightBay = ahwMap.get(NormalizedColorSensor.class, "rightBay");
+        leftBay = ahwMap.get(NormalizedColorSensor.class, "leftBay");
+
+        rightBay.setGain(colorGain);
+        leftBay.setGain(colorGain);
 
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD;
         RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
@@ -141,7 +141,6 @@ public class Robot2023 {
         armAngleEncoder = ahwMap.get(AnalogInput.class, "armAngleEncoder");
 
         viperTouch = ahwMap.get(DigitalChannel.class, "viperTouch");
-
 
         rightFront.setInverted(true);
         rightBack.setInverted(true);
@@ -168,12 +167,12 @@ public class Robot2023 {
                 () -> (leftOdo.getCurrentPosition() * ticksToIn * LEFTMULT),
                 () -> rightOdo.getCurrentPosition() * -ticksToIn * RIGHTMULT,
                 () -> frontOdo.getCurrentPosition() * ticksToIn * BACKMULT,
-                14.14,
-                6.5515 * OFFSETMULT
+                trackwidth,
+                odoOffset * OFFSETMULT
         );
 
         holOdom.updatePose();
-        //The front of the robot from the drivers control perspective is the intake side, but for odometry it is the lift side
+        //The front of the robot from the drivers control perspective is the lift side, but for odometry it is the intake side
         holOdom.updatePose(new Pose2d(0,0, new Rotation2d(3.14)));
 
         holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
@@ -184,5 +183,9 @@ public class Robot2023 {
             cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"), ColorBlobDetector.PropColor.BLUE);
             visionInit = true;
         }
+    }
+
+    public boolean isVisionInit() {
+        return visionInit;
     }
 }

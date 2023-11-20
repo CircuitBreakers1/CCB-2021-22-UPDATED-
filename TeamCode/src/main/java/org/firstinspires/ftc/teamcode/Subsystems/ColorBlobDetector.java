@@ -122,7 +122,7 @@ public class ColorBlobDetector implements VisionProcessor {
 
 
         //Draw bounding lines for tuning now that the contours are already determined
-        Imgproc.line(input, new Point(input.width() * leftPercent,0), new Point(input.width() * leftPercent, input.height()), new Scalar(255,255,255));
+        Imgproc.line(input, new Point(0,input.height() * leftPercent), new Point(input.width(), input.height() * leftPercent), new Scalar(255,255,255));
         Imgproc.line(input, new Point(input.width() * (1 - rightPercent),0), new Point(input.width() * (1 - rightPercent), input.height()), new Scalar(255,255,255));
         PropGuess currentGuess = UNKNOWN;
 
@@ -134,10 +134,10 @@ public class ColorBlobDetector implements VisionProcessor {
             Rect textBox = new Rect((int) boundingRect.tl().x-1, (int) boundingRect.tl().y - 10, 40, 10);
             Imgproc.rectangle(input, textBox, new Scalar(0, 0, 255), -1);
             Imgproc.putText(input, String.valueOf((int)boundingRect.area()), new Point(textBox.tl().x, textBox.br().y-2), 6, 0.35, new Scalar(0,0,0));
-            int centerX = (int) (boundingRect.tl().x + boundingRect.br().x) / 2;
-            if(centerX < input.width() * leftPercent) {
+            int centerX = (int) (boundingRect.tl().y + boundingRect.br().y) / 2;
+            if(centerX < input.height() * leftPercent) {
                 currentGuess = LEFT;
-            } else if (centerX > input.width() * (1 - rightPercent)) {
+            } else if (centerX > input.height() * (1 - rightPercent)) {
                 currentGuess = RIGHT;
             } else {
                 currentGuess = MIDDLE;
