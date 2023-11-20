@@ -4,15 +4,10 @@ import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.BACKMULT
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.LEFTMULT;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.OFFSETMULT;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.RIGHTMULT;
-import static org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase.getCurrentGameTagLibrary;
 import static java.lang.Math.PI;
 import static java.lang.Math.abs;
-import static java.lang.Math.cos;
 import static java.lang.Math.max;
 import static java.lang.Math.signum;
-import static java.lang.Math.sin;
-
-import android.util.Size;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
@@ -27,22 +22,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.apache.commons.math3.geometry.euclidean.threed.Rotation;
-import org.apache.commons.math3.geometry.euclidean.threed.RotationConvention;
-import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.MatrixUtils;
-import org.apache.commons.math3.linear.RealMatrix;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.vision.VisionPortal;
-import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
-import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-
-import java.util.List;
-
-import javax.annotation.Nullable;
 
 /**
  * Tested and Working Features:
@@ -193,14 +173,15 @@ public class Robot2023 {
         );
 
         holOdom.updatePose();
+        //The front of the robot from the drivers control perspective is the intake side, but for odometry it is the lift side
         holOdom.updatePose(new Pose2d(0,0, new Rotation2d(3.14)));
 
         holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
-        if(opMode != null) movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode, imu);
+        if(opMode != null) movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem, imu);
         armSubsystem = new ArmSubsystem(wrist, gripper, armAngle, armAngleEncoder, armExtend);
 
         if(initVision) {
-            cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));
+            cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"), ColorBlobDetector.PropColor.BLUE);
             visionInit = true;
         }
     }

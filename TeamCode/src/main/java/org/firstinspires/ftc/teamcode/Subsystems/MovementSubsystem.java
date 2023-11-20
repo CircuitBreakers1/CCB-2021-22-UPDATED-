@@ -1,30 +1,33 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.LOGCATTAG;
+import static org.firstinspires.ftc.teamcode.Subsystems.PoseSupply.ODOMETRY;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFD;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFI;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFP;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.TurnPIDP;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.odoUseIMU;
 import static java.lang.Math.abs;
-import static java.lang.Math.exp;
 import static java.lang.Math.max;
+
+import androidx.annotation.NonNull;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
+import com.arcrobotics.ftclib.geometry.Transform2d;
+import com.arcrobotics.ftclib.geometry.Translation2d;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
-import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.IMU;
-import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
-import org.firstinspires.ftc.teamcode.TeleOP.PAngleController;
+import org.firstinspires.ftc.robotcore.external.navigation.Rotation;
+
+import java.util.ArrayList;
+import java.util.Objects;
 
 public class MovementSubsystem {
     private final HoloDrivetrainSubsystem holoDrivetrain;
@@ -32,6 +35,7 @@ public class MovementSubsystem {
     private final LinearOpMode opMode;
     private Telemetry telemetry;
     private final HolonomicOdometry holOdom;
+    private final CameraSubsystem cameraSubsystem;
 
     private final IMU imu;
 
@@ -45,29 +49,27 @@ public class MovementSubsystem {
     private final double A = V1 / (1 - V1);
     private final double K = (1 / D2) * Math.log(V2 / (A * (1 / V2)));
 
-    public MovementSubsystem(HoloDrivetrainSubsystem holoDrivetrain, HolonomicOdometry holOdom, LinearOpMode OpMode, IMU imu) {
+    public MovementSubsystem(HoloDrivetrainSubsystem holoDrivetrain, HolonomicOdometry holOdom, LinearOpMode OpMode, CameraSubsystem cameraSubsystem, IMU imu) {
         this.holoDrivetrain = holoDrivetrain;
         this.holOdom = holOdom;
         this.opMode = OpMode;
         this.telemetry = OpMode.telemetry;
+        this.cameraSubsystem = cameraSubsystem;
         this.imu = imu;
         FtcDashboard dashboard = FtcDashboard.getInstance();
         this.telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
     }
 
-    public enum PoseSupplyMethod {
-        ODOMETRY(-1),
-        APRILTAG_BLUE_LEFT(1), APRILTAG_BLUE_MIDDLE(2), APRILTAG_BLUE_RIGHT(3),
-        APRILTAG_RED_LEFT(4), APRILTAG_RED_MIDDLE(5), APRILTAG_RED_RIGHT(6);
 
-        int id;
-
-        PoseSupplyMethod(int id) {
-            this.id = id;
-        }
-    }
-
-    public void moveTo(PoseSupplyMethod poseSupply, double x, double y, double theta, double maxSpeed) {
+    /**
+     * Move to a position
+     * @param poseSupply The Reference to Target When Moving
+     * @param x X Position relative to the poseSupply
+     * @param y Y Position relative to the poseSupply
+     * @param theta Rotation relative to poseSupply
+     * @param maxSpeed Max motor speeds
+     */
+    public void moveTo(@NonNull PoseSupply poseSupply, double x, double y, double theta, double maxSpeed) {
         theta = -theta;
 
         //Ku = 0.39, Tu = 0.719
@@ -84,24 +86,29 @@ public class MovementSubsystem {
         PAngleController turnController = new PAngleController(TurnPIDP);
 
         holOdom.updatePose();
-        Pose2d pose = holOdom.getPose();
-        double xError = x - pose.getX();
-        double yError = y - pose.getY();
-        double heading = odoUseIMU ? imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) : -pose.getHeading();
-//        double thetaAdjusted = theta;
-//        int thetaAdj;
-//        if(theta - heading < PI * -2) {
-//            thetaAdjusted += 2 * PI;
-//            thetaAdj = 1;
-//        } else if(theta - heading > PI * 2) {
-//            thetaAdjusted -= 2 * PI;
-//            thetaAdj = -1;
-//        } else {
-//            thetaAdjusted = theta;
-//            thetaAdj = 0;
-//        }
 
-        //turnController.setSetPoint(thetaAdjusted);
+        Pose2d pose;
+        double xError = 0;
+        double yError = 0;
+        double heading = 0;
+
+
+        if (poseSupply == ODOMETRY) {
+            pose = holOdom.getPose();
+
+        } else {
+            pose = cameraSubsystem.getRelativeAprilTagPose(poseSupply);
+            if(pose == null) {
+                //Approximate values from odometry
+                Transform2d temp = holOdom.getPose().minus(poseSupply.globalPose);
+                pose = new Pose2d(temp.getTranslation(), temp.getRotation());
+            }
+        }
+
+        heading = -pose.getHeading();
+        xError = x - pose.getX();
+        yError = y - pose.getY();
+
 
         double xPID = xController.calculate(pose.getX());
         double yPID = yController.calculate(pose.getY());
@@ -110,10 +117,7 @@ public class MovementSubsystem {
         double yVelocity = clip(yPID, maxSpeed, -maxSpeed);
         double thetaVelocity = clip(thetaPID, maxSpeed, -maxSpeed);
 
-        double maxTimeStamp = opMode.getRuntime();
         double maxTime = 0;
-        boolean xInc = false;
-        double prevX = xVelocity;
 
         while(opMode.opModeIsActive() && !opMode.gamepad1.a) {
             telemetry.addData("X Distance", xError);
@@ -127,9 +131,7 @@ public class MovementSubsystem {
             telemetry.addData("Odo Angle", -pose.getHeading());
             telemetry.addData("Theta Error", turnController.getError(theta, heading));
             telemetry.addData("Theta Error 2", theta - heading);
-            //telemetry.addData("Theta Error Adjusted", thetaAdjusted - heading);
             telemetry.addData("Theta PID Output", thetaPID);
-            //telemetry.addData("Theta Adjustment", thetaAdj);
             telemetry.addData("Theta Velocity", thetaVelocity);
             telemetry.addData("Max X Time", maxTime);
             telemetry.update();
@@ -137,10 +139,21 @@ public class MovementSubsystem {
 
         while((abs(xError) > precision || abs(yError) > precision || turnController.getError(theta, heading) > 0.05) && opMode.opModeIsActive()) {
             holOdom.updatePose();
-            pose = holOdom.getPose();
+            if (poseSupply == ODOMETRY) {
+                pose = holOdom.getPose();
+
+            } else {
+                pose = cameraSubsystem.getRelativeAprilTagPose(poseSupply);
+                if(pose == null) {
+                    //Approximate values from odometry
+                    Transform2d temp = holOdom.getPose().minus(poseSupply.globalPose);
+                    pose = new Pose2d(temp.getTranslation(), temp.getRotation());
+                }
+            }
+
+            heading = -pose.getHeading();
             xError = x - pose.getX();
             yError = y - pose.getY();
-            heading = odoUseIMU ? imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS) : -pose.getHeading();
 
 
             xPID = xController.calculate(pose.getX());

@@ -30,8 +30,9 @@ import javax.annotation.Nullable;
 public class CameraSubsystem {
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
+    private ColorBlobDetector colorBlobDetector;
 
-    public CameraSubsystem(WebcamName webcamName) {
+    public CameraSubsystem(WebcamName webcamName, ColorBlobDetector.PropColor color) {
         aprilTagProcessor = new AprilTagProcessor.Builder()
                 .setDrawTagID(true)
                 .setDrawAxes(false)
@@ -42,8 +43,10 @@ public class CameraSubsystem {
                 .setLensIntrinsics(520.549, 520.549, 313.018, 237.164)
                 .build();
 
+        colorBlobDetector = new ColorBlobDetector(color);
 
         visionPortal = new VisionPortal.Builder()
+                .addProcessor(colorBlobDetector)
                 .addProcessor(aprilTagProcessor)
                 .enableLiveView(true)
                 .setAutoStopLiveView(true)
@@ -58,6 +61,7 @@ public class CameraSubsystem {
         return getPoseFromAprilTag();
     }
 
+    /** NOT ABSOLUTE YET **/ //TODO: FIX
     @Nullable
     public Pose2d getPoseFromAprilTag() {
         List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
@@ -82,13 +86,13 @@ public class CameraSubsystem {
      *          null will be returned.
      */
     @Nullable
-    public Pose2d getRelativeAprilTagPose(int preferred, ArrayList<Integer> secondary) {
+    public Pose2d getRelativeAprilTagPose(PoseSupply preferred) {
         List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
 
         //First, look for the preferred AprilTag
         for (AprilTagDetection detection: detections) {
             if (detection.metadata != null) {
-                if(detection.id == preferred) {
+                if(detection.id == preferred.id) {
                     return translateToCam(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll);
                 }
             }
@@ -96,7 +100,10 @@ public class CameraSubsystem {
 
         for(AprilTagDetection detection: detections) {
             if(detection.metadata != null) {
-
+                if(preferred.substitutions.contains(detection.id)) {
+                    Pose2d temp = translateToCam(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll);
+                    return new Pose2d(temp.minus(preferred.globalPose).getTranslation(), temp.getRotation());
+                }
             }
         }
         return null;

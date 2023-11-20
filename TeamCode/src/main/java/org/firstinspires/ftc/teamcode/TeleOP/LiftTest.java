@@ -53,7 +53,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 /**
  * Demonstrates empty OpMode
  */
-@TeleOp(name = "Single Motor Test", group = "Concept")
+@TeleOp(name = "Simple Movement", group = "Concept")
 public class LiftTest extends OpMode {
 
   private ElapsedTime runtime = new ElapsedTime();
@@ -82,7 +82,7 @@ public class LiftTest extends OpMode {
   public void loop() {
 //    armExtend.setPower(gamepad2.left_stick_y);
 
-    armAngle.setPower(gamepad2.left_stick_y);
+    armAngle.setPower(-gamepad2.left_stick_y);
 
     telemetry.addData("Touch Sensor", viperTouch.getState());
 
