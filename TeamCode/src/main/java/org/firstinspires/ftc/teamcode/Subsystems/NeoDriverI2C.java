@@ -17,7 +17,7 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
     private final boolean isRGBW;
     private final int numPixels;
 
-    protected NeoDriverI2C(I2cDeviceSynch i2cDeviceSynch, boolean deviceClientIsOwned, boolean isRGBW, int numPixels) {
+    public NeoDriverI2C(I2cDeviceSynch i2cDeviceSynch, boolean deviceClientIsOwned, boolean isRGBW, int numPixels) {
         super(i2cDeviceSynch, deviceClientIsOwned);
 
         this.isRGBW = isRGBW;
@@ -31,7 +31,7 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
 
     @Override
     protected boolean doInitialize() {
-        return false;
+        return true;
     }
 
     @Override
@@ -115,7 +115,7 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
         setPixels(0, numPixels - 1, color);
     }
 
-    public class Color {
+    public static class Color {
         public int r;
         public int g;
         public int b;

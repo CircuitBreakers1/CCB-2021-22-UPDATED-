@@ -353,6 +353,9 @@ public class LastJohnTeleOp extends OpMode {
         holOdom.updatePose();
         Pose2d pose = holOdom.getPose();
 
+        telemetry.addData("Bay State", robot.colorDetectionSubsystem.getBayColors());
+        telemetry.addData("Left Bay HSV", robot.colorDetectionSubsystem.getLeftHSV());
+        telemetry.addData("Right Bay HSV", robot.colorDetectionSubsystem.getRightHSV());
         telemetry.addData("Arm Length:", armExtend.getCurrentPosition());
         telemetry.addData("Arm Angle:", robot.armSubsystem.getAngle());
         telemetry.addData("IMU", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));

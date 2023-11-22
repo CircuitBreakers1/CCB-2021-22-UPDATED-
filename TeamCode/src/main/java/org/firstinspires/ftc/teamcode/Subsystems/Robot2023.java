@@ -84,6 +84,7 @@ public class Robot2023 {
     public MovementSubsystem movementSubsystem;
     public ArmSubsystem armSubsystem;
     public CameraSubsystem cameraSubsystem;
+    public ColorDetectionSubsystem colorDetectionSubsystem;
     /**
      *
      * @param s The minimum time between recalibrating position based on AprilTag.
@@ -178,6 +179,7 @@ public class Robot2023 {
         holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
         if(opMode != null) movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem, imu);
         armSubsystem = new ArmSubsystem(wrist, gripper, armAngle, armAngleEncoder, armExtend);
+        colorDetectionSubsystem = new ColorDetectionSubsystem(leftBay, rightBay);
 
         if(initVision) {
             cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"), ColorBlobDetector.PropColor.BLUE);
