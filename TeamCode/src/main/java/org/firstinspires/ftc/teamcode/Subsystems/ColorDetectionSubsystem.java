@@ -25,16 +25,16 @@ public class ColorDetectionSubsystem {
      */
     @Nullable
     public enum BayColor {
-        PURPLE(new Scalar(262, 40, 85), new Scalar(282, 60, 100)), YELLOW(new Scalar(53, 65, 85), new Scalar(73, 100, 100)),
-        GREEN(new Scalar(118, 75, 85), new Scalar(138, 100, 100)), WHITE(new Scalar(0, 0, 75), new Scalar(360, 10, 100)),
+        PURPLE(new Scalar(217, 0.65, 0.15), new Scalar(223, 0.7, 0.5)), YELLOW(new Scalar(91, 0.65, 0), new Scalar(96, 1, 1)),
+        GREEN(new Scalar(127, 0.7, 0), new Scalar(139, 1, 1)), WHITE(new Scalar(188, 0, 0), new Scalar(195, 1, 1)),
         UNKNOWN(new Scalar(0), new Scalar(0));
         final Scalar lower;
         final Scalar upper;
 
         BayColor(Scalar lower, Scalar upper) {
             //First one is hue in degrees, then % saturation, then % value, so we scale it
-            this.upper = new Scalar(upper.val[0] / 360, upper.val[1] / 100, upper.val[2] / 100);
-            this.lower = new Scalar(lower.val[0] / 360, lower.val[1] / 100, lower.val[2] / 100);
+            this.upper = new Scalar(upper.val[0], upper.val[1], upper.val[2]);
+            this.lower = new Scalar(lower.val[0], lower.val[1], lower.val[2]);
         }
     }
 
@@ -58,6 +58,7 @@ public class ColorDetectionSubsystem {
         Scalar right = new Scalar(rightHSV[0], rightHSV[1], rightHSV[2]);
         //Run the loop for each bay
         if(((DistanceSensor) leftBay).getDistance(DistanceUnit.CM) < maxDist){
+            colors[0] = BayColor.UNKNOWN;
             for (BayColor color: BayColor.values()) {
                 if(isBigger(left, color.lower) && isSmaller(left, color.upper)) {
                     colors[0] = color;
@@ -66,6 +67,7 @@ public class ColorDetectionSubsystem {
             }
         }
         if(((DistanceSensor) rightBay).getDistance(DistanceUnit.CM) < maxDist){
+            colors[1] = BayColor.UNKNOWN;
             for (BayColor color : BayColor.values()) {
                 if (isBigger(right, color.lower) && isSmaller(right, color.upper)) {
                     colors[1] = color;

@@ -60,8 +60,12 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Subsystems.ArmSubsystem.ArmState;
+import org.firstinspires.ftc.teamcode.Subsystems.ColorDetectionSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.ApriltagSleevePipeline;
+
+import java.lang.reflect.Array;
+import java.util.Objects;
 
 /**
  * Demonstrates new features
@@ -353,9 +357,12 @@ public class LastJohnTeleOp extends OpMode {
         holOdom.updatePose();
         Pose2d pose = holOdom.getPose();
 
-        telemetry.addData("Bay State", robot.colorDetectionSubsystem.getBayColors());
-        telemetry.addData("Left Bay HSV", robot.colorDetectionSubsystem.getLeftHSV());
-        telemetry.addData("Right Bay HSV", robot.colorDetectionSubsystem.getRightHSV());
+        ColorDetectionSubsystem.BayColor[] bayColors = robot.colorDetectionSubsystem.getBayColors();
+
+        assert bayColors != null;
+        telemetry.addData("Bay State", formatAsString(bayColors));
+        telemetry.addData("Left Bay HSV", formatAsString(robot.colorDetectionSubsystem.getLeftHSV()));
+        telemetry.addData("Right Bay HSV", formatAsString(robot.colorDetectionSubsystem.getRightHSV()));
         telemetry.addData("Arm Length:", armExtend.getCurrentPosition());
         telemetry.addData("Arm Angle:", robot.armSubsystem.getAngle());
         telemetry.addData("IMU", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
@@ -364,5 +371,21 @@ public class LastJohnTeleOp extends OpMode {
         telemetry.addData("Y", pose.getY());
         telemetry.addData("Heading", pose.getHeading());
         telemetry.update();
+    }
+
+
+    private String formatAsString(Object[] array) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < array.length; i++) {
+            result.append(" , ").append(array[i]);
+        }
+        return result.toString();
+    }
+    private String formatAsString(float[] array) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < array.length; i++) {
+            result.append(" , ").append(array[i]);
+        }
+        return result.toString();
     }
 }
