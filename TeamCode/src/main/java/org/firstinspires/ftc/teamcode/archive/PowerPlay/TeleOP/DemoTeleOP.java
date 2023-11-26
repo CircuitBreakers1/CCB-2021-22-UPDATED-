@@ -53,6 +53,7 @@ import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.hardware.rev.RevBlinkinLedDriver;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad.RumbleEffect;
@@ -66,6 +67,7 @@ import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.TeleOPTargetingSubsystem;
 
 @TeleOp(name = "Demo TeleOP")
+@Disabled
 public class DemoTeleOP extends LinearOpMode {
     Robot robot = new Robot(this, false, true);
     Orientation angles;

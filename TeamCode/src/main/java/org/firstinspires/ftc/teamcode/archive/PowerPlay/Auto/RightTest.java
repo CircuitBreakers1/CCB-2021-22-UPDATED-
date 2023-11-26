@@ -34,6 +34,7 @@ import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Positi
 import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.PositionalMovementSubsystem.moveToLocation;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 
@@ -42,7 +43,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
  */
 
 @Autonomous(name="Right Auto", group="Linear Opmode")
-
+@Disabled
 public class RightTest extends LinearOpMode {
 
 

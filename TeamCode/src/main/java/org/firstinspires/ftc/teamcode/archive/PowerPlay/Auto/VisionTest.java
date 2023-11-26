@@ -32,6 +32,7 @@ package org.firstinspires.ftc.teamcode.archive.PowerPlay.Auto;
 import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.colorJunctionRightPipeline;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
@@ -42,6 +43,7 @@ import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
  */
 
 @Autonomous(name="Vision Test", group="Linear Opmode")
+@Disabled
 public class VisionTest extends LinearOpMode {
 
     Robot robot = new Robot(this, true, true);

@@ -34,24 +34,14 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.holOdom;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.endThetaPI;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.endX;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.endY;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.startThetaPI;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.startX;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.startY;
 
 import static java.lang.Math.PI;
 import static java.lang.Thread.sleep;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
-import com.arcrobotics.ftclib.geometry.Rotation2d;
-import com.arcrobotics.ftclib.hardware.motors.MotorEx;
-import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.teamcode.Subsystems.HoloDrivetrainSubsystem;
-import org.firstinspires.ftc.teamcode.Subsystems.MovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 
 /**

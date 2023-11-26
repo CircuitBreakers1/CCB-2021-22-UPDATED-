@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.ColorDetectionSubsystem.BayColor.EMPTY;
+import static org.firstinspires.ftc.teamcode.Subsystems.ColorDetectionSubsystem.BayColor.UNKNOWN;
+
 import android.graphics.Color;
 
 import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -23,11 +26,10 @@ public class ColorDetectionSubsystem {
      * The potential pixel colors stored in the bays. UNKNOWN is used when the distance sensor determines there is a pixel,
      * but the color is not recognized
      */
-    @Nullable
     public enum BayColor {
         PURPLE(new Scalar(217, 0.65, 0.15), new Scalar(223, 0.7, 0.5)), YELLOW(new Scalar(91, 0.65, 0), new Scalar(96, 1, 1)),
         GREEN(new Scalar(127, 0.7, 0), new Scalar(139, 1, 1)), WHITE(new Scalar(188, 0, 0), new Scalar(195, 1, 1)),
-        UNKNOWN(new Scalar(0), new Scalar(0));
+        UNKNOWN(new Scalar(0), new Scalar(0)), EMPTY(new Scalar(0), new Scalar(0));
         final Scalar lower;
         final Scalar upper;
 
@@ -47,9 +49,8 @@ public class ColorDetectionSubsystem {
      * Get the color of the bays
      * @return The color of the bays, stored in an Array in order [left, right]. Null if no color is detected
      */
-    @Nullable
     public BayColor[] getBayColors() {
-        BayColor[] colors = {null, null};
+        BayColor[] colors = {EMPTY, EMPTY};
         float[] leftHSV = new float[3];
         float[] rightHSV = new float[3];
         Color.colorToHSV(leftBay.getNormalizedColors().toColor(), leftHSV);
@@ -58,7 +59,7 @@ public class ColorDetectionSubsystem {
         Scalar right = new Scalar(rightHSV[0], rightHSV[1], rightHSV[2]);
         //Run the loop for each bay
         if(((DistanceSensor) leftBay).getDistance(DistanceUnit.CM) < maxDist){
-            colors[0] = BayColor.UNKNOWN;
+            colors[0] = UNKNOWN;
             for (BayColor color: BayColor.values()) {
                 if(isBigger(left, color.lower) && isSmaller(left, color.upper)) {
                     colors[0] = color;
@@ -67,7 +68,7 @@ public class ColorDetectionSubsystem {
             }
         }
         if(((DistanceSensor) rightBay).getDistance(DistanceUnit.CM) < maxDist){
-            colors[1] = BayColor.UNKNOWN;
+            colors[1] = UNKNOWN;
             for (BayColor color : BayColor.values()) {
                 if (isBigger(right, color.lower) && isSmaller(right, color.upper)) {
                     colors[1] = color;

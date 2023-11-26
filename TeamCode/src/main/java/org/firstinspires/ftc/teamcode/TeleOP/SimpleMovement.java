@@ -41,7 +41,6 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.slidePush;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.viperTouch;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.wrist;
 
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -54,7 +53,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
  * Demonstrates empty OpMode
  */
 @TeleOp(name = "Simple Movement", group = "Concept")
-public class LiftTest extends OpMode {
+public class SimpleMovement extends OpMode {
 
   private ElapsedTime runtime = new ElapsedTime();
 

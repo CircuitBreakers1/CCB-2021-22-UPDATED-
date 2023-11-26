@@ -60,6 +60,7 @@ import java.util.Locale;
  */
 
 @TeleOp(name = "Utility: Camera Frame Tuning", group = "Tuning")
+@Disabled
 public class CameraTuning extends LinearOpMode
 {
     /*

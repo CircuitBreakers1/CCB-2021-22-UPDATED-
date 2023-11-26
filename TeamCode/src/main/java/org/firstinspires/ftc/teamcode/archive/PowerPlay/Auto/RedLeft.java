@@ -36,6 +36,7 @@ import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -48,7 +49,7 @@ import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
  */
 
 @Autonomous(name="Left Auto", group="Linear Opmode")
-
+@Disabled
 public class RedLeft extends LinearOpMode {
 
 

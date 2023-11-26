@@ -38,11 +38,11 @@ import java.util.ArrayList;
 
 public class ColorBlobDetector implements VisionProcessor {
 
-    enum PropGuess {
+    public enum PropGuess {
         LEFT, RIGHT, MIDDLE, UNKNOWN
     }
 
-    enum PropColor {
+    public enum PropColor {
         RED, BLUE
     }
 

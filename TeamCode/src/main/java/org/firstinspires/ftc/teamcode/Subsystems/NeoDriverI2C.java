@@ -14,14 +14,11 @@ import java.nio.ByteOrder;
 @DeviceProperties(name = "NeoDriver", xmlTag = "AdafruitNeoDriver")
 public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
 
-    private final boolean isRGBW;
-    private final int numPixels;
+    private boolean isRGBW;
+    private int numPixels;
 
-    public NeoDriverI2C(I2cDeviceSynch i2cDeviceSynch, boolean deviceClientIsOwned, boolean isRGBW, int numPixels) {
+    public NeoDriverI2C(I2cDeviceSynch i2cDeviceSynch, boolean deviceClientIsOwned) {
         super(i2cDeviceSynch, deviceClientIsOwned);
-
-        this.isRGBW = isRGBW;
-        this.numPixels = numPixels;
 
         this.deviceClient.setI2cAddress(I2cAddr.create7bit(0x30));
 
@@ -32,6 +29,14 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
     @Override
     protected boolean doInitialize() {
         return true;
+    }
+
+    public void setNumPixels(int numPixels) {
+        this.numPixels = numPixels;
+    }
+
+    public void setRGBW(boolean isRGBW) {
+        this.isRGBW = isRGBW;
     }
 
     @Override

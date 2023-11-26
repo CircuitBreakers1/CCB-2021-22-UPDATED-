@@ -12,7 +12,7 @@ public class CameraTest extends OpMode {
 
     @Override
     public void init() {
-        robot.init(hardwareMap, true, null);
+        robot.init(hardwareMap, false, null);
     }
 
     @Override

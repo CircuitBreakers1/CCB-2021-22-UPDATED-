@@ -1,6 +1,11 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
 import static org.firstinspires.ftc.teamcode.Subsystems.PoseSupply.ODOMETRY;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armAngle;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armExtend;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.base;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.gripper;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.viperTouch;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFD;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFI;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFP;
@@ -15,19 +20,14 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.geometry.Pose2d;
-import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.arcrobotics.ftclib.geometry.Transform2d;
-import com.arcrobotics.ftclib.geometry.Translation2d;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.Rotation;
-
-import java.util.ArrayList;
-import java.util.Objects;
 
 public class MovementSubsystem {
     private final HoloDrivetrainSubsystem holoDrivetrain;
@@ -36,6 +36,7 @@ public class MovementSubsystem {
     private Telemetry telemetry;
     private final HolonomicOdometry holOdom;
     private final CameraSubsystem cameraSubsystem;
+    private final ArmSubsystem armSubsystem;
 
     private final IMU imu;
 
@@ -49,12 +50,20 @@ public class MovementSubsystem {
     private final double A = V1 / (1 - V1);
     private final double K = (1 / D2) * Math.log(V2 / (A * (1 / V2)));
 
-    public MovementSubsystem(HoloDrivetrainSubsystem holoDrivetrain, HolonomicOdometry holOdom, LinearOpMode OpMode, CameraSubsystem cameraSubsystem, IMU imu) {
+    public static final Runnable GRAB_PIXEL_AUTO = new Runnable() {
+        @Override
+        public void run() {
+            int yes = 14;
+        }
+    };
+
+    public MovementSubsystem(HoloDrivetrainSubsystem holoDrivetrain, HolonomicOdometry holOdom, LinearOpMode OpMode, CameraSubsystem cameraSubsystem, ArmSubsystem armSubsystem, IMU imu) {
         this.holoDrivetrain = holoDrivetrain;
         this.holOdom = holOdom;
         this.opMode = OpMode;
         this.telemetry = OpMode.telemetry;
         this.cameraSubsystem = cameraSubsystem;
+        this.armSubsystem = armSubsystem;
         this.imu = imu;
         FtcDashboard dashboard = FtcDashboard.getInstance();
         this.telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
@@ -68,8 +77,9 @@ public class MovementSubsystem {
      * @param y Y Position relative to the poseSupply
      * @param theta Rotation relative to poseSupply
      * @param maxSpeed Max motor speeds
+     * @param loop Runnable to be ran in the loop
      */
-    public void moveTo(@NonNull PoseSupply poseSupply, double x, double y, double theta, double maxSpeed) {
+    public void moveTo(@NonNull PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, Runnable loop) {
         theta = -theta;
 
         //Ku = 0.39, Tu = 0.719
@@ -116,6 +126,10 @@ public class MovementSubsystem {
         double xVelocity = clip(xPID, maxSpeed, -maxSpeed);
         double yVelocity = clip(yPID, maxSpeed, -maxSpeed);
         double thetaVelocity = clip(thetaPID, maxSpeed, -maxSpeed);
+
+        ArmSubsystem.ArmState armState = ArmSubsystem.ArmState.FreeReadyTransition;
+        boolean extendZeroed = false;
+        double gripTime = 0;
 
         double maxTime = 0;
 
@@ -211,9 +225,144 @@ public class MovementSubsystem {
             if(opMode.gamepad1.b) {
                 break;
             }
+
+            if(loop == GRAB_PIXEL_AUTO) {
+                switch (armState) {
+                    case FreeReadyTransition:
+                        gripper.setPosition(1);
+                        armSubsystem.setWristAngle(0);
+
+                        if(abs(armSubsystem.getAngle() - 10) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
+                            armState = ArmSubsystem.ArmState.LowerArm;
+                        }
+
+                        if(!(abs(armSubsystem.getAngle() - 10) < 1 /*Angle not in position*/)) {
+                            armAngle.setPower(-0.85 * Math.signum(armSubsystem.getAngle() - 10));
+                            telemetry.addData("Moving Arm", "True");
+                        } else {
+                            armAngle.setPower(0);
+                            telemetry.addData("Moving Arm", "False");
+                        }
+
+                        if(!extendZeroed) {
+                            if(!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */ ) {
+                                armExtend.setPower(0);
+                                armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                                armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                                extendZeroed = true;
+                            }
+                            armExtend.setPower(0.25);
+                        } else {
+                            armExtend.setTargetPosition(base);
+                            armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                            armExtend.setPower(0.8);
+                        }
+                        break;
+                    case LowerArm:
+                        armAngle.setPower(-0.85);
+                        if(abs(armSubsystem.getAngle() - 2) < 1) {
+                            armAngle.setPower(0);
+                            armState = ArmSubsystem.ArmState.Grip;
+                        }
+                        break;
+                    case Grip:
+                        if(gripTime == 0) {
+                            gripTime = System.currentTimeMillis();
+                        }
+                        gripper.setPosition(0);
+                        if(System.currentTimeMillis() - gripTime > 500) {
+                            armState = ArmSubsystem.ArmState.RaiseArm;
+                            gripTime = 0;
+                        }
+                        break;
+                    case RaiseArm:
+                        armAngle.setPower(0.85);
+                        if(armSubsystem.getAngle() > 23 /*Arm is raised*/) {
+                            armAngle.setPower(0);
+                            armState = ArmSubsystem.ArmState.FreeMovement;
+                            armAngle.setPower(0);
+                            armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                            armExtend.setTargetPosition(armExtend.getCurrentPosition());
+                            armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                            armExtend.setPower(0.8);
+                        }
+                        break;
+                }
+            } else {
+                loop.run();
+            }
+
         }
 
         holoDrivetrain.stop();
+
+        if(loop == GRAB_PIXEL_AUTO) {
+            while (armState != ArmSubsystem.ArmState.FreeMovement && opMode.opModeIsActive()) {
+                switch (armState) {
+                    case FreeReadyTransition:
+                        gripper.setPosition(1);
+                        armSubsystem.setWristAngle(0);
+
+                        if(abs(armSubsystem.getAngle() - 10) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
+                            armState = ArmSubsystem.ArmState.LowerArm;
+                        }
+
+                        if(!(abs(armSubsystem.getAngle() - 10) < 1 /*Angle not in position*/)) {
+                            armAngle.setPower(-0.85 * Math.signum(armSubsystem.getAngle() - 10));
+                            telemetry.addData("Moving Arm", "True");
+                        } else {
+                            armAngle.setPower(0);
+                            telemetry.addData("Moving Arm", "False");
+                        }
+
+                        if(!extendZeroed) {
+                            if(!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */ ) {
+                                armExtend.setPower(0);
+                                armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                                armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                                extendZeroed = true;
+                            }
+                            armExtend.setPower(0.25);
+                        } else {
+                            armExtend.setTargetPosition(base);
+                            armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                            armExtend.setPower(0.8);
+                        }
+                        break;
+                    case LowerArm:
+                        armAngle.setPower(-0.85);
+                        if(abs(armSubsystem.getAngle() - 2) < 1) {
+                            armAngle.setPower(0);
+                            armState = ArmSubsystem.ArmState.Grip;
+                        }
+                        break;
+                    case Grip:
+                        if(gripTime == 0) {
+                            gripTime = System.currentTimeMillis();
+                        }
+                        gripper.setPosition(0);
+                        if(System.currentTimeMillis() - gripTime > 500) {
+                            armState = ArmSubsystem.ArmState.RaiseArm;
+                            gripTime = 0;
+                        }
+                        break;
+                    case RaiseArm:
+                        armAngle.setPower(0.85);
+                        if(armSubsystem.getAngle() > 23 /*Arm is raised*/) {
+                            armAngle.setPower(0);
+                            armState = ArmSubsystem.ArmState.FreeMovement;
+                            armAngle.setPower(0);
+                            armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                            armExtend.setTargetPosition(armExtend.getCurrentPosition());
+                        }
+                        break;
+                }
+            }
+        }
+    }
+
+    public void moveTo(@NonNull PoseSupply poseSupply, double x, double y, double theta, double maxSpeed) {
+        moveTo(poseSupply, x, y, theta, maxSpeed, null);
     }
 
 
@@ -273,7 +422,7 @@ public class MovementSubsystem {
             telemetry.update();
         }
 
-        while(/*(abs(xError) > precision || abs(yError) > precision || turnController.getError(theta, heading) > 0.05) &&*/ opMode.opModeIsActive()) {
+        while((abs(xError) > precision || abs(yError) > precision || turnController.getError(theta, heading) > 0.05) && opMode.opModeIsActive()) {
             holOdom.updatePose();
             pose = holOdom.getPose();
             xError = x - pose.getX();

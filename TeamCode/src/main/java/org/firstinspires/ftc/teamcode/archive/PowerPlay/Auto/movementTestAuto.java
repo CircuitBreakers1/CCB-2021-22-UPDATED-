@@ -36,6 +36,7 @@ import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -43,6 +44,7 @@ import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.PositionalMov
 import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
 
 @Autonomous(name = "Iterative Movement Test", group = "")
+@Disabled
 public class movementTestAuto extends LinearOpMode {
     Robot robot = new Robot(this, true, true);
 

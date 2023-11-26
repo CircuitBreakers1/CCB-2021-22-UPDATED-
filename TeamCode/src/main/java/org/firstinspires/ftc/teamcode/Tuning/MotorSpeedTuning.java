@@ -37,6 +37,7 @@ import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.
 import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.rightFront;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -45,6 +46,7 @@ import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
 import java.util.ArrayList;
 
 @Autonomous(name = "Motor Speed Tuning", group = "Tuning")
+@Disabled
 public class MotorSpeedTuning extends LinearOpMode {
     Robot robot = new Robot(this, false, false);
 

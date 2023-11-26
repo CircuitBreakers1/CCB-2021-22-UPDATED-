@@ -36,12 +36,14 @@ import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.
 import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.rightFront;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
 
 @Autonomous(name = "Friction Variance", group = "Tuning")
+@Disabled
 public class FrictionVarianceTest extends LinearOpMode {
     Robot robot = new Robot(this, false, false);
 

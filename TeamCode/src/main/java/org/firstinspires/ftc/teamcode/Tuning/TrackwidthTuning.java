@@ -41,6 +41,7 @@ import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.
 import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.rightOdo;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -50,6 +51,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
 import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
 
 @Autonomous(name = "Track Speed Tuning", group = "Tuning")
+@Disabled
 public class TrackwidthTuning extends LinearOpMode {
     Robot robot = new Robot(this, false, false);
 

@@ -16,6 +16,7 @@ import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.
 import static org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot.pickupRight;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
@@ -23,6 +24,7 @@ import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.LiftSubsystem
 import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
 import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.ColorSleevePipeline;
 
+@Disabled
 public class MainAuto extends AutoSwitcher {
     autoStartSpot startSpot;
     LinearOpMode opMode;

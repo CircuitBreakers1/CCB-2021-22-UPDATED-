@@ -31,6 +31,7 @@ package org.firstinspires.ftc.teamcode.TeleOP;
 
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armAngle;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armExtend;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.base;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.gripper;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.holOdom;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.imu;
@@ -49,23 +50,15 @@ import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMP;
 
 import static java.lang.Math.abs;
 
-import com.acmerobotics.dashboard.FtcDashboard;
 import com.arcrobotics.ftclib.controller.PIDController;
-import com.arcrobotics.ftclib.controller.PIDFController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Subsystems.ArmSubsystem.ArmState;
-import org.firstinspires.ftc.teamcode.Subsystems.ColorDetectionSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
-import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.ApriltagSleevePipeline;
-
-import java.lang.reflect.Array;
-import java.util.Objects;
 
 /**
  * Demonstrates new features
@@ -74,6 +67,8 @@ import java.util.Objects;
 public class LastJohnTeleOp extends OpMode {
 
     Robot2023 robot = new Robot2023();
+
+    //Internal Variables
     boolean toggleStart = false, autoWrist = false;
     boolean toggleIntake = false, toggleDown = false;
     boolean toggleSweep = false, toggleSweepDown = false;
@@ -81,18 +76,16 @@ public class LastJohnTeleOp extends OpMode {
 
     boolean extendZeroed = false;
 
-    int base = ARMBASE;
+
 
     PIDController armPID = new PIDController(ARMP, ARMI, ARMD);
-
-
     ArmState armState = ArmState.Ready;
     double gripTime = 0;
 
+    //Live Configuration Variables
     boolean driveField = false;
     boolean driveDown = false;
-
-    Telemetry dashTele = FtcDashboard.getInstance().getTelemetry();
+    boolean debugTelemetry = false, debugDown = false;
 
     @Override
     public void init() {
@@ -158,6 +151,16 @@ public class LastJohnTeleOp extends OpMode {
         } else {
             driveDown = false;
         }
+
+        if(gamepad1.back) {
+            if(!debugDown) {
+                debugTelemetry = !debugTelemetry;
+                debugDown = true;
+            }
+        } else {
+            debugDown = false;
+        }
+
 
         telemetry.addData("Drive Mode", driveField ? "Field Centric" : "Robot Centric");
 
@@ -357,34 +360,33 @@ public class LastJohnTeleOp extends OpMode {
         holOdom.updatePose();
         Pose2d pose = holOdom.getPose();
 
-        ColorDetectionSubsystem.BayColor[] bayColors = robot.colorDetectionSubsystem.getBayColors();
-
-        assert bayColors != null;
-        telemetry.addData("Bay State", formatAsString(bayColors));
-        telemetry.addData("Left Bay HSV", formatAsString(robot.colorDetectionSubsystem.getLeftHSV()));
-        telemetry.addData("Right Bay HSV", formatAsString(robot.colorDetectionSubsystem.getRightHSV()));
-        telemetry.addData("Arm Length:", armExtend.getCurrentPosition());
-        telemetry.addData("Arm Angle:", robot.armSubsystem.getAngle());
-        telemetry.addData("IMU", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+        telemetry.addData("Bay State", formatAsString(robot.colorDetectionSubsystem.getBayColors()));
         telemetry.addData("State", armState);
-        telemetry.addData("X", pose.getX());
-        telemetry.addData("Y", pose.getY());
-        telemetry.addData("Heading", pose.getHeading());
+        if(debugTelemetry) {
+            telemetry.addData("Left Bay HSV", formatAsString(robot.colorDetectionSubsystem.getLeftHSV()));
+            telemetry.addData("Right Bay HSV", formatAsString(robot.colorDetectionSubsystem.getRightHSV()));
+            telemetry.addData("Arm Length:", armExtend.getCurrentPosition());
+            telemetry.addData("Arm Angle:", robot.armSubsystem.getAngle());
+            telemetry.addData("IMU", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+            telemetry.addData("X", pose.getX());
+            telemetry.addData("Y", pose.getY());
+            telemetry.addData("Heading", pose.getHeading());
+        }
         telemetry.update();
     }
 
 
     private String formatAsString(Object[] array) {
         StringBuilder result = new StringBuilder();
-        for (int i = 0; i < array.length; i++) {
-            result.append(" , ").append(array[i]);
+        for (Object o : array) {
+            result.append(", ").append(o);
         }
         return result.toString();
     }
     private String formatAsString(float[] array) {
         StringBuilder result = new StringBuilder();
-        for (int i = 0; i < array.length; i++) {
-            result.append(" , ").append(array[i]);
+        for (float v : array) {
+            result.append(", ").append(v);
         }
         return result.toString();
     }

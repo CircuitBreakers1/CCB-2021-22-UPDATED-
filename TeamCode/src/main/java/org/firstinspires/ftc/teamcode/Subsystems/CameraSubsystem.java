@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.ColorBlobDetector.PropColor.BLUE;
+import static org.firstinspires.ftc.teamcode.Subsystems.ColorBlobDetector.PropColor.RED;
 import static org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase.getCurrentGameTagLibrary;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
@@ -22,7 +24,6 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nullable;
@@ -30,9 +31,11 @@ import javax.annotation.Nullable;
 public class CameraSubsystem {
     private AprilTagProcessor aprilTagProcessor;
     private VisionPortal visionPortal;
-    private ColorBlobDetector colorBlobDetector;
+    private ColorBlobDetector.PropColor currentColor = null;
+    private ColorBlobDetector blueBlobDetector;
+    private ColorBlobDetector redBlobDetector;
 
-    public CameraSubsystem(WebcamName webcamName, ColorBlobDetector.PropColor color) {
+    public CameraSubsystem(WebcamName webcamName) {
 
         aprilTagProcessor = new AprilTagProcessor.Builder()
                 .setDrawTagID(true)
@@ -44,10 +47,12 @@ public class CameraSubsystem {
                 .setLensIntrinsics(520.549, 520.549, 313.018, 237.164)
                 .build();
 
-        colorBlobDetector = new ColorBlobDetector(color);
+        blueBlobDetector = new ColorBlobDetector(BLUE);
+        redBlobDetector = new ColorBlobDetector(RED);
 
         visionPortal = new VisionPortal.Builder()
-                .addProcessor(colorBlobDetector)
+                .addProcessor(blueBlobDetector)
+                .addProcessor(redBlobDetector)
                 .addProcessor(aprilTagProcessor)
                 .enableLiveView(true)
                 .setAutoStopLiveView(true)
@@ -55,6 +60,23 @@ public class CameraSubsystem {
                 .setCameraResolution(new Size(640, 480))
                 .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
                 .build();
+
+        visionPortal.setProcessorEnabled(blueBlobDetector, false);
+        visionPortal.setProcessorEnabled(redBlobDetector, false);
+    }
+
+    public void setColorBlobDetector(ColorBlobDetector.PropColor color) {
+        currentColor = color;
+        if(color == BLUE) {
+            visionPortal.setProcessorEnabled(redBlobDetector, false);
+            visionPortal.setProcessorEnabled(blueBlobDetector, true);
+        } else if (color == RED) {
+            visionPortal.setProcessorEnabled(redBlobDetector, true);
+            visionPortal.setProcessorEnabled(blueBlobDetector, false);
+        } else {
+            visionPortal.setProcessorEnabled(redBlobDetector, false);
+            visionPortal.setProcessorEnabled(blueBlobDetector, false);
+        }
     }
 
 
@@ -154,6 +176,13 @@ public class CameraSubsystem {
     }
 
     public ColorBlobDetector.PropGuess getPropGuess() {
-        return colorBlobDetector.getGuess();
+        switch (currentColor) {
+            case RED:
+                return redBlobDetector.guess;
+            case BLUE:
+                return blueBlobDetector.guess;
+            default:
+                return ColorBlobDetector.PropGuess.UNKNOWN;
+        }
     }
 }

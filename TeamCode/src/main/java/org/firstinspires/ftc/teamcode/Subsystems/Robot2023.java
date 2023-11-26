@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMBASE;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.BACKMULT;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.LEFTMULT;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.OFFSETMULT;
@@ -16,7 +17,6 @@ import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
-import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -77,6 +77,7 @@ public class Robot2023 {
     float colorGain = 2;
     double trackwidth = 14.14;
     double odoOffset = 6.5515;
+    public static int base = ARMBASE;
 
     //Subsystems
     public HoloDrivetrainSubsystem holoDrivetrain;
@@ -177,13 +178,13 @@ public class Robot2023 {
         holOdom.updatePose(new Pose2d(0,0, new Rotation2d(3.14)));
 
         holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
-        if(opMode != null) movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem, imu);
         armSubsystem = new ArmSubsystem(wrist, gripper, armAngle, armAngleEncoder, armExtend);
+        if(opMode != null) movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem, armSubsystem, imu);
         colorDetectionSubsystem = new ColorDetectionSubsystem(leftBay, rightBay);
 
-        if(initVision) {
-            cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"), ColorBlobDetector.PropColor.BLUE);
-            visionInit = true;
+        if(visionInit) {
+            cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));
+            this.visionInit = true;
         }
     }
 
