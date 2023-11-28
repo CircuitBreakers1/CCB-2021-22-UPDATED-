@@ -95,10 +95,10 @@ public class DemoTeleOP extends LinearOpMode {
         blinkinLedDriver.setPattern(pattern);
 
         //Prepare the rumble patterns for driver 2
-        RumbleEffect dropAllowed = new RumbleEffect.Builder().addStep(1,1, 100).addStep(0,0,50).addStep(1,1,100).build();
-        RumbleEffect dropNotAllowed = new RumbleEffect.Builder().addStep(0.5,0.5, 150).build();
-        RumbleEffect leftSideButtonPress = new RumbleEffect.Builder().addStep(0.5,0, 750).build();
-        RumbleEffect rightSideButtonPress = new RumbleEffect.Builder().addStep(0,0.5, 750).build();
+        RumbleEffect dropAllowed = new RumbleEffect.Builder().addStep(1, 1, 100).addStep(0, 0, 50).addStep(1, 1, 100).build();
+        RumbleEffect dropNotAllowed = new RumbleEffect.Builder().addStep(0.5, 0.5, 150).build();
+        RumbleEffect leftSideButtonPress = new RumbleEffect.Builder().addStep(0.5, 0, 750).build();
+        RumbleEffect rightSideButtonPress = new RumbleEffect.Builder().addStep(0, 0.5, 750).build();
 
         waitForStart();
 
@@ -111,13 +111,13 @@ public class DemoTeleOP extends LinearOpMode {
             holOdom.updatePose();
             Pose2d currentLocation = holOdom.getPose();
             double angle = currentLocation.getHeading();
-            angles   = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
+            angles = imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
 
             telemetry.addData("Target Junction", "X: " + TeleOPTargetingSubsystem.targetJunctions[0] + " Y: " + TeleOPTargetingSubsystem.targetJunctions[1]);
             telemetry.addData("Target Drop Spot", "X: " + TeleOPTargetingSubsystem.targetPosition[0] + " Y: " + TeleOPTargetingSubsystem.targetPosition[1]);
             telemetry.addData("Distance to Drop", TeleOPTargetingSubsystem.distance);
             telemetry.addData("Arm Position", armLift.getCurrentPosition());
-            telemetry.addData("Arm Target" , armLift.getTargetPosition());
+            telemetry.addData("Arm Target", armLift.getTargetPosition());
             telemetry.addData("Robot X", currentLocation.getX());
             telemetry.addData("Robot Y", currentLocation.getY());
             telemetry.addData("Robot Angle", angle);
@@ -146,33 +146,33 @@ public class DemoTeleOP extends LinearOpMode {
             rightFront.setPower(0.45 * (y - x - rx));
             rightBack.setPower(0.45 * (y + x - rx));
 
-            if(gamepad2.dpad_up) {
+            if (gamepad2.dpad_up) {
                 pickupLeft.setPower(1);
                 pickupRight.setPower(-1);
                 LiftSubsystem.setTarget(Min);
                 isIntaking = true;
                 isOutputting = false;
             }
-            if(!isIntaking && gamepad2.left_bumper) {
+            if (!isIntaking && gamepad2.left_bumper) {
                 pickupLeft.setPower(1);
                 pickupRight.setPower(-1);
                 isIntaking = true;
                 isOutputting = false;
             }
-            if(!isOutputting && gamepad2.dpad_down) {
+            if (!isOutputting && gamepad2.dpad_down) {
                 pickupLeft.setPower(-1);
                 pickupRight.setPower(1);
                 isOutputting = true;
                 isIntaking = false;
             }
-            if(gamepad2.dpad_left || (!coneTouch.getState() && isIntaking)) {
+            if (gamepad2.dpad_left || (!coneTouch.getState() && isIntaking)) {
                 pickupLeft.setPower(0);
                 pickupRight.setPower(0);
                 isIntaking = false;
                 isOutputting = false;
             }
 
-            if(gamepad2.a) {
+            if (gamepad2.a) {
                 LiftSubsystem.setTarget(Low);
             } else if (gamepad2.b) {
                 LiftSubsystem.setTarget(Medium);

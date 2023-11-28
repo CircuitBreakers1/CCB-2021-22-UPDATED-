@@ -30,10 +30,10 @@ public class PAngleController {
     }
 
     private double angleWrap(double rad) {
-        while(rad > Math.PI) {
+        while (rad > Math.PI) {
             rad -= Math.PI * 2;
         }
-        while(rad < -Math.PI) {
+        while (rad < -Math.PI) {
             rad += Math.PI * 2;
         }
         return rad;

@@ -90,7 +90,7 @@ public class TrackwidthTuning extends LinearOpMode {
         while (getRuntime() < endTime) {
             angles = imu.getAngularOrientation();
             angle = angles.firstAngle;
-            deltaAngle =  angle - startAngle;
+            deltaAngle = angle - startAngle;
             telemetry.addData("Angle", angle);
             telemetry.addData("Delta Angle", deltaAngle);
             telemetry.update();

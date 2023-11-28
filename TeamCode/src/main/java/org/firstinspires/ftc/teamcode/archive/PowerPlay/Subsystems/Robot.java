@@ -113,8 +113,8 @@ public class Robot {
     /**
      * Initalize the robot object.
      *
-     * @param OPMode  <b>Always</b> pass <i>this</i> here as it allows the telemetry to initialize.
-     * @param isAuto  Tells the robot whether or not to add telemetry for autonomous
+     * @param OPMode <b>Always</b> pass <i>this</i> here as it allows the telemetry to initialize.
+     * @param isAuto Tells the robot whether or not to add telemetry for autonomous
      * @param useDash Tells the robot whether to send data to the FTC Dashboard
      */
     public Robot(LinearOpMode OPMode, boolean isAuto, boolean useDash) {
@@ -340,7 +340,7 @@ public class Robot {
                      */
                 }
             });
-        } else if(cam == ONE_CAM_JUNCTION) {
+        } else if (cam == ONE_CAM_JUNCTION) {
 //            int cameraMonitorViewId2 = hwMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hwMap.appContext.getPackageName());
 //            WebcamName webcamName2 = hwMap.get(WebcamName.class, "Webcam 2");
 //            camera2 = OpenCvCameraFactory.getInstance().createWebcam(webcamName2, cameraMonitorViewId2);
@@ -360,13 +360,13 @@ public class Robot {
                     throw new RuntimeException("Camera could not be opened");
                 }
             });
-            
+
         }
 
     }
 
     public void switchCamPipeline(cameraInit cam) {
-        if(cameraInit == TWO_CAM_JUNCTION) {
+        if (cameraInit == TWO_CAM_JUNCTION) {
             camera2.closeCameraDeviceAsync(new OpenCvCamera.AsyncCameraCloseListener() {
                 @Override
                 public void onClose() {

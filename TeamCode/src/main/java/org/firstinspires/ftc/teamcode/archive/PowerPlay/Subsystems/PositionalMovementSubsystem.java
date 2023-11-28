@@ -39,6 +39,7 @@ public class PositionalMovementSubsystem {
 
     /**
      * Tells the robot to turn to a specific heading.
+     *
      * @param angle The angle to turn to IN RADIANS MOTHERFUCKER! Domain is [-pi, pi]
      * @param speed The speed at which to turn
      * @return The final angle, for debug purposes
@@ -57,18 +58,18 @@ public class PositionalMovementSubsystem {
         boolean turningRight;
 
         tempTargetNormalize = angle < 0 ? angle + (2 * PI) : angle;
-        tempCurrentNormalize = heading < 0 ? heading + (2 * PI): heading;
+        tempCurrentNormalize = heading < 0 ? heading + (2 * PI) : heading;
         tempOppCurrent = tempCurrentNormalize + PI < (2 * PI) ? tempCurrentNormalize + PI : tempCurrentNormalize - PI;
 
         double tolCheckCurrent = (2 * PI) + tempCurrentNormalize;
         double tolCheckTarg = (2 * PI) + tempTargetNormalize;
 
-        if(tolCheckCurrent >= tolCheckTarg - turnTolerance && tolCheckCurrent <= tolCheckTarg + turnTolerance) {
+        if (tolCheckCurrent >= tolCheckTarg - turnTolerance && tolCheckCurrent <= tolCheckTarg + turnTolerance) {
             return heading;
         }
 
-        if(tempTargetNormalize >= PI) {
-            if(heading >= tempTargetNormalize || heading <= tempOppCurrent) {
+        if (tempTargetNormalize >= PI) {
+            if (heading >= tempTargetNormalize || heading <= tempOppCurrent) {
                 turningRight = true;
             } else {
                 turningRight = false;
@@ -79,15 +80,15 @@ public class PositionalMovementSubsystem {
             turningRight = true;
         }
 
-        if(dashTelemetry != null) {
-            while (opMode.opModeIsActive() && !opMode.gamepad1.a){
+        if (dashTelemetry != null) {
+            while (opMode.opModeIsActive() && !opMode.gamepad1.a) {
                 dashTelemetry.addData("Error", toDegrees(tolCheckTarg - tolCheckCurrent));
                 dashTelemetry.addData("Current Angle", toDegrees(heading));
                 dashTelemetry.update();
             }
         }
 
-        if(turningRight) {
+        if (turningRight) {
             Robot.leftFront.setPower(speed);
             Robot.leftBack.setPower(speed);
             Robot.rightFront.setPower(-speed);
@@ -100,32 +101,30 @@ public class PositionalMovementSubsystem {
         }
 
 
-
-
         while (opMode.opModeIsActive()) {
             LiftSubsystem.updatePositional();
             holOdom.updatePose();
             moving = holOdom.getPose();
             heading = moving.getHeading();
-            tempCurrentNormalize = heading < 0 ? heading + (2 * PI): heading;
+            tempCurrentNormalize = heading < 0 ? heading + (2 * PI) : heading;
 
             tolCheckCurrent = (2 * PI) + tempCurrentNormalize;
 
-            if(tolCheckCurrent >= tolCheckTarg - turnTolerance && tolCheckCurrent <= tolCheckTarg + turnTolerance) {
+            if (tolCheckCurrent >= tolCheckTarg - turnTolerance && tolCheckCurrent <= tolCheckTarg + turnTolerance) {
                 break;
             }
 
             //Check if remaining movement is under pi/4 radians, and if so begin to ramp motors down
             double remainingDegrees = Math.abs(angle - heading);
 
-            if(remainingDegrees < (PI / 4)) {
+            if (remainingDegrees < (PI / 4)) {
                 //Degrees for graphing and functions because scuffed PID
                 remainingDegrees = Math.toDegrees(remainingDegrees);
 
                 double p = 0.01;
                 double rampDownSpeed = Math.max(abs(p * remainingDegrees), 0.2);
 
-                if(turningRight) {
+                if (turningRight) {
                     drive.drive(rampDownSpeed, -rampDownSpeed);
                 } else {
                     drive.drive(-rampDownSpeed, rampDownSpeed);
@@ -136,7 +135,7 @@ public class PositionalMovementSubsystem {
             opMode.telemetry.addData("Robot Angle Normal", tempCurrentNormalize);
             opMode.telemetry.update();
 
-            if(dashTelemetry != null) {
+            if (dashTelemetry != null) {
                 dashTelemetry.addData("Error", toDegrees(tolCheckTarg - tolCheckCurrent));
                 dashTelemetry.addData("Current Angle", toDegrees(heading));
                 dashTelemetry.update();
@@ -151,6 +150,7 @@ public class PositionalMovementSubsystem {
 
     /**
      * Move the robot to a given point from the current location
+     *
      * @param endX The X coordinate to go to
      * @param endY The Y cooridnate to go to
      * @param endAngle The end angle of the movement (In Degrees)
@@ -199,7 +199,7 @@ public class PositionalMovementSubsystem {
 
         double maxSpeed = max(lfTemp, max(lbTemp, max(rfTemp, rbTemp)));
 
-        if(maxSpeed > 1) {
+        if (maxSpeed > 1) {
             lfSpeed /= maxSpeed;
             lbSpeed /= maxSpeed;
             rfSpeed /= maxSpeed;
@@ -257,7 +257,7 @@ public class PositionalMovementSubsystem {
         double cycleTime;
         double lastCycle;
 
-        while(opMode.opModeIsActive()) {
+        while (opMode.opModeIsActive()) {
             lastCycle = opMode.getRuntime();
             holOdom.updatePose();
             moving = holOdom.getPose();
@@ -286,7 +286,7 @@ public class PositionalMovementSubsystem {
 
             maxSpeed = max(lfTemp, max(lbTemp, max(rfTemp, rbTemp)));
 
-            if(maxSpeed > 1) {
+            if (maxSpeed > 1) {
                 lfSpeed /= maxSpeed;
                 lbSpeed /= maxSpeed;
                 rfSpeed /= maxSpeed;
@@ -314,7 +314,7 @@ public class PositionalMovementSubsystem {
 
             drive.drive(lfSpeed * speed, rfSpeed * speed, lbSpeed * speed, rbSpeed * speed);
 
-            if(pidX.atSetPoint() && pidY.atSetPoint() /*&& pidT.atSetPoint()*/) {
+            if (pidX.atSetPoint() && pidY.atSetPoint() /*&& pidT.atSetPoint()*/) {
                 break;
             }
 
@@ -331,7 +331,7 @@ public class PositionalMovementSubsystem {
 
             LiftSubsystem.updatePositional();
 
-            if (dashTelemetry != null){
+            if (dashTelemetry != null) {
                 dashTelemetry.addData("X Error", endX - curX);
                 dashTelemetry.addData("X PID Output", x);
                 dashTelemetry.addData("Y Error", endY - curY);
@@ -371,12 +371,12 @@ public class PositionalMovementSubsystem {
 
     @Deprecated
     public static void moveToLocation(double endX, double endY, double speed) {
-        if(!opMode.opModeIsActive()) {
+        if (!opMode.opModeIsActive()) {
             return;
         }
 
         Telemetry telemetry = null;
-        if(Robot.useFTCDash) {
+        if (Robot.useFTCDash) {
             FtcDashboard dashboard = FtcDashboard.getInstance();
             telemetry = dashboard.getTelemetry();
         }
@@ -392,7 +392,7 @@ public class PositionalMovementSubsystem {
         double lastCorrect;
         targetAngle = targetAngle + 3.14;
 
-        if(targetAngle > 6.28) {
+        if (targetAngle > 6.28) {
             targetAngle = targetAngle - 6.28;
         }
 
@@ -409,9 +409,9 @@ public class PositionalMovementSubsystem {
                 new PIDFController(FORWARDPIDFF, FORWARDPIDFI, FORWARDPIDFD, FORWARDPIDFI, 0, distance);
         //Input: Angle deviation to target angle, Target: 0 angle deviation, Output: Motor weighting
         //PIDFController pidfTurning =
-                //new PIDFController(ANGLEPIDFP, ANGLEPIDFI, ANGLEPIDFD, ANGLEPIDFF, 0, heading - targetAngle);
+        //new PIDFController(ANGLEPIDFP, ANGLEPIDFI, ANGLEPIDFD, ANGLEPIDFF, 0, heading - targetAngle);
 
-        if(Robot.useFTCDash) {
+        if (Robot.useFTCDash) {
             telemetry.addData("Distance (Forward Error)", distance);
             telemetry.addData("Forward PID Output", speedAdjustment);
             telemetry.addData("Angle Deviation (Angle Error)", heading - targetAngle);
@@ -428,7 +428,7 @@ public class PositionalMovementSubsystem {
         Robot.rightBack.setPower(speed);
         Robot.rightFront.setPower(speed);
 
-        while(opMode.opModeIsActive()) {
+        while (opMode.opModeIsActive()) {
             holOdom.updatePose();
             moving = holOdom.getPose();
             heading = moving.getHeading();
@@ -441,7 +441,7 @@ public class PositionalMovementSubsystem {
             dHelper = (deltaX * deltaX) + (deltaY * deltaY);
             distance = sqrt(dHelper);
 
-            if(distance <= moveTolerance) {
+            if (distance <= moveTolerance) {
                 break;
             }
 
@@ -486,7 +486,7 @@ public class PositionalMovementSubsystem {
             opMode.telemetry.addData("Right Odo", Robot.rightOdo.getCurrentPosition());
             opMode.telemetry.update();
 
-            if(Robot.useFTCDash) {
+            if (Robot.useFTCDash) {
                 telemetry.addData("Distance (Forward Error)", distance);
                 telemetry.addData("Forward PID Output", speedAdjustment);
                 telemetry.addData("Angle Deviation (Angle Error)", heading - targetAngle);
@@ -520,7 +520,6 @@ public class PositionalMovementSubsystem {
             */
 
 
-
         }
 
         //drive.stop();
@@ -534,12 +533,12 @@ public class PositionalMovementSubsystem {
 
     @Deprecated
     public static void moveToLocation(double endX, double endY, double speed, boolean turn) {
-        if(!opMode.opModeIsActive()) {
+        if (!opMode.opModeIsActive()) {
             return;
         }
 
         Telemetry telemetry = null;
-        if(Robot.useFTCDash) {
+        if (Robot.useFTCDash) {
             FtcDashboard dashboard = FtcDashboard.getInstance();
             telemetry = dashboard.getTelemetry();
         }
@@ -555,12 +554,12 @@ public class PositionalMovementSubsystem {
         double lastCorrect;
         targetAngle = targetAngle + 3.14;
 
-        if(targetAngle > 6.28) {
+        if (targetAngle > 6.28) {
             targetAngle = targetAngle - 6.28;
         }
 
 
-        if(turn) {
+        if (turn) {
             heading = turnTo(targetAngle, speed);
         } else {
             heading = 0.0;
@@ -580,7 +579,7 @@ public class PositionalMovementSubsystem {
 //        PIDFController pidfTurning =
 //                new PIDFController(ANGLEPIDFP, ANGLEPIDFI, ANGLEPIDFD, ANGLEPIDFF, 0, heading - targetAngle);
 
-        if(Robot.useFTCDash) {
+        if (Robot.useFTCDash) {
             telemetry.addData("Distance (Forward Error)", distance);
             telemetry.addData("Forward PID Output", speedAdjustment);
             telemetry.addData("Angle Deviation (Angle Error)", heading - targetAngle);
@@ -597,7 +596,7 @@ public class PositionalMovementSubsystem {
         Robot.rightBack.setPower(speed);
         Robot.rightFront.setPower(speed);
 
-        while(opMode.opModeIsActive()) {
+        while (opMode.opModeIsActive()) {
             holOdom.updatePose();
             moving = holOdom.getPose();
             heading = moving.getHeading();
@@ -610,7 +609,7 @@ public class PositionalMovementSubsystem {
             dHelper = (deltaX * deltaX) + (deltaY * deltaY);
             distance = sqrt(dHelper);
 
-            if(distance <= moveTolerance) {
+            if (distance <= moveTolerance) {
                 break;
             }
 
@@ -655,7 +654,7 @@ public class PositionalMovementSubsystem {
             opMode.telemetry.addData("Right Odo", Robot.rightOdo.getCurrentPosition());
             opMode.telemetry.update();
 
-            if(Robot.useFTCDash) {
+            if (Robot.useFTCDash) {
                 telemetry.addData("Distance (Forward Error)", distance);
                 telemetry.addData("Forward PID Output", speedAdjustment);
                 telemetry.addData("Angle Deviation (Angle Error)", heading - targetAngle);
@@ -687,7 +686,6 @@ public class PositionalMovementSubsystem {
             }
 
             */
-
 
 
         }
@@ -716,30 +714,30 @@ public class PositionalMovementSubsystem {
         Pose2d moving = holOdom.getPose();
         turnLeft = moving.getHeading() >= 0;
 
-        if(turnLeft) {
+        if (turnLeft) {
             drive.drive(-speed, speed);
         } else {
             drive.drive(speed, -speed);
         }
 
-        while(opMode.opModeIsActive()) {
+        while (opMode.opModeIsActive()) {
             holOdom.updatePose();
             moving = holOdom.getPose();
             double heading = moving.getHeading();
-            if(heading > PI - turnTol || heading < -(PI - turnTol)) {
+            if (heading > PI - turnTol || heading < -(PI - turnTol)) {
                 break;
             }
 
             double remainingDegrees = Math.abs(PI - heading);
 
-            if(remainingDegrees < (PI / 4)) {
+            if (remainingDegrees < (PI / 4)) {
                 //Degrees for graphing and functions because scuffed PID
                 remainingDegrees = Math.toDegrees(remainingDegrees);
 
                 double p = 0.01;
                 double rampDownSpeed = Math.max(abs(p * remainingDegrees), 0.35);
 
-                if(turnLeft) {
+                if (turnLeft) {
                     drive.drive(-rampDownSpeed, rampDownSpeed);
                 } else {
                     drive.drive(rampDownSpeed, -rampDownSpeed);
@@ -762,38 +760,38 @@ public class PositionalMovementSubsystem {
         double oppAng = heading + PI;
         oppAng = oppAng > PI ? oppAng - PI : oppAng;
 
-        if(targetRad > heading && abs(targetRad) < abs(oppAng)) {
+        if (targetRad > heading && abs(targetRad) < abs(oppAng)) {
             turnLeft = true;
         }
 
-        if(turnLeft) {
+        if (turnLeft) {
             drive.drive(-speed, speed);
         } else {
             drive.drive(speed, -speed);
         }
 
-        while(opMode.opModeIsActive()) {
+        while (opMode.opModeIsActive()) {
             holOdom.updatePose();
             moving = holOdom.getPose();
             heading = moving.getHeading();
 
-            if(abs(targetRad - heading) < turnTol) {
+            if (abs(targetRad - heading) < turnTol) {
                 break;
             }
 
-            opMode.telemetry.addData("Error",abs(targetRad - heading));
+            opMode.telemetry.addData("Error", abs(targetRad - heading));
             opMode.telemetry.update();
 
             double remainingDegrees = Math.abs(targetRad - heading);
 
-            if(remainingDegrees < (PI / 4)) {
+            if (remainingDegrees < (PI / 4)) {
                 //Degrees for graphing and functions because scuffed PID
                 remainingDegrees = Math.toDegrees(remainingDegrees);
 
                 double p = 0.01;
                 double rampDownSpeed = Math.max(abs(p * remainingDegrees), 0.35);
 
-                if(turnLeft) {
+                if (turnLeft) {
                     drive.drive(-rampDownSpeed, rampDownSpeed);
                 } else {
                     drive.drive(rampDownSpeed, -rampDownSpeed);

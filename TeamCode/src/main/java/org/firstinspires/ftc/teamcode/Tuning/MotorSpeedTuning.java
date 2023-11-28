@@ -133,7 +133,6 @@ public class MotorSpeedTuning extends LinearOpMode {
             double rightBackTicks = rightBackEncoder / testTime;
 
 
-
             //Get the smallest ticks/second value
             double minTicks = Math.min(Math.min(leftBackTicks, leftFrontTicks), Math.min(rightFrontTicks, rightBackTicks));
 

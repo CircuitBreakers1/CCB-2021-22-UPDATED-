@@ -65,12 +65,11 @@ public class SummerTeleOP extends LinearOpMode {
 //        rightGrab.setPosition(0.9);
 
 
-
         sleep(1000);
 
 
         rotate.setPower(0.5);
-        while(rotateTrigger.getState()) {
+        while (rotateTrigger.getState()) {
             telemetry.addData("Status", "Zeroing...");
             telemetry.update();
         }
@@ -133,10 +132,8 @@ public class SummerTeleOP extends LinearOpMode {
             rightBack.setPower(1 * (y + x - rx));
 
 
-
-
-            if(leftLift.getCurrentPosition() >= armRotateLevel || Math.abs(rotate.getCurrentPosition()) - 40 < 0) {
-                if((gamepad2.left_stick_x < 0 && rotate.getCurrentPosition() <= 470) || (gamepad2.left_stick_x > 0 && rotate.getCurrentPosition() >= -470)) {
+            if (leftLift.getCurrentPosition() >= armRotateLevel || Math.abs(rotate.getCurrentPosition()) - 40 < 0) {
+                if ((gamepad2.left_stick_x < 0 && rotate.getCurrentPosition() <= 470) || (gamepad2.left_stick_x > 0 && rotate.getCurrentPosition() >= -470)) {
                     rotate.setPower(-gamepad2.left_stick_x * 0.25);
                 } else {
                     rotate.setPower(0);
@@ -163,12 +160,12 @@ public class SummerTeleOP extends LinearOpMode {
             yes = (-gamepad2.right_stick_y > 0 && leftLift.getCurrentPosition() < armMax);
             yes2 = -gamepad2.right_stick_y < 0 && (Math.abs(rotate.getCurrentPosition()) < 75 || leftLift.getCurrentPosition() > armRotateLevel);
 
-            if(yes || yes2) {
+            if (yes || yes2) {
                 leftLift.setPower(-gamepad2.right_stick_y);
                 rightLift.setPower(gamepad2.right_stick_y);
 
             } else if (gamepad2.right_stick_y == 0) {
-                if(leftLift.getCurrentPosition() > 1000) {
+                if (leftLift.getCurrentPosition() > 1000) {
                     leftLift.setPower(0.1);
                     rightLift.setPower(-0.1);
                 } else {
@@ -199,12 +196,12 @@ public class SummerTeleOP extends LinearOpMode {
 //                rightLift.setPower(0);
 //            }
 
-            if(gamepad2.left_bumper) {
+            if (gamepad2.left_bumper) {
                 //Close
                 rightGrab.setPosition(0.17);
                 leftGrab.setPosition(0.08);
             }
-            if(gamepad2.right_bumper) {
+            if (gamepad2.right_bumper) {
                 //Open
                 rightGrab.setPosition(0.1);
                 leftGrab.setPosition(0.15);

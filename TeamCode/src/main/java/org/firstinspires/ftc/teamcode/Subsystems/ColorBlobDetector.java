@@ -90,6 +90,7 @@ public class ColorBlobDetector implements VisionProcessor {
 
     /**
      * We have this method, but we don't need it and don't use it for this class
+     *
      * @param width
      * @param height
      * @param calibration
@@ -120,22 +121,21 @@ public class ColorBlobDetector implements VisionProcessor {
         Imgproc.drawContours(input, contours, -1, new Scalar(255, 255, 255), 1);
 
 
-
         //Draw bounding lines for tuning now that the contours are already determined
-        Imgproc.line(input, new Point(0,input.height() * leftPercent), new Point(input.width(), input.height() * leftPercent), new Scalar(255,255,255));
-        Imgproc.line(input, new Point(input.width() * (1 - rightPercent),0), new Point(input.width() * (1 - rightPercent), input.height()), new Scalar(255,255,255));
+        Imgproc.line(input, new Point(0, input.height() * leftPercent), new Point(input.width(), input.height() * leftPercent), new Scalar(255, 255, 255));
+        Imgproc.line(input, new Point(input.width() * (1 - rightPercent), 0), new Point(input.width() * (1 - rightPercent), input.height()), new Scalar(255, 255, 255));
         PropGuess currentGuess = UNKNOWN;
 
 
-        for (MatOfPoint contour: contours) {
+        for (MatOfPoint contour : contours) {
             Rect boundingRect = boundingRect(contour);
-            if(boundingRect.size().area() < minSize) continue;
-            Imgproc.rectangle(input, boundingRect, new Scalar(0,0,255), 2);
-            Rect textBox = new Rect((int) boundingRect.tl().x-1, (int) boundingRect.tl().y - 10, 40, 10);
+            if (boundingRect.size().area() < minSize) continue;
+            Imgproc.rectangle(input, boundingRect, new Scalar(0, 0, 255), 2);
+            Rect textBox = new Rect((int) boundingRect.tl().x - 1, (int) boundingRect.tl().y - 10, 40, 10);
             Imgproc.rectangle(input, textBox, new Scalar(0, 0, 255), -1);
-            Imgproc.putText(input, String.valueOf((int)boundingRect.area()), new Point(textBox.tl().x, textBox.br().y-2), 6, 0.35, new Scalar(0,0,0));
+            Imgproc.putText(input, String.valueOf((int) boundingRect.area()), new Point(textBox.tl().x, textBox.br().y - 2), 6, 0.35, new Scalar(0, 0, 0));
             int centerX = (int) (boundingRect.tl().y + boundingRect.br().y) / 2;
-            if(centerX < input.height() * leftPercent) {
+            if (centerX < input.height() * leftPercent) {
                 currentGuess = LEFT;
             } else if (centerX > input.height() * (1 - rightPercent)) {
                 currentGuess = RIGHT;
@@ -143,7 +143,7 @@ public class ColorBlobDetector implements VisionProcessor {
                 currentGuess = MIDDLE;
             }
         }
-        if(currentGuess != guess && currentGuess != UNKNOWN) {
+        if (currentGuess != guess && currentGuess != UNKNOWN) {
             guess = currentGuess;
         }
 
@@ -156,7 +156,7 @@ public class ColorBlobDetector implements VisionProcessor {
 
     @Override
     public void onDrawFrame(Canvas canvas, int onscreenWidth, int onscreenHeight, float scaleBmpPxToCanvasPx, float scaleCanvasDensity, Object userContext) {
-        if(filteredContours.size() > 0) {
+        if (filteredContours.size() > 0) {
             Paint paint = new Paint();
             paint.setColor(0x0);
             for (MatOfPoint contour : filteredContours) {

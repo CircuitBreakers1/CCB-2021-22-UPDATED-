@@ -136,6 +136,7 @@ public class ApriltagSleevePipeline extends OpenCvPipeline {
         LEFT(0), MIDDLE(1), RIGHT(2);
 
         private int value;
+
         sleeveTag(int i) {
             this.value = i;
         }
@@ -196,10 +197,10 @@ public class ApriltagSleevePipeline extends OpenCvPipeline {
     /**
      * Draw a 3D axis marker on a detection. (Similar to what Vuforia does)
      *
-     * @param buf          the RGB buffer on which to draw the marker
-     * @param length       the length of each of the marker 'poles'
-     * @param rvec         the rotation vector of the detection
-     * @param tvec         the translation vector of the detection
+     * @param buf the RGB buffer on which to draw the marker
+     * @param length the length of each of the marker 'poles'
+     * @param rvec the rotation vector of the detection
+     * @param tvec the translation vector of the detection
      * @param cameraMatrix the camera matrix used when finding the detection
      */
     void drawAxisMarker(Mat buf, double length, int thickness, Mat rvec, Mat tvec, Mat cameraMatrix) {
@@ -268,10 +269,10 @@ public class ApriltagSleevePipeline extends OpenCvPipeline {
      * Extracts 6DOF pose from a trapezoid, using a camera intrinsics matrix and the
      * original size of the tag.
      *
-     * @param points       the points which form the trapezoid
+     * @param points the points which form the trapezoid
      * @param cameraMatrix the camera intrinsics matrix
-     * @param tagsizeX     the original width of the tag
-     * @param tagsizeY     the original height of the tag
+     * @param tagsizeX the original width of the tag
+     * @param tagsizeY the original height of the tag
      * @return the 6DOF pose of the camera relative to the tag
      */
     Pose poseFromTrapezoid(Point[] points, Mat cameraMatrix, double tagsizeX, double tagsizeY) {

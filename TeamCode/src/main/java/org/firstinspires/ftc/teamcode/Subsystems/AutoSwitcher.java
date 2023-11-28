@@ -41,12 +41,13 @@ public class AutoSwitcher {
             return START_LOCATION;
         }
     }
+
     public enum StartLocation {
         //Assume robot is 17" long and 17" wide. Start centered on tile, touching wall
-        RED_BACKDROP(12, -63.5, -PI/2),
-        RED_AUDIENCE(-36, -63.5, -PI/2),
-        BLUE_BACKDROP(12, 63.5, PI/2),
-        BLUE_AUDIENCE(-36, 63.5, PI/2);
+        RED_BACKDROP(12, -63.5, -PI / 2),
+        RED_AUDIENCE(-36, -63.5, -PI / 2),
+        BLUE_BACKDROP(12, 63.5, PI / 2),
+        BLUE_AUDIENCE(-36, 63.5, PI / 2);
 
         public final Pose2d startPose;
 
@@ -72,6 +73,7 @@ public class AutoSwitcher {
     public enum PlaceLocation {
         LEFT, RIGHT
     }
+
     public enum SwitchType {
         MIRROR_X_AXIS, MIRROR_X_AXIS_AND_START_Y
     }
@@ -240,8 +242,8 @@ public class AutoSwitcher {
 
     public void moveSwitch(PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, Runnable loop, SwitchType switchType) {
         //Blue side is default, so no need to change anything for it.
-        if(alliance == Alliance.RED) {
-            switch (switchType){
+        if (alliance == Alliance.RED) {
+            switch (switchType) {
                 case MIRROR_X_AXIS:
                     x = -x;
                     theta = -theta;

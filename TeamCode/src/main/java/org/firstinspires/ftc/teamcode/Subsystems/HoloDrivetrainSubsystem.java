@@ -33,6 +33,7 @@ public class HoloDrivetrainSubsystem {
      * Smooth Deceleration for Evan.
      * Tune to feel, too small max D will feel unresponsive, so much will feel abrupt.
      * Always call in loop to achieve desired power
+     *
      * @param motor The motor to set power to
      * @param targetPower The power to set the motor to
      */

@@ -61,7 +61,7 @@ public class odometryTuning extends LinearOpMode {
 
         //Initialize IMU parameters
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
 
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
@@ -80,15 +80,15 @@ public class odometryTuning extends LinearOpMode {
         waitForStart();
 
         //Begin calibration (if robot is unable to pivot at these speeds, please adjust the constant at the top of the code
-        while(getZAngle() < 90 && opModeIsActive()){
+        while (getZAngle() < 90 && opModeIsActive()) {
             right_front.setPower(-PIVOT_SPEED);
             right_back.setPower(-PIVOT_SPEED);
             left_front.setPower(-PIVOT_SPEED);
             left_back.setPower(PIVOT_SPEED);
-            if(getZAngle() < 60) {
+            if (getZAngle() < 60) {
                 setPowerAll(-PIVOT_SPEED, -PIVOT_SPEED, PIVOT_SPEED, PIVOT_SPEED);
-            }else{
-                setPowerAll(-PIVOT_SPEED/2, -PIVOT_SPEED/2, PIVOT_SPEED/2, PIVOT_SPEED/2);
+            } else {
+                setPowerAll(-PIVOT_SPEED / 2, -PIVOT_SPEED / 2, PIVOT_SPEED / 2, PIVOT_SPEED / 2);
             }
 
             telemetry.addData("IMU Angle", getZAngle());
@@ -98,7 +98,7 @@ public class odometryTuning extends LinearOpMode {
         //Stop the robot
         setPowerAll(0, 0, 0, 0);
         timer.reset();
-        while(timer.milliseconds() < 1000 && opModeIsActive()){
+        while (timer.milliseconds() < 1000 && opModeIsActive()) {
             telemetry.addData("IMU Angle", getZAngle());
             telemetry.update();
         }
@@ -121,23 +121,21 @@ public class odometryTuning extends LinearOpMode {
         double trackwidth = abs(leftRadius) + abs(rightRadius);
 
 
-
-
         double encoderDifference = -abs(verticalLeft.getCurrentPosition()) - (abs(verticalRight.getCurrentPosition()));
 
-        double verticalEncoderTickOffsetPerDegree = encoderDifference/angle;
+        double verticalEncoderTickOffsetPerDegree = encoderDifference / angle;
 
-        double wheelBaseSeparation = (2*90*verticalEncoderTickOffsetPerDegree)/(Math.PI*COUNTS_PER_INCH);
+        double wheelBaseSeparation = (2 * 90 * verticalEncoderTickOffsetPerDegree) / (Math.PI * COUNTS_PER_INCH);
 
-        horizontalTickOffset = horizontal.getCurrentPosition()/Math.toRadians(getZAngle());
+        horizontalTickOffset = horizontal.getCurrentPosition() / Math.toRadians(getZAngle());
 
         //Write the constants to text files
         ReadWriteFile.writeFile(wheelBaseSeparationFile, String.valueOf(wheelBaseSeparation));
         ReadWriteFile.writeFile(horizontalTickOffsetFile, String.valueOf(horizontalTickOffset));
 
-        while(opModeIsActive()){
+        while (opModeIsActive()) {
             telemetry.addData("Odometry System Calibration Status", "Calibration Complete");
-            telemetry.addData("Loogie Math Values","");
+            telemetry.addData("Loogie Math Values", "");
             telemetry.addData("Trackwidth", trackwidth);
             telemetry.addData("Back Offset", backRadius);
             telemetry.addData("k", k);
@@ -162,7 +160,7 @@ public class odometryTuning extends LinearOpMode {
         }
     }
 
-    private void initHardwareMap(String rfName, String rbName, String lfName, String lbName, String vlEncoderName, String vrEncoderName, String hEncoderName){
+    private void initHardwareMap(String rfName, String rbName, String lfName, String lbName, String vlEncoderName, String vrEncoderName, String hEncoderName) {
         right_front = hardwareMap.dcMotor.get(rfName);
         right_back = hardwareMap.dcMotor.get(rbName);
         left_front = hardwareMap.dcMotor.get(lfName);
@@ -208,20 +206,22 @@ public class odometryTuning extends LinearOpMode {
 
     /**
      * Gets the orientation of the robot using the REV IMU
+     *
      * @return the angle of the robot
      */
-    private double getZAngle(){
+    private double getZAngle() {
         return (imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
     }
 
     /**
      * Sets power to all four drive motors
+     *
      * @param rf power for right front motor
      * @param rb power for right back motor
      * @param lf power for left front motor
      * @param lb power for left back motor
      */
-    private void setPowerAll(double rf, double rb, double lf, double lb){
+    private void setPowerAll(double rf, double rb, double lf, double lb) {
         right_front.setPower(rf);
         right_back.setPower(rb);
         left_front.setPower(-lf);

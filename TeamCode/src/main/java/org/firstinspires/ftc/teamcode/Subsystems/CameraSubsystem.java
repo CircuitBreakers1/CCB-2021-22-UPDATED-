@@ -68,13 +68,13 @@ public class CameraSubsystem {
     public void setColorBlobDetector(ColorBlobDetector.PropColor color) {
         currentColor = color;
 
-        if(color == null) {
+        if (color == null) {
             visionPortal.setProcessorEnabled(redBlobDetector, false);
             visionPortal.setProcessorEnabled(blueBlobDetector, false);
             return;
         }
 
-        if(color == BLUE) {
+        if (color == BLUE) {
             visionPortal.setProcessorEnabled(redBlobDetector, false);
             visionPortal.setProcessorEnabled(blueBlobDetector, true);
         } else if (color == RED) {
@@ -92,7 +92,7 @@ public class CameraSubsystem {
      */
     public void restartCamera() {
         visionPortal.resumeStreaming();
-        while(visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
+        while (visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
             try {
                 Thread.sleep(10);
             } catch (InterruptedException e) {
@@ -105,12 +105,14 @@ public class CameraSubsystem {
         return getPoseFromAprilTag();
     }
 
-    /** NOT ABSOLUTE YET **/ //TODO: FIX
+    /**
+     * NOT ABSOLUTE YET
+     **/ //TODO: FIX
     @Nullable
     public Pose2d getPoseFromAprilTag() {
         List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
 
-        for (AprilTagDetection detection: detections) {
+        for (AprilTagDetection detection : detections) {
             if (detection.metadata != null) {
                 //Return the first global pose we can find
                 return translateToCam(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll);
@@ -122,30 +124,31 @@ public class CameraSubsystem {
 
     /**
      * Returns a <b>relative</b> pose to the AprilTag
+     *
      * @param preferred The preferred AprilTag to use
      * @return The relative pose to the preferred AprilTag.
-     *          If the preferred AprilTag is not found, the first AprilTag in the secondary list will be used,
-     *          and it will attempt to translate into a relevant pose to the preferred AprilTag. If none are found,
-     *          null will be returned.
+     * If the preferred AprilTag is not found, the first AprilTag in the secondary list will be used,
+     * and it will attempt to translate into a relevant pose to the preferred AprilTag. If none are found,
+     * null will be returned.
      */
     @Nullable
     public Pose2d getRelativeAprilTagPose(PoseSupply preferred) {
         List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
 
         //First, look for the preferred AprilTag
-        for (AprilTagDetection detection: detections) {
+        for (AprilTagDetection detection : detections) {
             if (detection.metadata != null) {
-                if(detection.id == preferred.id) {
+                if (detection.id == preferred.id) {
                     return translateToCam(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll);
                 }
             }
         }
 
-        for(AprilTagDetection detection: detections) {
-            if(detection.metadata != null) {
-                if(preferred.substitutions.contains(detection.id)) {
+        for (AprilTagDetection detection : detections) {
+            if (detection.metadata != null) {
+                if (preferred.substitutions.contains(detection.id)) {
                     Pose2d temp = translateToCam(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll);
-                    return new Pose2d(PoseSupply.values()[detection.id].globalPose.getX() - preferred.globalPose.getX() + temp.getX(),temp.getY(), temp.getRotation());
+                    return new Pose2d(PoseSupply.values()[detection.id].globalPose.getX() - preferred.globalPose.getX() + temp.getX(), temp.getY(), temp.getRotation());
                 }
             }
         }
@@ -158,24 +161,24 @@ public class CameraSubsystem {
         pitch = Math.toRadians(pitch);
         roll = Math.toRadians(roll);
 
-        RealMatrix yawMatrix = new Array2DRowRealMatrix(new double[][] {
+        RealMatrix yawMatrix = new Array2DRowRealMatrix(new double[][]{
                 {cos(yaw), -sin(yaw), 0},
                 {sin(yaw), cos(yaw), 0},
                 {0, 0, 1}
         });
-        RealMatrix pitchMatrix = new Array2DRowRealMatrix(new double[][] {
+        RealMatrix pitchMatrix = new Array2DRowRealMatrix(new double[][]{
                 {cos(pitch), 0, sin(pitch)},
                 {0, 1, 0},
                 {-sin(pitch), 0, cos(pitch)}
         });
-        RealMatrix rollMatrix = new Array2DRowRealMatrix(new double[][] {
+        RealMatrix rollMatrix = new Array2DRowRealMatrix(new double[][]{
                 {1, 0, 0},
                 {0, cos(roll), -sin(roll)},
                 {0, sin(roll), cos(roll)}
         });
         RealMatrix rotationMatrix = yawMatrix.multiply(pitchMatrix).multiply(rollMatrix);
 
-        RealMatrix tAprilToCamMatrix = new Array2DRowRealMatrix(new double[][] {
+        RealMatrix tAprilToCamMatrix = new Array2DRowRealMatrix(new double[][]{
                 {rotationMatrix.getEntry(0, 0), rotationMatrix.getEntry(0, 1), rotationMatrix.getEntry(0, 2), x},
                 {rotationMatrix.getEntry(1, 0), rotationMatrix.getEntry(1, 1), rotationMatrix.getEntry(1, 2), y},
                 {rotationMatrix.getEntry(2, 0), rotationMatrix.getEntry(2, 1), rotationMatrix.getEntry(2, 2), z},

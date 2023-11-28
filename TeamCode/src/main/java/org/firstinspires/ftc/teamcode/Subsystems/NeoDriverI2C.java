@@ -77,7 +77,7 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
         //Set the I2C Speed
         writeShort(Register.SPEED, (short) 0x1, ByteOrder.LITTLE_ENDIAN);
         //Set the buffer length
-        if(isRGBW) {
+        if (isRGBW) {
             writeShort(Register.BUF_LENGTH, (short) 0x4);
         } else {
             writeShort(Register.BUF_LENGTH, (short) 0x3);
@@ -86,6 +86,7 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
 
     /**
      * Sets the color of multiple pixels
+     *
      * @param startPixel The pixel to begin writing (Inclusive)
      * @param endPixel The pixel to stop writing (Inclusive)
      * @param color The color to use
@@ -112,7 +113,7 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
             }
 
             this.deviceClient.write(Register.BUF.bVal, data);
-            this.deviceClient.write(Register.SHOW.bVal, new byte[] {0x1});
+            this.deviceClient.write(Register.SHOW.bVal, new byte[]{0x1});
         }
     }
 

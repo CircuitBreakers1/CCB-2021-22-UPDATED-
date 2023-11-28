@@ -39,10 +39,10 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 
 /**
- *  The autonomous for the Right Side of the Field
+ * The autonomous for the Right Side of the Field
  */
 
-@Autonomous(name="Right Auto", group="Linear Opmode")
+@Autonomous(name = "Right Auto", group = "Linear Opmode")
 @Disabled
 public class RightTest extends LinearOpMode {
 

@@ -76,10 +76,10 @@ public class IterativeTeleOP extends LinearOpMode {
         Robot.blinkinLedDriver.setPattern(Robot.pattern);
 
         //Prepare the rumble patterns for driver 2
-        RumbleEffect dropAllowed = new RumbleEffect.Builder().addStep(1,1, 100).addStep(0,0,50).addStep(1,1,100).build();
-        RumbleEffect dropNotAllowed = new RumbleEffect.Builder().addStep(0.5,0.5, 150).build();
-        RumbleEffect leftSideButtonPress = new RumbleEffect.Builder().addStep(0.5,0, 750).build();
-        RumbleEffect rightSideButtonPress = new RumbleEffect.Builder().addStep(0,0.5, 750).build();
+        RumbleEffect dropAllowed = new RumbleEffect.Builder().addStep(1, 1, 100).addStep(0, 0, 50).addStep(1, 1, 100).build();
+        RumbleEffect dropNotAllowed = new RumbleEffect.Builder().addStep(0.5, 0.5, 150).build();
+        RumbleEffect leftSideButtonPress = new RumbleEffect.Builder().addStep(0.5, 0, 750).build();
+        RumbleEffect rightSideButtonPress = new RumbleEffect.Builder().addStep(0, 0.5, 750).build();
 
         waitForStart();
 
@@ -92,13 +92,13 @@ public class IterativeTeleOP extends LinearOpMode {
             Robot.holOdom.updatePose();
             Pose2d currentLocation = Robot.holOdom.getPose();
             double angle = currentLocation.getHeading();
-            angles   = Robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
+            angles = Robot.imu.getAngularOrientation(AxesReference.INTRINSIC, AxesOrder.ZYX, AngleUnit.RADIANS);
 
             telemetry.addData("Target Junction", "X: " + TeleOPTargetingSubsystem.targetJunctions[0] + " Y: " + TeleOPTargetingSubsystem.targetJunctions[1]);
             telemetry.addData("Target Drop Spot", "X: " + TeleOPTargetingSubsystem.targetPosition[0] + " Y: " + TeleOPTargetingSubsystem.targetPosition[1]);
             telemetry.addData("Distance to Drop", TeleOPTargetingSubsystem.distance);
             telemetry.addData("Arm Position", Robot.armLift.getCurrentPosition());
-            telemetry.addData("Arm Target" , Robot.armLift.getTargetPosition());
+            telemetry.addData("Arm Target", Robot.armLift.getTargetPosition());
             telemetry.addData("Robot X", currentLocation.getX());
             telemetry.addData("Robot Y", currentLocation.getY());
             telemetry.addData("Robot Angle", angle);
@@ -127,33 +127,33 @@ public class IterativeTeleOP extends LinearOpMode {
             Robot.rightFront.setPower(1 * (y - x - rx));
             Robot.rightBack.setPower(1 * (y + x - rx));
 
-            if(gamepad2.dpad_up) {
+            if (gamepad2.dpad_up) {
                 Robot.pickupLeft.setPower(1);
                 Robot.pickupRight.setPower(-1);
                 LiftSubsystem.setTarget(LiftSubsystem.LiftTarget.Min);
                 isIntaking = true;
                 isOutputting = false;
             }
-            if(!isIntaking && gamepad2.left_bumper) {
+            if (!isIntaking && gamepad2.left_bumper) {
                 Robot.pickupLeft.setPower(1);
                 Robot.pickupRight.setPower(-1);
                 isIntaking = true;
                 isOutputting = false;
             }
-            if(!isOutputting && gamepad2.dpad_down) {
+            if (!isOutputting && gamepad2.dpad_down) {
                 Robot.pickupLeft.setPower(-1);
                 Robot.pickupRight.setPower(1);
                 isOutputting = true;
                 isIntaking = false;
             }
-            if(gamepad2.dpad_left || (!Robot.coneTouch.getState() && isIntaking)) {
+            if (gamepad2.dpad_left || (!Robot.coneTouch.getState() && isIntaking)) {
                 Robot.pickupLeft.setPower(0);
                 Robot.pickupRight.setPower(0);
                 isIntaking = false;
                 isOutputting = false;
             }
 
-            if(gamepad2.a) {
+            if (gamepad2.a) {
                 LiftSubsystem.setTarget(LiftSubsystem.LiftTarget.Low);
             } else if (gamepad2.b) {
                 LiftSubsystem.setTarget(LiftSubsystem.LiftTarget.Medium);

@@ -58,12 +58,12 @@ public class movementTestAuto extends LinearOpMode {
         waitForStart();
 
 
-        while(opModeIsActive()) {
-            if(gamepad1.a) {
-                PositionalMovementSubsystem.moveTo(30,0,0, 1,true, true, dashTelemetry);
+        while (opModeIsActive()) {
+            if (gamepad1.a) {
+                PositionalMovementSubsystem.moveTo(30, 0, 0, 1, true, true, dashTelemetry);
             }
 
-            if(gamepad1.b) {
+            if (gamepad1.b) {
                 PositionalMovementSubsystem.moveTo(0, 0, 0, 1, true, true, dashTelemetry);
             }
 

@@ -53,7 +53,7 @@ public class ColorSleevePipeline extends OpenCvPipeline {
         average = mean.val[0];
 
         //Checks which range the hue is in
-        if(average <= 30 || (average >= 140 && average <= 180)) {
+        if (average <= 30 || (average >= 140 && average <= 180)) {
             predictedColor = RED;
         } else if (average > 30 && average <= 90) {
             predictedColor = GREEN;
@@ -63,7 +63,7 @@ public class ColorSleevePipeline extends OpenCvPipeline {
 
         //Then create the Mat used for the viewport
         //"Evan Proof Viewing"
-        Scalar color = new Scalar(0,0,0,0);
+        Scalar color = new Scalar(0, 0, 0, 0);
 
         Imgproc.rectangle(input, rect, color, 7);
 
@@ -76,10 +76,9 @@ public class ColorSleevePipeline extends OpenCvPipeline {
     }
 
 
-
-
     /**
      * For debug purposes only
+     *
      * @return Average Hue value of target square
      */
     public double getAverage() {

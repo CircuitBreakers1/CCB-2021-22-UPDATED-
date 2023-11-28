@@ -26,7 +26,7 @@ public class CameraTest extends OpMode {
     public void init_loop() {
 //        telemetry.addData("Color Guess", robot.cameraSubsystem.getPropGuess());
         Pose2d pose = robot.cameraSubsystem.getRelativeAprilTagPose(PoseSupply.APRILTAG_BLUE_MIDDLE);
-        if(pose != null) realPose = pose;
+        if (pose != null) realPose = pose;
         telemetry.addData("X", realPose.getX()).addData("Y", realPose.getY()).addData("Theta", realPose.getHeading());
         telemetry.update();
     }

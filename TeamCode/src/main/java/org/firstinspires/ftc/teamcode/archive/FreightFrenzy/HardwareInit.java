@@ -39,12 +39,11 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 /**
  * This is NOT an opmode.
- *
+ * <p>
  * This class is used to initialize the robot hardware in multiple programs and be the only spot it
  * needs to be changed
  */
-public class HardwareInit
-{
+public class HardwareInit {
     public DcMotor leftFront;
     public DcMotor rightFront;
     public DcMotor leftBack;
@@ -62,11 +61,11 @@ public class HardwareInit
 
 
     /* local OpMode members. */
-    HardwareMap hwMap           =  null;
-    private final ElapsedTime period  = new ElapsedTime();
+    HardwareMap hwMap = null;
+    private final ElapsedTime period = new ElapsedTime();
 
     /* Constructor */
-    public HardwareInit(){
+    public HardwareInit() {
 
     }
 
@@ -76,14 +75,14 @@ public class HardwareInit
         hwMap = ahwMap;
 
         // Define and Initialize Motors
-        leftFront  = hwMap.get(DcMotor.class, "leftFront");
-        rightFront  = hwMap.get(DcMotor.class, "rightFront");
-        leftBack  = hwMap.get(DcMotor.class, "leftBack");
-        rightBack  = hwMap.get(DcMotor.class, "rightBack");
-        backSpinner  = hwMap.get(DcMotor.class, "backSpinner");
-        intake  = hwMap.get(DcMotor.class, "intake");
-        leftArm  = hwMap.get(DcMotor.class, "leftArm");
-        rightArm  = hwMap.get(DcMotor.class, "rightArm");
+        leftFront = hwMap.get(DcMotor.class, "leftFront");
+        rightFront = hwMap.get(DcMotor.class, "rightFront");
+        leftBack = hwMap.get(DcMotor.class, "leftBack");
+        rightBack = hwMap.get(DcMotor.class, "rightBack");
+        backSpinner = hwMap.get(DcMotor.class, "backSpinner");
+        intake = hwMap.get(DcMotor.class, "intake");
+        leftArm = hwMap.get(DcMotor.class, "leftArm");
+        rightArm = hwMap.get(DcMotor.class, "rightArm");
 
         // Set motor direction
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);

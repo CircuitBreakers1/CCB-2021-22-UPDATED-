@@ -53,7 +53,7 @@ import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.DrivetrainSub
  *
  */
 
-@Autonomous(name="Pure Pursuit Test Auto", group="Linear Opmode")
+@Autonomous(name = "Pure Pursuit Test Auto", group = "Linear Opmode")
 @Disabled
 public class PurePursuitTest extends LinearOpMode {
 
@@ -73,15 +73,15 @@ public class PurePursuitTest extends LinearOpMode {
 
         Waypoint startLocation = new StartWaypoint(holOdom.getPose());
         Waypoint coneSquareCenterEnd =
-                new EndWaypoint(36, 55, 3.14/4, 0.5, 0.5,6, 2, 3.14/12);
+                new EndWaypoint(36, 55, 3.14 / 4, 0.5, 0.5, 6, 2, 3.14 / 12);
 
 
         Waypoint conePickUp =
-                new EndWaypoint(3, 55, 3.14, 0.5, 0.5, 6, 2, 3.14/12);
+                new EndWaypoint(3, 55, 3.14, 0.5, 0.5, 6, 2, 3.14 / 12);
         Waypoint coneSquareCenter =
-                new GeneralWaypoint(36, 55, 3.14/4, 0.5, 0.5, 6);
+                new GeneralWaypoint(36, 55, 3.14 / 4, 0.5, 0.5, 6);
         Waypoint coneSet =
-                new EndWaypoint(42, 61, 3.14/4, 0.5, 0.5, 6, 2, 3.14/12);
+                new EndWaypoint(42, 61, 3.14 / 4, 0.5, 0.5, 6, 2, 3.14 / 12);
         Waypoint currentRobotLocation;
 
         Path initialPath = new Path(startLocation, coneSquareCenterEnd);
@@ -90,8 +90,6 @@ public class PurePursuitTest extends LinearOpMode {
         waitForStart();
 
         initialPath.followPath(DrivetrainSubsystem.mecDrive, holOdom);
-
-        
 
 
         drivetrain.stop();

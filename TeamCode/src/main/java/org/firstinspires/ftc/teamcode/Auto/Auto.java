@@ -72,17 +72,17 @@ public class Auto extends LinearOpMode {
 
         //TODO: Implement Lights to Show Ready Status
         //Init Loop
-        while(opModeInInit()) {
+        while (opModeInInit()) {
             //Do Arm Zeroing
-            if(!(abs(robot.armSubsystem.getAngle() - 10) < 4) /*Angle not in position*/ && !systemStates[5]) {
+            if (!(abs(robot.armSubsystem.getAngle() - 10) < 4) /*Angle not in position*/ && !systemStates[5]) {
                 armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - 7));
             } else {
                 armAngle.setPower(0);
                 systemStates[5] = true;
             }
 
-            if(!systemStates[4]) {
-                if(!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */ ) {
+            if (!systemStates[4]) {
+                if (!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */) {
                     armExtend.setPower(0);
                     armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -100,31 +100,31 @@ public class Auto extends LinearOpMode {
                 case Ready:
                     gripper.setPosition(0);
                     robot.armSubsystem.setWristAngle(0);
-                    if(gamepad1.a && systemStates[4] && systemStates[5]) {
+                    if (gamepad1.a && systemStates[4] && systemStates[5]) {
                         armState = ArmSubsystem.ArmState.LowerArm;
                     }
                     break;
                 case LowerArm:
                     gripper.setPosition(1);
                     armAngle.setPower(-0.85);
-                    if(abs(robot.armSubsystem.getAngle() - 2) < 1) {
+                    if (abs(robot.armSubsystem.getAngle() - 2) < 1) {
                         armAngle.setPower(0);
                         armState = ArmSubsystem.ArmState.Grip;
                     }
                     break;
                 case Grip:
-                    if(gripTime == 0) {
+                    if (gripTime == 0) {
                         gripTime = System.currentTimeMillis();
                     }
                     gripper.setPosition(0);
-                    if(System.currentTimeMillis() - gripTime > 500) {
+                    if (System.currentTimeMillis() - gripTime > 500) {
                         armState = ArmSubsystem.ArmState.RaiseArm;
                         gripTime = 0;
                     }
                     break;
                 case RaiseArm:
                     armAngle.setPower(0.85);
-                    if(robot.armSubsystem.getAngle() > 10 /*Arm is raised*/) {
+                    if (robot.armSubsystem.getAngle() > 10 /*Arm is raised*/) {
                         armAngle.setPower(0);
                         armState = ArmSubsystem.ArmState.Ready;
                         armAngle.setPower(0);
@@ -138,10 +138,10 @@ public class Auto extends LinearOpMode {
 
             //Configure auto setup. Dpad up/down to toggle through values, dpad left/right to cycle through options
             if (gamepad1.dpad_up) {
-                if(!dpadPressed[0]) {
+                if (!dpadPressed[0]) {
                     dpadPressed[0] = true;
                     autoSwitcher.toggleUp(currentConfiguration);
-                    if(currentConfiguration == START_LOCATION) {
+                    if (currentConfiguration == START_LOCATION) {
                         switch (autoSwitcher.getAlliance()) {
                             case RED:
                                 currentColor = ColorBlobDetector.PropColor.RED;
@@ -158,10 +158,10 @@ public class Auto extends LinearOpMode {
                 dpadPressed[0] = false;
             }
             if (gamepad1.dpad_down) {
-                if(!dpadPressed[2]) {
+                if (!dpadPressed[2]) {
                     dpadPressed[2] = true;
                     autoSwitcher.toggleDown(currentConfiguration);
-                    if(currentConfiguration == START_LOCATION) {
+                    if (currentConfiguration == START_LOCATION) {
                         switch (autoSwitcher.getAlliance()) {
                             case RED:
                                 currentColor = ColorBlobDetector.PropColor.RED;
@@ -178,7 +178,7 @@ public class Auto extends LinearOpMode {
                 dpadPressed[2] = false;
             }
             if (gamepad1.dpad_left) {
-                if(!dpadPressed[3]) {
+                if (!dpadPressed[3]) {
                     dpadPressed[3] = true;
                     currentConfiguration = ConfigSetting.cycleDown(currentConfiguration);
                 }
@@ -186,7 +186,7 @@ public class Auto extends LinearOpMode {
                 dpadPressed[3] = false;
             }
             if (gamepad1.dpad_right) {
-                if(!dpadPressed[1]) {
+                if (!dpadPressed[1]) {
                     dpadPressed[1] = true;
                     currentConfiguration = ConfigSetting.cycleUp(currentConfiguration);
                 }
@@ -243,16 +243,16 @@ public class Auto extends LinearOpMode {
         //Create the runnable to lower the arm as we move to the spike marks.
         Runnable lowerArm = () -> {
             //Make sure the arm is far enough out
-            if(armExtend.getCurrentPosition() < -400) {
+            if (armExtend.getCurrentPosition() < -400) {
                 double error = armTarget - robot.armSubsystem.getAngle();
-                if(abs(error) > 3) {
+                if (abs(error) > 3) {
                     armAngle.setPower(0.85 * signum(error));
                 }
             }
         };
 
         ColorBlobDetector.PropGuess mirroredGuess = propGuess;
-        if(autoSwitcher.getAlliance() == AutoSwitcher.Alliance.RED) {
+        if (autoSwitcher.getAlliance() == AutoSwitcher.Alliance.RED) {
             switch (mirroredGuess) {
                 case LEFT:
                     mirroredGuess = ColorBlobDetector.PropGuess.RIGHT;
@@ -280,10 +280,10 @@ public class Auto extends LinearOpMode {
                         break;
                 }
                 //Finish moving the arm, then stop the arm and drop the pixel.
-                while(opModeIsActive()) {
-                    if(armExtend.getCurrentPosition() < -200) {
+                while (opModeIsActive()) {
+                    if (armExtend.getCurrentPosition() < -200) {
                         double error = armTarget - robot.armSubsystem.getAngle();
-                        if(abs(error) > 3) {
+                        if (abs(error) > 3) {
                             armAngle.setPower(0.85 * signum(error));
                         } else {
                             break;
@@ -294,7 +294,7 @@ public class Auto extends LinearOpMode {
                 //Drop the pixel.
                 gripper.setPosition(1);
                 sleep(300);
-                if(mirroredGuess == ColorBlobDetector.PropGuess.LEFT) {
+                if (mirroredGuess == ColorBlobDetector.PropGuess.LEFT) {
                     autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 30, 55, -1.57, 1);
                 }
                 //Go to the backboard, then the code merge happens
@@ -316,10 +316,10 @@ public class Auto extends LinearOpMode {
                 }
 
                 //Finish moving the arm, then stop the arm and drop the pixel.
-                while(opModeIsActive()) {
-                    if(armExtend.getCurrentPosition() < -200) {
+                while (opModeIsActive()) {
+                    if (armExtend.getCurrentPosition() < -200) {
                         double error = armTarget - robot.armSubsystem.getAngle();
-                        if(abs(error) > 3) {
+                        if (abs(error) > 3) {
                             armAngle.setPower(0.85 * signum(error));
                         } else {
                             break;
@@ -341,7 +341,7 @@ public class Auto extends LinearOpMode {
         autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 36, -3.14, 1, MovementSubsystem.GRAB_PIXEL_AUTO);
 
         double armTargetAngle = 15;
-        while((abs(robot.armSubsystem.getAngle() - armTargetAngle) > 3) && opModeIsActive()) {
+        while ((abs(robot.armSubsystem.getAngle() - armTargetAngle) > 3) && opModeIsActive()) {
             armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - armTargetAngle));
         }
         armAngle.setPower(0);
@@ -350,7 +350,7 @@ public class Auto extends LinearOpMode {
         armExtend.setPower(0.9);
 
         AutoSwitcher.PlaceLocation placeMirrored = autoSwitcher.getPlaceLocation();
-        if(autoSwitcher.getAlliance() == AutoSwitcher.Alliance.RED) {
+        if (autoSwitcher.getAlliance() == AutoSwitcher.Alliance.RED) {
             switch (placeMirrored) {
                 case LEFT:
                     placeMirrored = AutoSwitcher.PlaceLocation.RIGHT;
@@ -376,14 +376,14 @@ public class Auto extends LinearOpMode {
         //Drop Pixel on Backdrop. Default points to LEFT edge of the drop zone.
         switch (mirroredGuess) {
             case LEFT:
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50,43 - LEFT_TO_RIGHT,-3.14,0.5);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50, 43 - LEFT_TO_RIGHT, -3.14, 0.5);
                 break;
             case RIGHT:
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50,29.5 - LEFT_TO_RIGHT,-3.14,0.5);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50, 29.5 - LEFT_TO_RIGHT, -3.14, 0.5);
                 break;
             case MIDDLE:
             default:
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50,39,-3.14 - LEFT_TO_RIGHT,0.5);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50, 39, -3.14 - LEFT_TO_RIGHT, 0.5);
         }
 
 //        switch (autoSwitcher.getAlliance()) {

@@ -24,7 +24,7 @@ public class ContourStackPipeline extends OpenCvPipeline {
 
     @Override
     public Mat processFrame(Mat input) {
-        if(camPXWidth == 0) {
+        if (camPXWidth == 0) {
             camPXWidth = input.width();
         }
         Imgproc.cvtColor(input, gray, Imgproc.COLOR_RGB2GRAY);
@@ -56,7 +56,7 @@ public class ContourStackPipeline extends OpenCvPipeline {
 
         //Determine which contour is the cone stack by lowest y value
         ContourEx lowestContour = null;
-        if(filteredContours.size() > 1) {
+        if (filteredContours.size() > 1) {
             for (ContourEx contour : filteredContours) {
                 if (lowestContour == null || contour.bottomY > lowestContour.bottomY) {
                     lowestContour = contour;

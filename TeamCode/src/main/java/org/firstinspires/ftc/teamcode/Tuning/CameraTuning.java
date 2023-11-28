@@ -50,19 +50,18 @@ import java.util.Locale;
  * with the FTC VisionPortal.   It captures a camera frame (image) and stores it on the Robot Controller
  * (Control Hub or RC phone), with each press of the gamepad button X (or Square).
  * Full calibration instructions are here:
- *
- *  https://ftc-docs.firstinspires.org/camera-calibration
- *
+ * <p>
+ * https://ftc-docs.firstinspires.org/camera-calibration
+ * <p>
  * In Android Studio, copy this class into your "teamcode" folder with a new name.
  * Remove or comment out the @Disabled line to add this file to the Driver Station OpMode list.
- *
+ * <p>
  * In OnBot Java, use "Add File" to add this file from the list of Samples.
  */
 
 @TeleOp(name = "Utility: Camera Frame Tuning", group = "Tuning")
 @Disabled
-public class CameraTuning extends LinearOpMode
-{
+public class CameraTuning extends LinearOpMode {
     /*
      * EDIT THESE PARAMETERS AS NEEDED
      */
@@ -77,31 +76,25 @@ public class CameraTuning extends LinearOpMode
     long capReqTime;
 
     @Override
-    public void runOpMode()
-    {
+    public void runOpMode() {
         VisionPortal portal;
 
-        if (USING_WEBCAM)
-        {
+        if (USING_WEBCAM) {
             portal = new VisionPortal.Builder()
                     .setCamera(hardwareMap.get(WebcamName.class, "Webcam"))
                     .setCameraResolution(new Size(RESOLUTION_WIDTH, RESOLUTION_HEIGHT))
                     .build();
-        }
-        else
-        {
+        } else {
             portal = new VisionPortal.Builder()
                     .setCamera(INTERNAL_CAM_DIR)
                     .setCameraResolution(new Size(RESOLUTION_WIDTH, RESOLUTION_HEIGHT))
                     .build();
         }
 
-        while (!isStopRequested())
-        {
+        while (!isStopRequested()) {
             boolean x = gamepad1.x;
 
-            if (x && !lastX)
-            {
+            if (x && !lastX) {
                 portal.saveNextFrameRaw(String.format(Locale.US, "CameraFrameCapture-%06d", frameCount++));
                 capReqTime = System.currentTimeMillis();
             }
@@ -113,13 +106,11 @@ public class CameraTuning extends LinearOpMode
             telemetry.addLine(" > Press X (or Square) to capture a frame");
             telemetry.addData(" > Camera Status", portal.getCameraState());
 
-            if (capReqTime != 0)
-            {
+            if (capReqTime != 0) {
                 telemetry.addLine("\nCaptured Frame!");
             }
 
-            if (capReqTime != 0 && System.currentTimeMillis() - capReqTime > 1000)
-            {
+            if (capReqTime != 0 && System.currentTimeMillis() - capReqTime > 1000) {
                 capReqTime = 0;
             }
 

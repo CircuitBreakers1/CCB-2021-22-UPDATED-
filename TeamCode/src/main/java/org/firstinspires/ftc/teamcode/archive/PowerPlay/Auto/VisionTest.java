@@ -42,7 +42,7 @@ import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
  *
  */
 
-@Autonomous(name="Vision Test", group="Linear Opmode")
+@Autonomous(name = "Vision Test", group = "Linear Opmode")
 @Disabled
 public class VisionTest extends LinearOpMode {
 
@@ -58,7 +58,7 @@ public class VisionTest extends LinearOpMode {
 
         waitForStart();
 
-        while(opModeIsActive()) {
+        while (opModeIsActive()) {
 //            telemetry.addData("Location Guess", apriltagSleevePipeline.getPrediction());
 //            try {
 //                telemetry.addData("Tag ID", apriltagSleevePipeline.getLatestDetections().get(0).id);
@@ -70,7 +70,7 @@ public class VisionTest extends LinearOpMode {
 //            } else {
 //                telemetry.addData("Stack Offset", "Can't See Stack");
 //            }
-            telemetry.addData("Junction Detected",colorJunctionRightPipeline.isJunctionDetected() ? "True" : "False");
+            telemetry.addData("Junction Detected", colorJunctionRightPipeline.isJunctionDetected() ? "True" : "False");
             telemetry.update();
 
             sleep(10);

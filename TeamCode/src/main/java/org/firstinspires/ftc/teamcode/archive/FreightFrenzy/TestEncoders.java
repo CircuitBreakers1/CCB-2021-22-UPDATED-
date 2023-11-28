@@ -41,8 +41,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
  */
 
 
-
-@TeleOp(name="Encoder Test", group="Linear Opmode")
+@TeleOp(name = "Encoder Test", group = "Linear Opmode")
 @Disabled
 public class TestEncoders extends LinearOpMode {
 
@@ -60,14 +59,13 @@ public class TestEncoders extends LinearOpMode {
     @Override
     public void runOpMode() {
 
-        leftFront  = hardwareMap.dcMotor.get("leftFront");
-        rightFront  = hardwareMap.dcMotor.get("rightFront");
-        leftBack  = hardwareMap.dcMotor.get("leftBack");
-        rightBack  = hardwareMap.dcMotor.get("rightBack");
-        
+        leftFront = hardwareMap.dcMotor.get("leftFront");
+        rightFront = hardwareMap.dcMotor.get("rightFront");
+        leftBack = hardwareMap.dcMotor.get("leftBack");
+        rightBack = hardwareMap.dcMotor.get("rightBack");
+
         leftBack.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFront.setDirection(DcMotorSimple.Direction.REVERSE);
-
 
 
         waitForStart();
@@ -112,7 +110,7 @@ public class TestEncoders extends LinearOpMode {
         leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        while((leftBack.isBusy() || leftFront.isBusy() || rightBack.isBusy() || rightFront.isBusy()) && opModeIsActive()) {
+        while ((leftBack.isBusy() || leftFront.isBusy() || rightBack.isBusy() || rightFront.isBusy()) && opModeIsActive()) {
             /**
              * Robot gets some free time.
              * What does it do during it's free time?

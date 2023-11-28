@@ -50,8 +50,6 @@ public class OdometrySubsystem {
         dBack = currBack - prevBack;
 
 
-
-
         prevLeft = currLeft;
         prevRight = currRight;
         prevBack = currBack;
