@@ -71,6 +71,7 @@ public class Auto extends LinearOpMode {
         holOdom.updatePose(autoSwitcher.getStartLocation().startPose);
 
         //TODO: Implement Lights to Show Ready Status
+        //Init Loop
         while(opModeInInit()) {
             //Do Arm Zeroing
             if(!(abs(robot.armSubsystem.getAngle() - 10) < 4) /*Angle not in position*/ && !systemStates[5]) {
@@ -211,6 +212,7 @@ public class Auto extends LinearOpMode {
             telemetry.addLine("Status: " + (allSystemsGo ? "ALL SYSTEMS GO!" : "Not Ready"));
             telemetry.addData("Current Configuration", currentConfiguration + " - " + autoSwitcher.get(currentConfiguration));
             telemetry.addData("Start Location", autoSwitcher.get(START_LOCATION));
+            telemetry.addData("Place Location", autoSwitcher.get(ConfigSetting.PLACE_LOCATION));
             telemetry.addData("Park Location", autoSwitcher.get(ConfigSetting.PARK_LOCATION));
             telemetry.addData("Movement Path", autoSwitcher.get(ConfigSetting.MOVEMENT_PATH));
             telemetry.addData("Prop Guess", propGuess);
@@ -249,21 +251,32 @@ public class Auto extends LinearOpMode {
             }
         };
 
-        //Drop Pixel
+        ColorBlobDetector.PropGuess mirroredGuess = propGuess;
+        if(autoSwitcher.getAlliance() == AutoSwitcher.Alliance.RED) {
+            switch (mirroredGuess) {
+                case LEFT:
+                    mirroredGuess = ColorBlobDetector.PropGuess.RIGHT;
+                    break;
+                case RIGHT:
+                    mirroredGuess = ColorBlobDetector.PropGuess.LEFT;
+                    break;
+            }
+        }
+
         switch (autoSwitcher.getStartLocation()) {
             case RED_BACKDROP:
             case BLUE_BACKDROP:
                 //Backdrop side code
-                switch (propGuess) {
+                switch (mirroredGuess) {
                     case LEFT:
-                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 22, 55, -1.57, 1, null, MIRROR_X_AXIS_AND_START_Y);
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 22, 55, -1.57, 1);
                         break;
                     case RIGHT:
-                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 15, 48, -0.685, 1, null, MIRROR_X_AXIS_AND_START_Y);
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 15, 48, -0.685, 1);
                         break;
                     case MIDDLE:
                     case UNKNOWN:
-                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 16, 44, -1.57, 1, null, MIRROR_X_AXIS_AND_START_Y);
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 16, 44, -1.57, 1);
                         break;
                 }
                 //Finish moving the arm, then stop the arm and drop the pixel.
@@ -281,21 +294,51 @@ public class Auto extends LinearOpMode {
                 //Drop the pixel.
                 gripper.setPosition(1);
                 sleep(300);
-                if((propGuess == ColorBlobDetector.PropGuess.LEFT && autoSwitcher.getStartLocation() == BLUE_BACKDROP) ||
-                        (propGuess == ColorBlobDetector.PropGuess.RIGHT && autoSwitcher.getStartLocation() == RED_BACKDROP)) {
-                    autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 30, 55, -1.57, 1, null);
+                if(mirroredGuess == ColorBlobDetector.PropGuess.LEFT) {
+                    autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 30, 55, -1.57, 1);
                 }
                 //Go to the backboard, then the code merge happens
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 36, -3.14, 1, MovementSubsystem.GRAB_PIXEL_AUTO);
                 break;
             case RED_AUDIENCE:
             case BLUE_AUDIENCE:
+                //Audience side code
+                switch (mirroredGuess) {
+                    case LEFT:
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -31, 55, -2.455, 1);
+                        break;
+                    case RIGHT:
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -39, 48, -1.57, 1);
+                        break;
+                    case MIDDLE:
+                    case UNKNOWN:
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -32, 44, -1.57, 1);
+                        break;
+                }
 
+                //Finish moving the arm, then stop the arm and drop the pixel.
+                while(opModeIsActive()) {
+                    if(armExtend.getCurrentPosition() < -200) {
+                        double error = armTarget - robot.armSubsystem.getAngle();
+                        if(abs(error) > 3) {
+                            armAngle.setPower(0.85 * signum(error));
+                        } else {
+                            break;
+                        }
+                    }
+                }
+                armAngle.setPower(0);
+                //Drop the pixel.
+                gripper.setPosition(1);
+                sleep(300);
+
+                armExtend.setTargetPosition(base);
+
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -36, 60, -1.57, 1);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -36, 36, -1.57, 1);
                 break;
         }
 
-//        PoseSupply poseSupply;
-//
+        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 36, -3.14, 1, MovementSubsystem.GRAB_PIXEL_AUTO);
 
         double armTargetAngle = 15;
         while((abs(robot.armSubsystem.getAngle() - armTargetAngle) > 3) && opModeIsActive()) {
@@ -306,27 +349,41 @@ public class Auto extends LinearOpMode {
         armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         armExtend.setPower(0.9);
 
-        ColorBlobDetector.PropGuess guessMirrored = propGuess;
-
-        switch (guessMirrored) {
-            case RIGHT:
-                guessMirrored = ColorBlobDetector.PropGuess.LEFT;
-                break;
-            case LEFT:
-                guessMirrored = ColorBlobDetector.PropGuess.RIGHT;
-                break;
+        AutoSwitcher.PlaceLocation placeMirrored = autoSwitcher.getPlaceLocation();
+        if(autoSwitcher.getAlliance() == AutoSwitcher.Alliance.RED) {
+            switch (placeMirrored) {
+                case LEFT:
+                    placeMirrored = AutoSwitcher.PlaceLocation.RIGHT;
+                    break;
+                case RIGHT:
+                    placeMirrored = AutoSwitcher.PlaceLocation.LEFT;
+                    break;
+            }
         }
 
-        switch (guessMirrored) {
+        final double LEFT_TO_RIGHT;
+        switch (placeMirrored) {
             case LEFT:
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50,43,-3.14,0.5);
+                LEFT_TO_RIGHT = 0;
                 break;
             case RIGHT:
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50,29.5,-3.14,0.5);
+                LEFT_TO_RIGHT = 2;
+                break;
+            default:
+                throw new IllegalStateException("Unexpected value: " + autoSwitcher.getPlaceLocation());
+        }
+
+        //Drop Pixel on Backdrop. Default points to LEFT edge of the drop zone.
+        switch (mirroredGuess) {
+            case LEFT:
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50,43 - LEFT_TO_RIGHT,-3.14,0.5);
+                break;
+            case RIGHT:
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50,29.5 - LEFT_TO_RIGHT,-3.14,0.5);
                 break;
             case MIDDLE:
             default:
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50,39,-3.14,0.5);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50,39,-3.14 - LEFT_TO_RIGHT,0.5);
         }
 
 //        switch (autoSwitcher.getAlliance()) {

@@ -10,7 +10,8 @@ public class AutoSwitcher {
     public enum ConfigSetting {
         START_LOCATION,
         PARK_LOCATION,
-        MOVEMENT_PATH;
+        MOVEMENT_PATH,
+        PLACE_LOCATION;
 
         public static ConfigSetting cycleUp(ConfigSetting setting) {
             switch (setting) {
@@ -19,6 +20,8 @@ public class AutoSwitcher {
                 case PARK_LOCATION:
                     return MOVEMENT_PATH;
                 case MOVEMENT_PATH:
+                    return PLACE_LOCATION;
+                case PLACE_LOCATION:
                     return START_LOCATION;
             }
             return START_LOCATION;
@@ -27,6 +30,8 @@ public class AutoSwitcher {
         public static ConfigSetting cycleDown(ConfigSetting setting) {
             switch (setting) {
                 case START_LOCATION:
+                    return PLACE_LOCATION;
+                case PLACE_LOCATION:
                     return MOVEMENT_PATH;
                 case PARK_LOCATION:
                     return START_LOCATION;
@@ -38,10 +43,10 @@ public class AutoSwitcher {
     }
     public enum StartLocation {
         //Assume robot is 17" long and 17" wide. Start centered on tile, touching wall
-        RED_BACKDROP(12, 63.5, -PI/2),
+        RED_BACKDROP(12, -63.5, -PI/2),
         RED_AUDIENCE(-36, -63.5, -PI/2),
         BLUE_BACKDROP(12, 63.5, PI/2),
-        BLUE_AUDIENCE(-36, -63.5, PI/2);
+        BLUE_AUDIENCE(-36, 63.5, PI/2);
 
         public final Pose2d startPose;
 
@@ -63,6 +68,10 @@ public class AutoSwitcher {
         OUTSIDE_TRUSS,
         STAGE_DOOR
     }
+
+    public enum PlaceLocation {
+        LEFT, RIGHT
+    }
     public enum SwitchType {
         MIRROR_X_AXIS, MIRROR_X_AXIS_AND_START_Y
     }
@@ -71,11 +80,13 @@ public class AutoSwitcher {
     private ParkLocation parkLocation;
     private MovementPath movementPath;
     private Alliance alliance;
+    private PlaceLocation placeLocation;
     private final MovementSubsystem movementSubsystem;
 
     public AutoSwitcher(MovementSubsystem movementSubsystem) {
         startLocation = StartLocation.BLUE_BACKDROP;
         alliance = Alliance.BLUE;
+        placeLocation = PlaceLocation.LEFT;
         parkLocation = ParkLocation.OUTSIDE;
         movementPath = MovementPath.STAGE_DOOR;
         this.movementSubsystem = movementSubsystem;
@@ -107,6 +118,10 @@ public class AutoSwitcher {
 
     public MovementPath getMovementPath() {
         return movementPath;
+    }
+
+    public PlaceLocation getPlaceLocation() {
+        return placeLocation;
     }
 
     public void toggleUp(ConfigSetting setting) {
@@ -155,6 +170,16 @@ public class AutoSwitcher {
                         break;
                 }
                 break;
+            case PLACE_LOCATION:
+                switch (placeLocation) {
+                    case LEFT:
+                        placeLocation = PlaceLocation.RIGHT;
+                        break;
+                    case RIGHT:
+                        placeLocation = PlaceLocation.LEFT;
+                        break;
+                }
+                break;
         }
     }
 
@@ -197,6 +222,16 @@ public class AutoSwitcher {
                         break;
                     case STAGE_DOOR:
                         movementPath = MovementPath.OUTSIDE_TRUSS;
+                        break;
+                }
+                break;
+            case PLACE_LOCATION:
+                switch (placeLocation) {
+                    case LEFT:
+                        placeLocation = PlaceLocation.RIGHT;
+                        break;
+                    case RIGHT:
+                        placeLocation = PlaceLocation.LEFT;
                         break;
                 }
                 break;

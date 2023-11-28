@@ -87,8 +87,18 @@ public class CameraSubsystem {
         visionPortal.stopStreaming();
     }
 
+    /**
+     * Restarts the camera stream. <b>This method does not return until the camera is active and streaming</b>
+     */
     public void restartCamera() {
         visionPortal.resumeStreaming();
+        while(visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public Pose2d initFindPosition() {
