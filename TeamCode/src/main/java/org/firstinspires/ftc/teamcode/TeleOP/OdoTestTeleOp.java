@@ -34,11 +34,15 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.holOdom;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.endThetaPI;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.endX;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.endY;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.startThetaPI;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.startX;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.startY;
 
 import static java.lang.Math.PI;
 import static java.lang.Thread.sleep;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -62,6 +66,7 @@ public class OdoTestTeleOp extends LinearOpMode {
         robot.init(hardwareMap, false, this);
 
         telemetry.addData("Status", "Initialized");
+        holOdom.updatePose(new Pose2d(startX, startY, new Rotation2d(startThetaPI * PI)));
         Pose2d pose = holOdom.getPose();
         telemetry.addData("X", pose.getX());
         telemetry.addData("Y", pose.getY());
@@ -90,7 +95,7 @@ public class OdoTestTeleOp extends LinearOpMode {
 //        robot.movementSubsystem.moveToPose(0,16,PI,1);
 //        robot.movementSubsystem.moveToPose(0,0, PI * 0.25, 1);
 
-        robot.movementSubsystem.moveToPose(endX, endY, endThetaPI * PI, 1);
+        robot.movementSubsystem.moveToPose(endX, endY, endThetaPI * PI, 0.8);
     }
 
 //    @Override

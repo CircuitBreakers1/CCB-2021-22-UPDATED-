@@ -7,7 +7,6 @@ import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.arcrobotics.ftclib.geometry.Rotation2d;
 
 public class AutoSwitcher {
-
     public enum ConfigSetting {
         START_LOCATION,
         PARK_LOCATION,
@@ -40,9 +39,9 @@ public class AutoSwitcher {
     public enum StartLocation {
         //Assume robot is 17" long and 17" wide. Start centered on tile, touching wall
         RED_BACKDROP(12, 63.5, -PI/2),
-        RED_AUDIENCE(-36, 63.5, -PI/2),
+        RED_AUDIENCE(-36, -63.5, -PI/2),
         BLUE_BACKDROP(12, 63.5, PI/2),
-        BLUE_AUDIENCE(-36, 63.5, PI/2);
+        BLUE_AUDIENCE(-36, -63.5, PI/2);
 
         public final Pose2d startPose;
 
@@ -55,22 +54,28 @@ public class AutoSwitcher {
         INSIDE, OUTSIDE
     }
 
+    public enum Alliance {
+        RED, BLUE
+    }
+
     public enum MovementPath {
         INSIDE_TRUSS,
         OUTSIDE_TRUSS,
         STAGE_DOOR
     }
-    public enum switchType {
-        MIRROR_X_AXIS,
+    public enum SwitchType {
+        MIRROR_X_AXIS, MIRROR_X_AXIS_AND_START_Y
     }
 
     private StartLocation startLocation;
     private ParkLocation parkLocation;
     private MovementPath movementPath;
+    private Alliance alliance;
     private final MovementSubsystem movementSubsystem;
 
     public AutoSwitcher(MovementSubsystem movementSubsystem) {
         startLocation = StartLocation.BLUE_BACKDROP;
+        alliance = Alliance.BLUE;
         parkLocation = ParkLocation.OUTSIDE;
         movementPath = MovementPath.STAGE_DOOR;
         this.movementSubsystem = movementSubsystem;
@@ -92,6 +97,10 @@ public class AutoSwitcher {
         return startLocation;
     }
 
+    public Alliance getAlliance() {
+        return alliance;
+    }
+
     public ParkLocation getParkLocation() {
         return parkLocation;
     }
@@ -106,15 +115,19 @@ public class AutoSwitcher {
                 switch (startLocation) {
                     case RED_BACKDROP:
                         startLocation = StartLocation.RED_AUDIENCE;
+                        alliance = Alliance.RED;
                         break;
                     case RED_AUDIENCE:
                         startLocation = StartLocation.BLUE_BACKDROP;
+                        alliance = Alliance.BLUE;
                         break;
                     case BLUE_BACKDROP:
                         startLocation = StartLocation.BLUE_AUDIENCE;
+                        alliance = Alliance.BLUE;
                         break;
                     case BLUE_AUDIENCE:
                         startLocation = StartLocation.RED_BACKDROP;
+                        alliance = Alliance.RED;
                         break;
                 }
                 holOdom.updatePose(startLocation.startPose);
@@ -190,12 +203,32 @@ public class AutoSwitcher {
         }
     }
 
-    public void moveSwitch(PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, Runnable loop) {
+    public void moveSwitch(PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, Runnable loop, SwitchType switchType) {
         //Blue side is default, so no need to change anything for it.
-        if(startLocation == StartLocation.RED_BACKDROP || startLocation == StartLocation.RED_AUDIENCE) {
-            x = -x;
-            theta = -theta;
+        if(alliance == Alliance.RED) {
+            switch (switchType){
+                case MIRROR_X_AXIS:
+                    x = -x;
+                    theta = -theta;
+                    break;
+                case MIRROR_X_AXIS_AND_START_Y:
+                    x = -x;
+                    theta = -theta;
+                    double yDif = y - startLocation.startPose.getY();
+                    double thetaDif = theta - startLocation.startPose.getHeading();
+                    y = y - (2 * yDif);
+                    theta = theta - (2 * thetaDif);
+                    break;
+            }
         }
         movementSubsystem.moveTo(poseSupply, x, y, theta, maxSpeed, loop);
+    }
+
+    public void moveSwitch(PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, Runnable loop) {
+        moveSwitch(poseSupply, x, y, theta, maxSpeed, loop, SwitchType.MIRROR_X_AXIS);
+    }
+
+    public void moveSwitch(PoseSupply poseSupply, double x, double y, double theta, double maxSpeed) {
+        moveSwitch(poseSupply, x, y, theta, maxSpeed, null, SwitchType.MIRROR_X_AXIS);
     }
 }

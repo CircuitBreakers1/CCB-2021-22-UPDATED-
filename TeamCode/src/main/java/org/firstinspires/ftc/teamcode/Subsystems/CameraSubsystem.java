@@ -67,18 +67,29 @@ public class CameraSubsystem {
 
     public void setColorBlobDetector(ColorBlobDetector.PropColor color) {
         currentColor = color;
+
+        if(color == null) {
+            visionPortal.setProcessorEnabled(redBlobDetector, false);
+            visionPortal.setProcessorEnabled(blueBlobDetector, false);
+            return;
+        }
+
         if(color == BLUE) {
             visionPortal.setProcessorEnabled(redBlobDetector, false);
             visionPortal.setProcessorEnabled(blueBlobDetector, true);
         } else if (color == RED) {
             visionPortal.setProcessorEnabled(redBlobDetector, true);
             visionPortal.setProcessorEnabled(blueBlobDetector, false);
-        } else {
-            visionPortal.setProcessorEnabled(redBlobDetector, false);
-            visionPortal.setProcessorEnabled(blueBlobDetector, false);
         }
     }
 
+    public void pauseCamera() {
+        visionPortal.stopStreaming();
+    }
+
+    public void restartCamera() {
+        visionPortal.resumeStreaming();
+    }
 
     public Pose2d initFindPosition() {
         return getPoseFromAprilTag();
@@ -124,7 +135,7 @@ public class CameraSubsystem {
             if(detection.metadata != null) {
                 if(preferred.substitutions.contains(detection.id)) {
                     Pose2d temp = translateToCam(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll);
-                    return new Pose2d(temp.minus(preferred.globalPose).getTranslation(), temp.getRotation());
+                    return new Pose2d(PoseSupply.values()[detection.id].globalPose.getX() - preferred.globalPose.getX() + temp.getX(),temp.getY(), temp.getRotation());
                 }
             }
         }
@@ -185,4 +196,5 @@ public class CameraSubsystem {
                 return ColorBlobDetector.PropGuess.UNKNOWN;
         }
     }
+
 }

@@ -182,7 +182,7 @@ public class Robot2023 {
         if(opMode != null) movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem, armSubsystem, imu);
         colorDetectionSubsystem = new ColorDetectionSubsystem(leftBay, rightBay);
 
-        if(visionInit) {
+        if(initVision) {
             cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));
             this.visionInit = true;
         }

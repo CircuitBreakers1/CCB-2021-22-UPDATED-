@@ -40,7 +40,7 @@ public class MovementSubsystem {
 
     private final IMU imu;
 
-    private static final double precision = 0.25;
+    private static final double precision = 0.4;
 
     private final double V1 = 0.1, V2 = 0.999;
     /**
@@ -80,7 +80,11 @@ public class MovementSubsystem {
      * @param loop Runnable to be ran in the loop
      */
     public void moveTo(@NonNull PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, Runnable loop) {
-        theta = -theta;
+        theta = theta;
+
+        if(loop == null) {
+            loop = () -> {};
+        }
 
         //Ku = 0.39, Tu = 0.719
         //Z-N Values: Kp = 0.078, Ki = 0.217, Kd = 0.0185
@@ -101,7 +105,6 @@ public class MovementSubsystem {
         double xError = 0;
         double yError = 0;
         double heading = 0;
-
 
         if (poseSupply == ODOMETRY) {
             pose = holOdom.getPose();
@@ -133,7 +136,7 @@ public class MovementSubsystem {
 
         double maxTime = 0;
 
-        while(opMode.opModeIsActive() && !opMode.gamepad1.a) {
+        while(opMode.opModeIsActive() && !opMode.gamepad1.a && poseSupply != ODOMETRY) {
             telemetry.addData("X Distance", xError);
             telemetry.addData("Y Distance", yError);
             telemetry.addData("X PID Output", xPID);
@@ -180,6 +183,9 @@ public class MovementSubsystem {
 
             System.out.println("Theta Velocity: " + thetaVelocity + " Time: " + opMode.getRuntime());
 
+            telemetry.addData("Arm State", armState);
+            telemetry.addData("Is Doing Arm Thing", loop == GRAB_PIXEL_AUTO);
+            telemetry.addData("Extend Zeroed", extendZeroed);
             telemetry.addData("X Distance", xError);
             telemetry.addData("Y Distance", yError);
             telemetry.addData("X PID Output", xPID);
@@ -201,10 +207,10 @@ public class MovementSubsystem {
             double x_rotated = xVelocity * Math.cos(heading) - yVelocity * Math.sin(heading);
             double y_rotated = xVelocity * Math.sin(heading) + yVelocity * Math.cos(heading);
 
-            double lfSpeed = x_rotated - y_rotated + thetaVelocity;
-            double lbSpeed = x_rotated + y_rotated + thetaVelocity;
-            double rfSpeed = x_rotated + y_rotated - thetaVelocity;
-            double rbSpeed = x_rotated - y_rotated - thetaVelocity;
+            double lfSpeed = x_rotated - y_rotated - thetaVelocity;
+            double lbSpeed = x_rotated + y_rotated - thetaVelocity;
+            double rfSpeed = x_rotated + y_rotated + thetaVelocity;
+            double rbSpeed = x_rotated - y_rotated + thetaVelocity;
 
             double lfTemp = abs(lfSpeed);
             double lbTemp = abs(lbSpeed);
@@ -220,7 +226,10 @@ public class MovementSubsystem {
                 rbSpeed /= maxMotorSpeed;
             }
 
-            holoDrivetrain.drive(lfSpeed, rfSpeed, lbSpeed, rbSpeed);
+            //holoDrivetrain.drive(lfSpeed, rfSpeed, lbSpeed, rbSpeed);
+            //Flipped for gaslighting purposes
+            //holoDrivetrain.drive(-rbSpeed, -lbSpeed, -rfSpeed, -lfSpeed);
+            holoDrivetrain.drive(-rbSpeed, -lbSpeed, -rfSpeed, -lfSpeed);
 
             if(opMode.gamepad1.b) {
                 break;
@@ -245,13 +254,14 @@ public class MovementSubsystem {
                         }
 
                         if(!extendZeroed) {
+                            armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                            armExtend.setPower(0.65);
                             if(!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */ ) {
                                 armExtend.setPower(0);
                                 armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                                 armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                                 extendZeroed = true;
                             }
-                            armExtend.setPower(0.25);
                         } else {
                             armExtend.setTargetPosition(base);
                             armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -322,7 +332,7 @@ public class MovementSubsystem {
                                 armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                                 extendZeroed = true;
                             }
-                            armExtend.setPower(0.25);
+                            armExtend.setPower(0.65);
                         } else {
                             armExtend.setTargetPosition(base);
                             armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -354,6 +364,7 @@ public class MovementSubsystem {
                             armAngle.setPower(0);
                             armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                             armExtend.setTargetPosition(armExtend.getCurrentPosition());
+                            armExtend.setPower(0);
                         }
                         break;
                 }
@@ -422,7 +433,7 @@ public class MovementSubsystem {
             telemetry.update();
         }
 
-        while((abs(xError) > precision || abs(yError) > precision || turnController.getError(theta, heading) > 0.05) && opMode.opModeIsActive()) {
+        while(/*(abs(xError) > precision || abs(yError) > precision || turnController.getError(theta, heading) > 0.05) && */ opMode.opModeIsActive()) {
             holOdom.updatePose();
             pose = holOdom.getPose();
             xError = x - pose.getX();
@@ -493,7 +504,8 @@ public class MovementSubsystem {
                 rbSpeed /= maxMotorSpeed;
             }
 
-            holoDrivetrain.drive(-lfSpeed, -rfSpeed, -lbSpeed, -rbSpeed);
+            //holoDrivetrain.drive(-lfSpeed, -rfSpeed, -lbSpeed, -rbSpeed);
+            holoDrivetrain.drive(-rbSpeed, -lbSpeed, -rfSpeed, -lfSpeed);
 
             if(opMode.gamepad1.b) {
                 break;

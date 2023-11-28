@@ -50,12 +50,14 @@ import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMP;
 
 import static java.lang.Math.abs;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.Subsystems.ArmSubsystem.ArmState;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
@@ -76,7 +78,7 @@ public class LastJohnTeleOp extends OpMode {
 
     boolean extendZeroed = false;
 
-
+    Telemetry dashTele = FtcDashboard.getInstance().getTelemetry();
 
     PIDController armPID = new PIDController(ARMP, ARMI, ARMD);
     ArmState armState = ArmState.Ready;
@@ -143,6 +145,9 @@ public class LastJohnTeleOp extends OpMode {
 
     @Override
     public void loop() {
+        dashTele.addData("Arm Angle", robot.armSubsystem.getAngle());
+        dashTele.update();
+
         if(gamepad1.start) {
             if(!driveDown) {
                 driveField = !driveField;
@@ -321,12 +326,16 @@ public class LastJohnTeleOp extends OpMode {
                 gripper.setPosition(1);
                 robot.armSubsystem.setWristAngle(0);
 
+                telemetry.addData("Arm Angle", robot.armSubsystem.getAngle());
+                telemetry.addData("Arm Extend", armExtend.getCurrentPosition());
+                telemetry.addData("Extend Zeroed", extendZeroed);
+
                 if(abs(robot.armSubsystem.getAngle() - 10) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
                     armState = ArmState.Ready;
                 }
 
                 if(!(abs(robot.armSubsystem.getAngle() - 10) < 1 /*Angle not in position*/)) {
-                    armAngle.setPower(-0.85 * Math.signum(robot.armSubsystem.getAngle() - 10));
+                    armAngle.setPower(-0.5 * Math.signum(robot.armSubsystem.getAngle() - 10));
                     telemetry.addData("Moving Arm", "True");
                 } else {
                     armAngle.setPower(0);
@@ -359,6 +368,8 @@ public class LastJohnTeleOp extends OpMode {
 
         holOdom.updatePose();
         Pose2d pose = holOdom.getPose();
+
+
 
         telemetry.addData("Bay State", formatAsString(robot.colorDetectionSubsystem.getBayColors()));
         telemetry.addData("State", armState);

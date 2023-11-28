@@ -34,7 +34,7 @@ public class ColorDetectionSubsystem {
         final Scalar upper;
 
         BayColor(Scalar lower, Scalar upper) {
-            //First one is hue in degrees, then % saturation, then % value, so we scale it
+            //IDK what the scales are so I guessed lol
             this.upper = new Scalar(upper.val[0], upper.val[1], upper.val[2]);
             this.lower = new Scalar(lower.val[0], lower.val[1], lower.val[2]);
         }
