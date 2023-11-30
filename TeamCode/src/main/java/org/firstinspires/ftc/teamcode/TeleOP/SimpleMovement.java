@@ -79,7 +79,7 @@ public class SimpleMovement extends OpMode {
 
     @Override
     public void loop() {
-//    armExtend.setPower(gamepad2.left_stick_y);
+        armExtend.setPower(gamepad2.right_stick_y);
 
         armAngle.setPower(-gamepad2.left_stick_y);
 
@@ -125,6 +125,7 @@ public class SimpleMovement extends OpMode {
 
 
         telemetry.addData("Status", "Run Time: " + runtime.toString());
+        telemetry.addData("Arm Angle", robot.armSubsystem.getAngle());
         telemetry.addData("LF", leftFront.getCurrentPosition());
         telemetry.addData("RF", rightFront.getCurrentPosition());
         telemetry.addData("LB", leftBack.getCurrentPosition());

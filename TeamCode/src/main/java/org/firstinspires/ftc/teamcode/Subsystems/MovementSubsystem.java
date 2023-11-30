@@ -83,7 +83,7 @@ public class MovementSubsystem {
     public void moveTo(@NonNull PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, Runnable loop) {
         theta = theta;
 
-        if (loop == null) {
+        if (loop == null || loop == GRAB_PIXEL_AUTO) {
             loop = () -> {};
         }
 

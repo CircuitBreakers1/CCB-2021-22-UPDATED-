@@ -86,7 +86,7 @@ public class AutoSwitcher {
     private final MovementSubsystem movementSubsystem;
 
     public AutoSwitcher(MovementSubsystem movementSubsystem) {
-        startLocation = StartLocation.BLUE_BACKDROP;
+        startLocation = StartLocation.BLUE_AUDIENCE;
         alliance = Alliance.BLUE;
         placeLocation = PlaceLocation.LEFT;
         parkLocation = ParkLocation.OUTSIDE;
@@ -102,6 +102,8 @@ public class AutoSwitcher {
                 return parkLocation.toString();
             case MOVEMENT_PATH:
                 return movementPath.toString();
+            case PLACE_LOCATION:
+                return placeLocation.toString();
         }
         return "";
     }
