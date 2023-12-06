@@ -59,7 +59,7 @@ public class Auto extends LinearOpMode {
         ArmSubsystem.ArmState armState = ArmSubsystem.ArmState.Ready;
 
         //Represents whether robot states are ready:
-        //Indexes: 0 - Arm Pickup Maneuver Happened, 1 - Right Bay Shows YELLOW, 2 - Vision Target Acquired, 3 - Odo not in Timbucktoo, 4 - Arm Length Zeroed, 5 - Arm Angle Zeroed
+        //Indexes: 0 - Arm Pickup Maneuver Happened, 1 - Right Bay Shows YELLOW, 2 - Vision Target Acquired, 3 - Odo not in Timbucktwo, 4 - Arm Length Zeroed, 5 - Arm Angle Zeroed
         boolean[] systemStates = {false, false, false, false, false, false};
         boolean allSystemsGo = false;
 

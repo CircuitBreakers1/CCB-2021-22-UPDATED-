@@ -20,7 +20,8 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
     public NeoDriverI2C(I2cDeviceSynch i2cDeviceSynch, boolean deviceClientIsOwned) {
         super(i2cDeviceSynch, deviceClientIsOwned);
 
-        this.deviceClient.setI2cAddress(I2cAddr.create7bit(0x30));
+        this.setOptimalReadWindow();
+        this.deviceClient.setI2cAddress(I2cAddr.create7bit(0x60));
 
         super.registerArmingStateCallback(false);
         this.deviceClient.engage();
@@ -50,17 +51,43 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
     }
 
     private enum Register {
+        FIRST(0),
         PIN(0x01),
         SPEED(0x02),
         BUF_LENGTH(0x03),
         BUF(0x04),
-        SHOW(0x05);
+        SHOW(0x05),
+        LAST(SHOW.bVal);
 
-        public int bVal;
+        public byte bVal;
 
         Register(int bVal) {
-            this.bVal = bVal;
+            this.bVal = (byte) bVal;
         }
+    }
+
+    protected void setOptimalReadWindow() {
+        I2cDeviceSynch.ReadWindow readWindow = new I2cDeviceSynch.ReadWindow(
+                Register.FIRST.bVal,
+                Register.LAST.bVal - Register.FIRST.bVal + 1,
+                I2cDeviceSynch.ReadMode.REPEAT);
+        this.deviceClient.setReadWindow(readWindow);
+    }
+
+    protected void writeBytes(Register reg, byte[] val) {
+
+        byte[] output = new byte[val.length + 2];
+
+        output[0] = 0x0E;
+        output[1] = reg.bVal;
+
+        System.arraycopy(val, 0, output, 2, val.length);
+
+        this.deviceClient.write(output);
+    }
+
+    protected void writeByteLE(Register reg, byte val) {
+        writeBytes(reg, TypeConversion.shortToByteArray(val, ByteOrder.LITTLE_ENDIAN));
     }
 
     protected void writeShort(Register reg, short val, ByteOrder byteOrder) {
@@ -73,15 +100,19 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
 
     public void init() {
         //Set the "pin" used by the seesaw firmware
-        writeShort(Register.PIN, (short) 0xF);
+        writeBytes(Register.PIN, new byte[] {0xF});
+        //writeShort(Register.PIN, (short) 0xF);
         //Set the I2C Speed
-        writeShort(Register.SPEED, (short) 0x1, ByteOrder.LITTLE_ENDIAN);
+        writeBytes(Register.SPEED, new byte[] {0x00});
+        //writeShort(Register.SPEED, (short) 0x1, ByteOrder.LITTLE_ENDIAN);
         //Set the buffer length
         if(isRGBW) {
-            writeShort(Register.BUF_LENGTH, (short) 0x4);
+            writeByteLE(Register.BUF_LENGTH, (byte) 0x04);
         } else {
-            writeShort(Register.BUF_LENGTH, (short) 0x3);
+            writeByteLE(Register.BUF_LENGTH, (byte) 0x03);
         }
+
+        writeBytes(Register.SHOW, new byte[] {0x0});
     }
 
     /**
@@ -111,8 +142,8 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
                 data[4 + (j * 3)] = (byte) color.b;
             }
 
-            this.deviceClient.write(Register.BUF.bVal, data);
-            this.deviceClient.write(Register.SHOW.bVal, new byte[] {0x1});
+            writeBytes(Register.BUF, data);
+            writeBytes(Register.SHOW, new byte[] {0x1});
         }
     }
 
@@ -121,14 +152,26 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
     }
 
     public static class Color {
-        public int r;
-        public int g;
-        public int b;
+        public byte r;
+        public byte g;
+        public byte b;
 
-        public Color(int r, int g, int b) {
-            this.r = r;
-            this.g = g;
-            this.b = b;
+        //Write order is GRB
+        public Color(short r, short g, short b) {
+            this.r = (byte) r;
+            this.g = (byte) g;
+            this.b = (byte) b;
         }
+    }
+
+    //Set the color of the first pixel to red.
+    public int test() {
+        short startAddr = 0;
+        byte[] startAddrBytes = TypeConversion.shortToByteArray(startAddr);
+        byte[] data = new byte[] {startAddrBytes[0], startAddrBytes[1], 0x00, (byte) 0xFF, 0x00};
+        writeBytes(Register.BUF, data);
+        writeBytes(Register.SHOW, new byte[] {0x1});
+        writeBytes(Register.SHOW, new byte[] {0x0});
+        return data.length;
     }
 }
