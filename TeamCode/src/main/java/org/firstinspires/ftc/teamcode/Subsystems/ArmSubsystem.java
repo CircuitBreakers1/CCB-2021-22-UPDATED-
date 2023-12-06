@@ -20,7 +20,7 @@ public class ArmSubsystem {
     //Pickup Angle: 2 Length: -64
     //Free: 23
 
-    private static final double OFFSET = 420.76;
+    private static final double OFFSET = 420.76 + 60;
     private static final double WRIST_MIN = 17.0, WRIST_MAX = 90.0;
 
     public ArmSubsystem(Servo wrist, Servo gripper, DcMotor armAngle, AnalogInput armEncoder, DcMotor armLength) {
@@ -35,22 +35,22 @@ public class ArmSubsystem {
         double v = armEncoder.getVoltage();
         final double a = 400 * pow(v, 2) - 440 * v + 363;
         double t = -(135 * (sqrt(a) + 20 * sqrt(3) * v - 33 * sqrt(3)))
-                    /(11 * sqrt(3) - sqrt(a));
+                / (11 * sqrt(3) - sqrt(a));
         return t - OFFSET;
     }
 
     public void setWristAngle(double angle) {
-        if(angle < WRIST_MIN) {
+        if (angle < WRIST_MIN) {
             angle = WRIST_MIN;
             RobotLog.ee("ArmSubsystem", "Wrist angle too low");
-        } else if(angle > WRIST_MAX) {
+        } else if (angle > WRIST_MAX) {
             RobotLog.ee("ArmSubsystem", "Wrist angle too high");
             angle = WRIST_MAX;
         }
 
         double position = (angle - WRIST_MIN) / (WRIST_MAX - WRIST_MIN);
 
-        if(position < 0.1) position = 0.1;
+        if (position < 0.1) position = 0.1;
 
         wrist.setPosition(position);
     }

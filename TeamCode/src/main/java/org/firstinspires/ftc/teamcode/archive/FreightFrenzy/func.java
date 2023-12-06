@@ -15,6 +15,7 @@ public class func /*extends LinearOpMode*/ {
         robot.rightLEDGreen.setState(green);
         robot.rightLEDRed.setState(red);
     }
+
     public static void tankOn(double left, double right) {
         robot.leftBack.setPower(left);
         robot.leftFront.setPower(left);

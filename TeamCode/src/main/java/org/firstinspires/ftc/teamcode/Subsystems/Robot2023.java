@@ -86,11 +86,11 @@ public class Robot2023 {
     public ArmSubsystem armSubsystem;
     public CameraSubsystem cameraSubsystem;
     public ColorDetectionSubsystem colorDetectionSubsystem;
+
     /**
-     *
      * @param s The minimum time between recalibrating position based on AprilTag.
-     *          Once the time has elapsed, the robot will reopen the camera stream, and attempt
-     *          to recalibrate its position. Once it has done so, it will reclose the camera stream.
+     * Once the time has elapsed, the robot will reopen the camera stream, and attempt
+     * to recalibrate its position. Once it has done so, it will reclose the camera stream.
      */
     public Robot2023(double s) {
         recalibrateTime = s;
@@ -136,7 +136,7 @@ public class Robot2023 {
         leftBay.setGain(colorGain);
 
         RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD;
-        RevHubOrientationOnRobot.UsbFacingDirection  usbDirection  = RevHubOrientationOnRobot.UsbFacingDirection.UP;
+        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
         imu.initialize(new IMU.Parameters(orientationOnRobot));
 
@@ -175,17 +175,20 @@ public class Robot2023 {
 
         holOdom.updatePose();
         //The front of the robot from the drivers control perspective is the lift side, but for odometry it is the intake side
-        holOdom.updatePose(new Pose2d(0,0, new Rotation2d(3.14)));
+        holOdom.updatePose(new Pose2d(0, 0, new Rotation2d(3.14)));
 
         holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
         armSubsystem = new ArmSubsystem(wrist, gripper, armAngle, armAngleEncoder, armExtend);
-        if(opMode != null) movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem, armSubsystem, imu);
+        if (opMode != null)
+            movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem, armSubsystem, imu);
         colorDetectionSubsystem = new ColorDetectionSubsystem(leftBay, rightBay);
 
-        if(initVision) {
+        if (initVision) {
             cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));
             this.visionInit = true;
         }
+        if (opMode != null)
+            movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem, armSubsystem, imu);
     }
 
     public boolean isVisionInit() {

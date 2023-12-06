@@ -117,6 +117,7 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
 
     /**
      * Sets the color of multiple pixels
+     *
      * @param startPixel The pixel to begin writing (Inclusive)
      * @param endPixel The pixel to stop writing (Inclusive)
      * @param color The color to use

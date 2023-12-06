@@ -67,7 +67,7 @@ public class MainAuto extends AutoSwitcher {
 
 
         while (this.opMode.opModeInInit()) {
-            if(!armTouch.getState() && armLift.getCurrentPosition() != 0) {
+            if (!armTouch.getState() && armLift.getCurrentPosition() != 0) {
                 armLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
@@ -98,7 +98,7 @@ public class MainAuto extends AutoSwitcher {
         pickupLeft.setPower(1);
         pickupRight.setPower(-1);
 
-        while(coneTouch.getState() && this.opMode.getRuntime() - startTime < 2) {
+        while (coneTouch.getState() && this.opMode.getRuntime() - startTime < 2) {
         }
 
         pickupLeft.setPower(0.1);
@@ -107,9 +107,9 @@ public class MainAuto extends AutoSwitcher {
         LiftSubsystem.setTarget(Medium);
 
         //Move to the medium junction and turn
-        moveToMirrored(36,47, 0.8, false);
+        moveToMirrored(36, 47, 0.8, false);
 
-        turnMirrored(0,0.8);
+        turnMirrored(0, 0.8);
 
         //Move into the junction, drop and move out
         //Dropping
@@ -138,19 +138,19 @@ public class MainAuto extends AutoSwitcher {
         double[] parkFromJunction = {2.25, 1.75, 1}; //Time to park from junction
 
         //Begin the cycle loop
-        while(this.opMode.opModeIsActive()) {
+        while (this.opMode.opModeIsActive()) {
             //Set arm height and go to cone stack
             LiftSubsystem.setTarget(ConeStack);
             //moveTo(16, 60, 0.5);
 
             //Check if there is time to pickup cone, otherwise park
-            if(getRemainingTime(startTime, this.opMode.getRuntime()) < (pickupTime + parkFromLine[(int) mirror(park, 1)])) {
+            if (getRemainingTime(startTime, this.opMode.getRuntime()) < (pickupTime + parkFromLine[(int) mirror(park, 1)])) {
                 break;
             }
 
             //Pickup the cone
             moveToMirrored(24, 60, 0.8, false);
-            if(conesInStack == 5) {
+            if (conesInStack == 5) {
                 moveToMirrored(10.5, 59.25, 0.4);
             } else {
                 moveToMirrored(9.25, 60.25, 0.4);
@@ -159,7 +159,7 @@ public class MainAuto extends AutoSwitcher {
             pickupRight.setPower(-1);
             LiftSubsystem.setPosition(coneLevel[5 - conesInStack]);
 
-            while(coneTouch.getState() && !LiftSubsystem.isAtTarget()) {
+            while (coneTouch.getState() && !LiftSubsystem.isAtTarget()) {
                 LiftSubsystem.updatePositional();
             }
 
@@ -170,7 +170,7 @@ public class MainAuto extends AutoSwitcher {
 
             LiftSubsystem.setTarget(High);
 
-            while(this.opMode.opModeIsActive() && armLift.getCurrentPosition() < 700) {
+            while (this.opMode.opModeIsActive() && armLift.getCurrentPosition() < 700) {
 
             }
 //
@@ -183,7 +183,7 @@ public class MainAuto extends AutoSwitcher {
 //            LiftSubsystem.setTarget(Min);
 
             //Check if there is time to drop off cone, otherwise park
-            if(getRemainingTime(startTime, this.opMode.getRuntime()) < dropTime + movementTime + parkFromJunction[(int) mirror(park, 1)]) {
+            if (getRemainingTime(startTime, this.opMode.getRuntime()) < dropTime + movementTime + parkFromJunction[(int) mirror(park, 1)]) {
                 break;
             }
 
@@ -202,12 +202,12 @@ public class MainAuto extends AutoSwitcher {
             moveToMirrored(48, 60, 0.7, false);
 
             //Check if there is still time to cycle, otherwise park
-            if(getRemainingTime(startTime, this.opMode.getRuntime()) < movementTime + pickupTime + parkFromLine[(int) mirror(park, 1)]) {
+            if (getRemainingTime(startTime, this.opMode.getRuntime()) < movementTime + pickupTime + parkFromLine[(int) mirror(park, 1)]) {
                 break;
             }
 
             //Make sure there is still a cone in the stack
-            if(conesInStack <= 0) {
+            if (conesInStack <= 0) {
                 break;
             }
 

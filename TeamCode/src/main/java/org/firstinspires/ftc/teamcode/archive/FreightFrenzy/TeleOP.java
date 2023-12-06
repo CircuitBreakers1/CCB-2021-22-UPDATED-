@@ -35,7 +35,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 
-
 /**
  * This file is the main code for our TeleOP
  */
@@ -155,12 +154,12 @@ public class TeleOP extends LinearOpMode {
                 armDown = true;
             }
 
-            if(armDown && robot.leftArm.getCurrentPosition() < 6) {
+            if (armDown && robot.leftArm.getCurrentPosition() < 6) {
                 robot.leftArm.setPower(0);
                 robot.rightArm.setPower(0);
 
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER );
+                robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
 
             /*
@@ -200,7 +199,7 @@ public class TeleOP extends LinearOpMode {
                 robot.rightArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
                 robot.leftArm.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
-            if(gamepad2.dpad_up) {
+            if (gamepad2.dpad_up) {
                 robot.intake.setPower(-1);
                 robot.rightArm.setTargetPosition(0);
                 robot.leftArm.setTargetPosition(0);
@@ -213,7 +212,7 @@ public class TeleOP extends LinearOpMode {
                 intakeOn = true;
                 outputOn = false;
             }
-            if(intakeOn && !robot.cargoTouch.getState()) {
+            if (intakeOn && !robot.cargoTouch.getState()) {
                 robot.intake.setPower(0);
 
                 robot.rightArm.setPower(0);
@@ -225,12 +224,12 @@ public class TeleOP extends LinearOpMode {
                 intakeOn = false;
                 outputOn = false;
             }
-            if(gamepad2.dpad_down) {
+            if (gamepad2.dpad_down) {
                 robot.intake.setPower(1);
                 intakeOn = false;
                 outputOn = true;
             }
-            if(gamepad2.dpad_left) {
+            if (gamepad2.dpad_left) {
                 robot.intake.setPower(0);
 
                 robot.rightArm.setPower(0);
@@ -243,7 +242,7 @@ public class TeleOP extends LinearOpMode {
                 outputOn = false;
             }
 
-            if(intakeOn) {
+            if (intakeOn) {
                 setLEDs(!robot.cargoTouch.getState(), true);
             } else setLEDs(outputOn, false);
 

@@ -41,6 +41,7 @@ public class MovementSubsystem {
     private final IMU imu;
 
     private static final double precision = 0.4;
+    private boolean apriltagSyncRequested = false;
 
     private final double V1 = 0.1, V2 = 0.999;
     /**
@@ -50,11 +51,8 @@ public class MovementSubsystem {
     private final double A = V1 / (1 - V1);
     private final double K = (1 / D2) * Math.log(V2 / (A * (1 / V2)));
 
-    public static final Runnable GRAB_PIXEL_AUTO = new Runnable() {
-        @Override
-        public void run() {
-            int yes = 14;
-        }
+    public static final Runnable GRAB_PIXEL_AUTO = () -> {
+        int yes = 14;
     };
 
     public MovementSubsystem(HoloDrivetrainSubsystem holoDrivetrain, HolonomicOdometry holOdom, LinearOpMode OpMode, CameraSubsystem cameraSubsystem, ArmSubsystem armSubsystem, IMU imu) {
@@ -72,6 +70,7 @@ public class MovementSubsystem {
 
     /**
      * Move to a position
+     *
      * @param poseSupply The Reference to Target When Moving
      * @param x X Position relative to the poseSupply
      * @param y Y Position relative to the poseSupply
@@ -82,7 +81,7 @@ public class MovementSubsystem {
     public void moveTo(@NonNull PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, Runnable loop) {
         theta = theta;
 
-        if(loop == null) {
+        if (loop == null) {
             loop = () -> {};
         }
 
@@ -99,7 +98,18 @@ public class MovementSubsystem {
         //PIDController turnController = new PIDController(TurnPIDP, TurnPIDI, TurnPIDD);
         PAngleController turnController = new PAngleController(TurnPIDP);
 
-        holOdom.updatePose();
+
+        if(apriltagSyncRequested) {
+            Pose2d aprilPose = cameraSubsystem.getPoseFromAprilTag();
+            if(aprilPose != null) {
+                holOdom.updatePose(aprilPose);
+                apriltagSyncRequested = false;
+            } else {
+                holOdom.updatePose();
+            }
+        } else {
+            holOdom.updatePose();
+        }
 
         Pose2d pose;
         double xError = 0;
@@ -111,7 +121,7 @@ public class MovementSubsystem {
 
         } else {
             pose = cameraSubsystem.getRelativeAprilTagPose(poseSupply);
-            if(pose == null) {
+            if (pose == null) {
                 //Approximate values from odometry
                 Transform2d temp = holOdom.getPose().minus(poseSupply.globalPose);
                 pose = new Pose2d(temp.getTranslation(), temp.getRotation());
@@ -136,7 +146,7 @@ public class MovementSubsystem {
 
         double maxTime = 0;
 
-        while(opMode.opModeIsActive() && !opMode.gamepad1.a && poseSupply != ODOMETRY) {
+        while (opMode.opModeIsActive() && !opMode.gamepad1.a && poseSupply != ODOMETRY) {
             telemetry.addData("X Distance", xError);
             telemetry.addData("Y Distance", yError);
             telemetry.addData("X PID Output", xPID);
@@ -154,14 +164,25 @@ public class MovementSubsystem {
             telemetry.update();
         }
 
-        while((abs(xError) > precision || abs(yError) > precision || turnController.getError(theta, heading) > 0.05) && opMode.opModeIsActive()) {
+        while ((abs(xError) > precision || abs(yError) > precision || turnController.getError(theta, heading) > 0.11) && opMode.opModeIsActive()) {
             holOdom.updatePose();
+
+            telemetry.addData("April Sync Needed", apriltagSyncRequested);
+
+            if(apriltagSyncRequested) {
+                Pose2d aprilPose = cameraSubsystem.getPoseFromAprilTag();
+                if(aprilPose != null) {
+                    holOdom.updatePose(aprilPose);
+                    apriltagSyncRequested = false;
+                }
+            }
+
             if (poseSupply == ODOMETRY) {
                 pose = holOdom.getPose();
 
             } else {
                 pose = cameraSubsystem.getRelativeAprilTagPose(poseSupply);
-                if(pose == null) {
+                if (pose == null) {
                     //Approximate values from odometry
                     Transform2d temp = holOdom.getPose().minus(poseSupply.globalPose);
                     pose = new Pose2d(temp.getTranslation(), temp.getRotation());
@@ -219,7 +240,7 @@ public class MovementSubsystem {
 
             double maxMotorSpeed = max(lfTemp, max(lbTemp, max(rfTemp, rbTemp)));
 
-            if(maxMotorSpeed > 1) {
+            if (maxMotorSpeed > 1) {
                 lfSpeed /= maxMotorSpeed;
                 lbSpeed /= maxMotorSpeed;
                 rfSpeed /= maxMotorSpeed;
@@ -231,21 +252,21 @@ public class MovementSubsystem {
             //holoDrivetrain.drive(-rbSpeed, -lbSpeed, -rfSpeed, -lfSpeed);
             holoDrivetrain.drive(-rbSpeed, -lbSpeed, -rfSpeed, -lfSpeed);
 
-            if(opMode.gamepad1.b) {
+            if (opMode.gamepad1.b) {
                 break;
             }
 
-            if(loop == GRAB_PIXEL_AUTO) {
+            if (loop == GRAB_PIXEL_AUTO) {
                 switch (armState) {
                     case FreeReadyTransition:
                         gripper.setPosition(1);
                         armSubsystem.setWristAngle(0);
 
-                        if(abs(armSubsystem.getAngle() - 10) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
+                        if (abs(armSubsystem.getAngle() - 10) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
                             armState = ArmSubsystem.ArmState.LowerArm;
                         }
 
-                        if(!(abs(armSubsystem.getAngle() - 10) < 1 /*Angle not in position*/)) {
+                        if (!(abs(armSubsystem.getAngle() - 10) < 1 /*Angle not in position*/)) {
                             armAngle.setPower(-0.85 * Math.signum(armSubsystem.getAngle() - 10));
                             telemetry.addData("Moving Arm", "True");
                         } else {
@@ -253,10 +274,10 @@ public class MovementSubsystem {
                             telemetry.addData("Moving Arm", "False");
                         }
 
-                        if(!extendZeroed) {
+                        if (!extendZeroed) {
                             armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                             armExtend.setPower(0.65);
-                            if(!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */ ) {
+                            if (!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */) {
                                 armExtend.setPower(0);
                                 armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                                 armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -270,24 +291,24 @@ public class MovementSubsystem {
                         break;
                     case LowerArm:
                         armAngle.setPower(-0.85);
-                        if(abs(armSubsystem.getAngle() - 2) < 1) {
+                        if (abs(armSubsystem.getAngle() - 2) < 1) {
                             armAngle.setPower(0);
                             armState = ArmSubsystem.ArmState.Grip;
                         }
                         break;
                     case Grip:
-                        if(gripTime == 0) {
+                        if (gripTime == 0) {
                             gripTime = System.currentTimeMillis();
                         }
                         gripper.setPosition(0);
-                        if(System.currentTimeMillis() - gripTime > 500) {
+                        if (System.currentTimeMillis() - gripTime > 500) {
                             armState = ArmSubsystem.ArmState.RaiseArm;
                             gripTime = 0;
                         }
                         break;
                     case RaiseArm:
                         armAngle.setPower(0.85);
-                        if(armSubsystem.getAngle() > 23 /*Arm is raised*/) {
+                        if (armSubsystem.getAngle() > 23 /*Arm is raised*/) {
                             armAngle.setPower(0);
                             armState = ArmSubsystem.ArmState.FreeMovement;
                             armAngle.setPower(0);
@@ -306,18 +327,18 @@ public class MovementSubsystem {
 
         holoDrivetrain.stop();
 
-        if(loop == GRAB_PIXEL_AUTO) {
+        if (loop == GRAB_PIXEL_AUTO) {
             while (armState != ArmSubsystem.ArmState.FreeMovement && opMode.opModeIsActive()) {
                 switch (armState) {
                     case FreeReadyTransition:
                         gripper.setPosition(1);
                         armSubsystem.setWristAngle(0);
 
-                        if(abs(armSubsystem.getAngle() - 10) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
+                        if (abs(armSubsystem.getAngle() - 10) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
                             armState = ArmSubsystem.ArmState.LowerArm;
                         }
 
-                        if(!(abs(armSubsystem.getAngle() - 10) < 1 /*Angle not in position*/)) {
+                        if (!(abs(armSubsystem.getAngle() - 10) < 1 /*Angle not in position*/)) {
                             armAngle.setPower(-0.85 * Math.signum(armSubsystem.getAngle() - 10));
                             telemetry.addData("Moving Arm", "True");
                         } else {
@@ -325,8 +346,8 @@ public class MovementSubsystem {
                             telemetry.addData("Moving Arm", "False");
                         }
 
-                        if(!extendZeroed) {
-                            if(!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */ ) {
+                        if (!extendZeroed) {
+                            if (!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */) {
                                 armExtend.setPower(0);
                                 armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                                 armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -341,24 +362,24 @@ public class MovementSubsystem {
                         break;
                     case LowerArm:
                         armAngle.setPower(-0.85);
-                        if(abs(armSubsystem.getAngle() - 2) < 1) {
+                        if (abs(armSubsystem.getAngle() - 2) < 1) {
                             armAngle.setPower(0);
                             armState = ArmSubsystem.ArmState.Grip;
                         }
                         break;
                     case Grip:
-                        if(gripTime == 0) {
+                        if (gripTime == 0) {
                             gripTime = System.currentTimeMillis();
                         }
                         gripper.setPosition(0);
-                        if(System.currentTimeMillis() - gripTime > 500) {
+                        if (System.currentTimeMillis() - gripTime > 500) {
                             armState = ArmSubsystem.ArmState.RaiseArm;
                             gripTime = 0;
                         }
                         break;
                     case RaiseArm:
                         armAngle.setPower(0.85);
-                        if(armSubsystem.getAngle() > 23 /*Arm is raised*/) {
+                        if (armSubsystem.getAngle() > 23 /*Arm is raised*/) {
                             armAngle.setPower(0);
                             armState = ArmSubsystem.ArmState.FreeMovement;
                             armAngle.setPower(0);
@@ -376,9 +397,7 @@ public class MovementSubsystem {
         moveTo(poseSupply, x, y, theta, maxSpeed, null);
     }
 
-
-
-
+    @Deprecated
     public void moveToPose(double x, double y, double theta, double maxSpeed) {
         //theta = -theta;
 
@@ -413,7 +432,7 @@ public class MovementSubsystem {
         boolean xInc = false;
         double prevX = xVelocity;
 
-        while(opMode.opModeIsActive() && !opMode.gamepad1.a) {
+        while (opMode.opModeIsActive() && !opMode.gamepad1.a) {
             telemetry.addData("X Distance", xError);
             telemetry.addData("Y Distance", yError);
             telemetry.addData("X PID Output", xPID);
@@ -433,7 +452,7 @@ public class MovementSubsystem {
             telemetry.update();
         }
 
-        while(/*(abs(xError) > precision || abs(yError) > precision || turnController.getError(theta, heading) > 0.05) && */ opMode.opModeIsActive()) {
+        while (/*(abs(xError) > precision || abs(yError) > precision || turnController.getError(theta, heading) > 0.05) && */ opMode.opModeIsActive()) {
             holOdom.updatePose();
             pose = holOdom.getPose();
             xError = x - pose.getX();
@@ -497,7 +516,7 @@ public class MovementSubsystem {
 
             double maxMotorSpeed = max(lfTemp, max(lbTemp, max(rfTemp, rbTemp)));
 
-            if(maxMotorSpeed > 1) {
+            if (maxMotorSpeed > 1) {
                 lfSpeed /= maxMotorSpeed;
                 lbSpeed /= maxMotorSpeed;
                 rfSpeed /= maxMotorSpeed;
@@ -507,21 +526,29 @@ public class MovementSubsystem {
             //holoDrivetrain.drive(-lfSpeed, -rfSpeed, -lbSpeed, -rbSpeed);
             holoDrivetrain.drive(-rbSpeed, -lbSpeed, -rfSpeed, -lfSpeed);
 
-            if(opMode.gamepad1.b) {
+            if (opMode.gamepad1.b) {
                 break;
             }
         }
-        
+
         holoDrivetrain.stop();
     }
 
 
-
-
-
     private double clip(double input, double max, double min) {
-        if(input > max) {
+        if (input > max) {
             return max;
         } else return Math.max(input, min);
+    }
+
+    public void requestApriltagSync() {
+        apriltagSyncRequested = true;
+//        if(!cameraSubsystem.isPortalStreaming()) {
+//            cameraSubsystem.restartCamera();
+//        }
+    }
+
+    public void cancelApriltagSync() {
+        apriltagSyncRequested = false;
     }
 }

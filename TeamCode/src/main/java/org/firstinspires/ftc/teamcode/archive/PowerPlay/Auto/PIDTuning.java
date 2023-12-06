@@ -43,10 +43,10 @@ import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
 
 
 /**
- *  The autonomous for the Left side of the field.
+ * The autonomous for the Left side of the field.
  */
 
-@Autonomous(name="PID Tuning", group="Linear Opmode")
+@Autonomous(name = "PID Tuning", group = "Linear Opmode")
 @Disabled
 public class PIDTuning extends LinearOpMode {
 
@@ -68,7 +68,7 @@ public class PIDTuning extends LinearOpMode {
             telemetry.update();
         }
 
-        moveTo(36,47, 0.7);
+        moveTo(36, 47, 0.7);
 
 
     }

@@ -45,10 +45,10 @@ import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
 
 
 /**
- *  The autonomous for the Left side of the field.
+ * The autonomous for the Left side of the field.
  */
 
-@Autonomous(name="Left Auto", group="Linear Opmode")
+@Autonomous(name = "Left Auto", group = "Linear Opmode")
 @Disabled
 public class RedLeft extends LinearOpMode {
 
@@ -87,7 +87,7 @@ public class RedLeft extends LinearOpMode {
 
 
         while (opModeInInit()) {
-            if(!armTouch.getState() && armLift.getCurrentPosition() != 0) {
+            if (!armTouch.getState() && armLift.getCurrentPosition() != 0) {
                 armLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 armLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             }
@@ -134,7 +134,7 @@ public class RedLeft extends LinearOpMode {
         pickupLeft.setPower(1);
         pickupRight.setPower(-1);
 
-        while(coneTouch.getState() && getRuntime() - startTime < 0.5) {
+        while (coneTouch.getState() && getRuntime() - startTime < 0.5) {
         }
 
 //        pickupLeft.setPower(0.2);
@@ -146,11 +146,10 @@ public class RedLeft extends LinearOpMode {
         LiftSubsystem.setTarget(Medium);
 
 
-
         //Move to the medium junction and turn
-        moveTo(36,47, 0.8, false);
+        moveTo(36, 47, 0.8, false);
 
-        turn(0,0.8);
+        turn(0, 0.8);
 
         //Move into the junction, drop and move out
         //Dropping
@@ -273,7 +272,7 @@ public class RedLeft extends LinearOpMode {
 
         //sleep(500);
 
-        moveTo(35,58,0.7);
+        moveTo(35, 58, 0.7);
 
         LiftSubsystem.setTarget(Min);
 

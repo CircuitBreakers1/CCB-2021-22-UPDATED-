@@ -47,6 +47,7 @@ import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMBASE;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMD;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMI;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMP;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.shootAngle;
 
 import static java.lang.Math.abs;
 
@@ -94,7 +95,7 @@ public class LastJohnTeleOp extends OpMode {
         telemetry.addData("Status", "Initialized");
         robot.init(hardwareMap, false, null);
 
-        wrist.setPosition(1);
+        wrist.setPosition(0);
 
         armPID.setSetPoint(-224);
 
@@ -111,18 +112,18 @@ public class LastJohnTeleOp extends OpMode {
         telemetry.addData("Moving Arm", extendZeroed ? "Moving to " + base : "Zeroing");
         telemetry.addData("Touch State", viperTouch.getState());
 
-        robot.armSubsystem.setWristAngle(0);
+        wrist.setPosition(0);
 
-        if(!(abs(robot.armSubsystem.getAngle() - 7) < 1 /*Angle not in position*/)) {
-            armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - 7));
+        if (!(abs(robot.armSubsystem.getAngle() - 13) < 3 /*Angle not in position*/)) {
+            armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - 13));
             telemetry.addData("Moving Arm", "True");
         } else {
             armAngle.setPower(0);
             telemetry.addData("Moving Arm", "False");
         }
 
-        if(!extendZeroed) {
-            if(!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */ ) {
+        if (!extendZeroed) {
+            if (!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */) {
                 armExtend.setPower(0);
                 armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                 armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -139,6 +140,7 @@ public class LastJohnTeleOp extends OpMode {
     @Override
     public void start() {
         armExtend.setPower(0);
+        armAngle.setPower(0);
         armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
@@ -148,8 +150,8 @@ public class LastJohnTeleOp extends OpMode {
         dashTele.addData("Arm Angle", robot.armSubsystem.getAngle());
         dashTele.update();
 
-        if(gamepad1.start) {
-            if(!driveDown) {
+        if (gamepad1.start) {
+            if (!driveDown) {
                 driveField = !driveField;
                 driveDown = true;
             }
@@ -157,8 +159,8 @@ public class LastJohnTeleOp extends OpMode {
             driveDown = false;
         }
 
-        if(gamepad1.back) {
-            if(!debugDown) {
+        if (gamepad1.back) {
+            if (!debugDown) {
                 debugTelemetry = !debugTelemetry;
                 debugDown = true;
             }
@@ -176,31 +178,34 @@ public class LastJohnTeleOp extends OpMode {
         double rotY = driveField ? x * Math.sin(-botHeading) + y * Math.cos(-botHeading) : y;
         robot.holoDrivetrain.smoothDrive(rotX, rotY, -gamepad1.right_stick_x);
 
-        if(gamepad1.dpad_up) {
-            shooterRaise.setPosition(0.4);
+        if (gamepad1.dpad_up) {
+            shooterRaise.setPosition(shootAngle);
         } else if (gamepad1.dpad_down) {
             shooterRaise.setPosition(0);
         }
 
-        if(gamepad2.a) {
-            if(!toggleDown) {
+        if (gamepad2.a) {
+            if (!toggleDown) {
                 toggleDown = true;
                 toggleIntake = !toggleIntake;
                 double power = toggleIntake ? -1 : 0;
                 intake.setPower(power);
             }
-        } else {
+        } else if (gamepad2.left_bumper) {
+            toggleIntake = true;
+            intake.setPower(1);
+        }else {
             toggleDown = false;
         }
 
-        if(gamepad1.dpad_left) {
+        if (gamepad1.dpad_left) {
             shotRelease.setPosition(0);
         } else if (gamepad1.dpad_right) {
             shotRelease.setPosition(0.5);
         }
 
-        if(gamepad2.b) {
-            if(!toggleSweepDown) {
+        if (gamepad2.b) {
+            if (!toggleSweepDown) {
                 toggleSweepDown = true;
                 toggleSweep = !toggleSweep;
             }
@@ -208,7 +213,7 @@ public class LastJohnTeleOp extends OpMode {
             toggleSweepDown = false;
         }
 
-        if(!toggleSweep) {
+        if (!toggleSweep) {
             slidePush.setPosition(0.64);
         } else {
             slidePush.setPosition(0.77);
@@ -222,7 +227,7 @@ public class LastJohnTeleOp extends OpMode {
             lift.setPower(0);
         }
 
-        if(gamepad2.dpad_left) {
+        if (gamepad2.dpad_left) {
             liftRaise.setPosition(0);
         } else if (gamepad2.dpad_right) {
             liftRaise.setPosition(0.1);
@@ -230,38 +235,39 @@ public class LastJohnTeleOp extends OpMode {
 
         switch (armState) {
             case Ready:
+                wrist.setPosition(0);
                 gripper.setPosition(1);
-                gamepad2.setLedColor(0,0,255,-1);
-                if(gamepad2.triangle /*Button to initiate grabbing pixel*/) {
+                gamepad2.setLedColor(0, 0, 255, -1);
+                if (gamepad2.triangle /*Button to initiate grabbing pixel*/) {
                     armState = ArmState.LowerArm;
                 }
-                if(gamepad2.left_stick_y < 0 /*Stick Pushed Up*/) {
+                if (gamepad2.left_stick_y < 0 /*Stick Pushed Up*/) {
                     armState = ArmState.FreeMovement;
                 }
                 break;
             case LowerArm:
-                gamepad2.setLedColor(255,0,0,-1);
+                gamepad2.setLedColor(255, 0, 0, -1);
                 armAngle.setPower(-0.85);
-                if(abs(robot.armSubsystem.getAngle() - 2) < 1) {
+                if (abs(robot.armSubsystem.getAngle() - 2) < 1) {
                     armAngle.setPower(0);
                     armState = ArmState.Grip;
                 }
                 break;
             case Grip:
-                gamepad2.setLedColor(255,0,0,-1);
-                if(gripTime == 0) {
+                gamepad2.setLedColor(255, 0, 0, -1);
+                if (gripTime == 0) {
                     gripTime = System.currentTimeMillis();
                 }
                 gripper.setPosition(0);
-                if(System.currentTimeMillis() - gripTime > 500) {
+                if (System.currentTimeMillis() - gripTime > 500) {
                     armState = ArmState.RaiseArm;
                     gripTime = 0;
                 }
                 break;
             case RaiseArm:
-                gamepad2.setLedColor(255,0,0,-1);
+                gamepad2.setLedColor(255, 0, 0, -1);
                 armAngle.setPower(0.85);
-                if(robot.armSubsystem.getAngle() > 23 /*Arm is raised*/) {
+                if (robot.armSubsystem.getAngle() > 23 /*Arm is raised*/) {
                     armAngle.setPower(0);
                     armState = ArmState.FreeMovement;
                     armAngle.setPower(0);
@@ -271,20 +277,20 @@ public class LastJohnTeleOp extends OpMode {
                 }
                 break;
             case FreeMovement:
-                gamepad2.setLedColor(0,255,0,-1);
+                gamepad2.setLedColor(0, 255, 0, -1);
                 robot.armSubsystem.setAbsoluteWristAngle(30);
                 //armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
-                if(!viperTouch.getState() && armExtend.getCurrentPosition() != 0) {
+                if (!viperTouch.getState() && armExtend.getCurrentPosition() != 0) {
                     armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 }
 
-                if(gamepad2.square) {
+                if (gamepad2.square) {
                     gripper.setPosition(1);
                 }
 
-                if(true /*Angle Stick Pushed up and not at max angle, or down and not at min angle*/) {
+                if (true /*Angle Stick Pushed up and not at max angle, or down and not at min angle*/) {
                     armAngle.setPower(-gamepad2.left_stick_y);
                 } else {
                     armAngle.setPower(0);
@@ -292,12 +298,12 @@ public class LastJohnTeleOp extends OpMode {
 
                 double armExtendPower = gamepad2.right_stick_y;
 
-                if(armExtendPower != 0) {
+                if (armExtendPower != 0) {
                     armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     armExtend.setPower(gamepad2.right_stick_y);
                     breakMode = false;
                 } else {
-                    if(!breakMode) {
+                    if (!breakMode) {
                         armExtend.setPower(0);
                         armExtend.setTargetPosition(armExtend.getCurrentPosition());
                         armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -312,7 +318,7 @@ public class LastJohnTeleOp extends OpMode {
 //                    armExtend.setPower(0);
 //                }
 
-                if(gamepad2.triangle /*Button to Move arm into ready state*/) {
+                if (gamepad2.triangle /*Button to Move arm into ready state*/) {
                     armState = ArmState.FreeReadyTransition;
                     armAngle.setPower(0);
                     armExtend.setPower(0);
@@ -322,20 +328,20 @@ public class LastJohnTeleOp extends OpMode {
                 }
                 break;
             case FreeReadyTransition:
-                gamepad2.setLedColor(255,255,0,-1);
+                gamepad2.setLedColor(255, 255, 0, -1);
                 gripper.setPosition(1);
-                robot.armSubsystem.setWristAngle(0);
+                wrist.setPosition(0);
 
                 telemetry.addData("Arm Angle", robot.armSubsystem.getAngle());
                 telemetry.addData("Arm Extend", armExtend.getCurrentPosition());
                 telemetry.addData("Extend Zeroed", extendZeroed);
 
-                if(abs(robot.armSubsystem.getAngle() - 10) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
+                if (abs(robot.armSubsystem.getAngle() - 13) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
                     armState = ArmState.Ready;
                 }
 
-                if(!(abs(robot.armSubsystem.getAngle() - 10) < 1 /*Angle not in position*/)) {
-                    armAngle.setPower(-0.5 * Math.signum(robot.armSubsystem.getAngle() - 10));
+                if (!(abs(robot.armSubsystem.getAngle() - 13) < 1 /*Angle not in position*/)) {
+                    armAngle.setPower(-0.5 * Math.signum(robot.armSubsystem.getAngle() - 13));
                     telemetry.addData("Moving Arm", "True");
                 } else {
                     armAngle.setPower(0);
@@ -349,14 +355,14 @@ public class LastJohnTeleOp extends OpMode {
 //                    armExtend.setPower(0);
 //                    telemetry.addData("Moving Angle", "False");
 //                }
-                if(!extendZeroed) {
-                    if(!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */ ) {
+                if (!extendZeroed) {
+                    if (!viperTouch.getState() /* && armExtend.getCurrentPosition() != 0 */) {
                         armExtend.setPower(0);
                         armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                         armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                         extendZeroed = true;
                     }
-                    armExtend.setPower(0.25);
+                    armExtend.setPower(0.70);
                 } else {
                     armExtend.setTargetPosition(base);
                     armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -370,10 +376,9 @@ public class LastJohnTeleOp extends OpMode {
         Pose2d pose = holOdom.getPose();
 
 
-
         telemetry.addData("Bay State", formatAsString(robot.colorDetectionSubsystem.getBayColors()));
         telemetry.addData("State", armState);
-        if(debugTelemetry) {
+        if (debugTelemetry) {
             telemetry.addData("Left Bay HSV", formatAsString(robot.colorDetectionSubsystem.getLeftHSV()));
             telemetry.addData("Right Bay HSV", formatAsString(robot.colorDetectionSubsystem.getRightHSV()));
             telemetry.addData("Arm Length:", armExtend.getCurrentPosition());
@@ -394,6 +399,7 @@ public class LastJohnTeleOp extends OpMode {
         }
         return result.toString();
     }
+
     private String formatAsString(float[] array) {
         StringBuilder result = new StringBuilder();
         for (float v : array) {

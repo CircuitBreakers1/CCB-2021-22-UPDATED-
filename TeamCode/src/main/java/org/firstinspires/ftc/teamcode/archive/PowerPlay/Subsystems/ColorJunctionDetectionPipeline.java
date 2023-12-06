@@ -78,7 +78,7 @@ public class ColorJunctionDetectionPipeline extends OpenCvPipeline {
             Scalar mean = Core.mean(matHue);
 
             average[0] = mean.val[0];
-            if(average[0] > 160) {
+            if (average[0] > 160) {
                 junctionDetected = false;
             }
         }
@@ -86,7 +86,7 @@ public class ColorJunctionDetectionPipeline extends OpenCvPipeline {
         //Then create the Mat used for the viewport
         //"Evan Proof Viewing"
         Scalar red = new Scalar(0, 0, 255, 0);
-        Scalar green = new Scalar(0,255,0,0);
+        Scalar green = new Scalar(0, 255, 0, 0);
 
         Imgproc.rectangle(input, rect, green, 2);
         Imgproc.rectangle(input, outerRect, red, 2);
@@ -100,6 +100,7 @@ public class ColorJunctionDetectionPipeline extends OpenCvPipeline {
 
     /**
      * For debug purposes only
+     *
      * @return Average Hue value of target square
      */
     public double[] getAverage() {

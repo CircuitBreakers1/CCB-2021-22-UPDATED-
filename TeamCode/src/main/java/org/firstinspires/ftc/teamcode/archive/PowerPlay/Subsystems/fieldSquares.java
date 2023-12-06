@@ -8,7 +8,7 @@ public class fieldSquares {
     public static int[] getTargetSquareLocation(moveDirection direction, double currX, double currY) {
         //Get the current square and then move in the specified direction
         int[] square = getSquareFromLocation(currX, currY);
-        switch (direction){
+        switch (direction) {
             case UP:
                 square[1]++;
                 break;
@@ -28,21 +28,21 @@ public class fieldSquares {
 
     private static int[] getSquareFromLocation(double x, double y) {
         //Create the array that will be returned
-        int[] returnArray = new int[] {0,0};
+        int[] returnArray = new int[]{0, 0};
 
         //Using a for loop, determine the square we are on
-        for(int i = 0; i < 6; i++) {
+        for (int i = 0; i < 6; i++) {
             double distanceFromWallCentered = (squareLengthIn * i) - (squareLengthIn * 3);
 
-            if(x >= distanceFromWallCentered && x<= distanceFromWallCentered + squareLengthIn) {
+            if (x >= distanceFromWallCentered && x <= distanceFromWallCentered + squareLengthIn) {
                 returnArray[0] = i++;
                 break;
             }
         }
-        for(int i = 0; i < 6; i++) {
+        for (int i = 0; i < 6; i++) {
             double distanceFromWallCentered = (squareLengthIn * i) - (squareLengthIn * 3);
 
-            if(y >= distanceFromWallCentered && y <= distanceFromWallCentered + squareLengthIn) {
+            if (y >= distanceFromWallCentered && y <= distanceFromWallCentered + squareLengthIn) {
                 returnArray[0] = i++;
                 break;
             }
@@ -52,7 +52,7 @@ public class fieldSquares {
     }
 
     private static int[] getCenterLocationFromSquare(int[] square) {
-        int[] XYLoc = new int[] {0,0};
+        int[] XYLoc = new int[]{0, 0};
         int halfFieldLength = 3 * squareLengthIn;
         XYLoc[0] = (square[0] * squareLengthIn) - halfFieldLength + 12;
         XYLoc[1] = (square[1] * squareLengthIn) - halfFieldLength + 12;
@@ -64,7 +64,7 @@ public class fieldSquares {
     }
 
     public static int getSquareX(double x) {
-        int[] square = getSquareFromLocation(x,0);
+        int[] square = getSquareFromLocation(x, 0);
         return square[0];
     }
 

@@ -47,6 +47,7 @@ public class ColorDetectionSubsystem {
 
     /**
      * Get the color of the bays
+     *
      * @return The color of the bays, stored in an Array in order [left, right]. Null if no color is detected
      */
     public BayColor[] getBayColors() {
@@ -58,16 +59,16 @@ public class ColorDetectionSubsystem {
         Scalar left = new Scalar(leftHSV[0], leftHSV[1], leftHSV[2]);
         Scalar right = new Scalar(rightHSV[0], rightHSV[1], rightHSV[2]);
         //Run the loop for each bay
-        if(((DistanceSensor) leftBay).getDistance(DistanceUnit.CM) < maxDist){
+        if (((DistanceSensor) leftBay).getDistance(DistanceUnit.CM) < maxDist) {
             colors[0] = UNKNOWN;
-            for (BayColor color: BayColor.values()) {
-                if(isBigger(left, color.lower) && isSmaller(left, color.upper)) {
+            for (BayColor color : BayColor.values()) {
+                if (isBigger(left, color.lower) && isSmaller(left, color.upper)) {
                     colors[0] = color;
                     break;
                 }
             }
         }
-        if(((DistanceSensor) rightBay).getDistance(DistanceUnit.CM) < maxDist){
+        if (((DistanceSensor) rightBay).getDistance(DistanceUnit.CM) < maxDist) {
             colors[1] = UNKNOWN;
             for (BayColor color : BayColor.values()) {
                 if (isBigger(right, color.lower) && isSmaller(right, color.upper)) {
@@ -97,7 +98,8 @@ public class ColorDetectionSubsystem {
      * For debug purposes. Returns the HSV values of the left bay or -1 if no pixel is detected
      */
     public float[] getLeftHSV() {
-        if(((DistanceSensor) leftBay).getDistance(DistanceUnit.CM) > maxDist) return new float[]{-1.0f, -1.0f, -1.0f};
+        if (((DistanceSensor) leftBay).getDistance(DistanceUnit.CM) > maxDist)
+            return new float[]{-1.0f, -1.0f, -1.0f};
         float[] hsv = new float[3];
         Color.colorToHSV(leftBay.getNormalizedColors().toColor(), hsv);
         return hsv;
@@ -107,7 +109,8 @@ public class ColorDetectionSubsystem {
      * For debug purposes. Returns the HSV values of the right bay, or -1 if no pixel is detected
      */
     public float[] getRightHSV() {
-        if(((DistanceSensor) rightBay).getDistance(DistanceUnit.CM) > maxDist) return new float[]{-1.0f, -1.0f, -1.0f};
+        if (((DistanceSensor) rightBay).getDistance(DistanceUnit.CM) > maxDist)
+            return new float[]{-1.0f, -1.0f, -1.0f};
         float[] hsv = new float[3];
         Color.colorToHSV(rightBay.getNormalizedColors().toColor(), hsv);
         return hsv;

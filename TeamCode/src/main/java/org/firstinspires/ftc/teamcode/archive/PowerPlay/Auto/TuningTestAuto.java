@@ -47,7 +47,7 @@ import org.firstinspires.ftc.teamcode.archive.PowerPlay.Subsystems.Robot;
  *
  */
 
-@Autonomous(name="Tuning", group="Linear Opmode")
+@Autonomous(name = "Tuning", group = "Linear Opmode")
 @Disabled
 public class TuningTestAuto extends LinearOpMode {
 
@@ -107,7 +107,7 @@ public class TuningTestAuto extends LinearOpMode {
         FtcDashboard dash = FtcDashboard.getInstance();
         Telemetry dashTele = dash.getTelemetry();
 
-        while(opModeIsActive()) {
+        while (opModeIsActive()) {
             holOdom.updatePose();
             moving = holOdom.getPose();
             telemetry.addData("Press A to move", moving.getX());
@@ -117,7 +117,7 @@ public class TuningTestAuto extends LinearOpMode {
             telemetry.update();
 
 
-            moveTo(30,5, 0.8);
+            moveTo(30, 5, 0.8);
 
             /*
             if(gamepad1.a) {

@@ -46,6 +46,7 @@ import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.Subsystems.PoseSupply;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 
 /**
@@ -53,17 +54,14 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
  */
 @TeleOp(name = "Odo Test TeleOP", group = "")
 public class OdoTestTeleOp extends LinearOpMode {
-
     Robot2023 robot = new Robot2023();
-
-
     double aprilX = 0;
     double aprilY = 0;
     double aprilHeading = 0;
 
     @Override
     public void runOpMode() throws InterruptedException {
-        robot.init(hardwareMap, false, this);
+        robot.init(hardwareMap, true, this);
 
         telemetry.addData("Status", "Initialized");
         holOdom.updatePose(new Pose2d(startX, startY, new Rotation2d(startThetaPI * PI)));
@@ -72,7 +70,7 @@ public class OdoTestTeleOp extends LinearOpMode {
         telemetry.addData("Y", pose.getY());
         telemetry.addData("Heading", pose.getHeading());
 
-        while(opModeInInit()) {
+        while (opModeInInit()) {
             double x = -gamepad1.left_stick_x;
             double y = -gamepad1.left_stick_y;
 
@@ -95,7 +93,7 @@ public class OdoTestTeleOp extends LinearOpMode {
 //        robot.movementSubsystem.moveToPose(0,16,PI,1);
 //        robot.movementSubsystem.moveToPose(0,0, PI * 0.25, 1);
 
-        robot.movementSubsystem.moveToPose(endX, endY, endThetaPI * PI, 0.8);
+        robot.movementSubsystem.moveTo(PoseSupply.APRILTAG_BLUE_MIDDLE, endX, endY, endThetaPI * PI, 1);
     }
 
 //    @Override
@@ -141,8 +139,6 @@ public class OdoTestTeleOp extends LinearOpMode {
 ////        telemetry.addData("Right Front", rightFront.get());
 ////        telemetry.addData("Left Back", leftBack.get());
 ////        telemetry.addData("Right Back", rightBack.get());
-
-
 
 
 }
