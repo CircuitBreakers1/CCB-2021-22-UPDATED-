@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Auto;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.ConfigSetting.PLACE_LOCATION;
 import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.ConfigSetting.START_LOCATION;
 import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.StartLocation.BLUE_AUDIENCE;
 import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.StartLocation.BLUE_BACKDROP;
@@ -23,6 +24,7 @@ import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.x3;
 import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.y1;
 import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.y2;
 import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.y3;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMBASE;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
@@ -32,6 +34,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Subsystems.ArmSubsystem;
@@ -50,6 +53,10 @@ public class Auto extends LinearOpMode {
         Robot2023 robot = new Robot2023();
 
         robot.init(hardwareMap, true, this);
+
+        FtcDashboard dashboard = FtcDashboard.getInstance();
+        Telemetry dashTele = dashboard.getTelemetry();
+        //this.telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
 
 //        telemetry = FtcDashboard.getInstance().getTelemetry();
 
@@ -76,7 +83,9 @@ public class Auto extends LinearOpMode {
 
         holOdom.updatePose(autoSwitcher.getStartLocation().startPose);
 
-        Telemetry dash = FtcDashboard.getInstance().getTelemetry();
+        //Telemetry dash = FtcDashboard.getInstance().getTelemetry();
+
+        wrist.setPosition(0);
 
         //TODO: Implement Lights to Show Ready Status
         //Init Loop
@@ -96,9 +105,9 @@ public class Auto extends LinearOpMode {
                     armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     systemStates[4] = true;
                 }
-                armExtend.setPower(0.25);
+                armExtend.setPower(0.65);
             } else {
-                armExtend.setTargetPosition(base);
+                armExtend.setTargetPosition(ARMBASE);
                 armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 armExtend.setPower(0.8);
             }
@@ -218,6 +227,9 @@ public class Auto extends LinearOpMode {
                 allSystemsGo = true;
             }
 
+            dashTele.addData("Guess", propGuess);
+            dashTele.update();
+
             telemetry.addLine("Status: " + (allSystemsGo ? "ALL SYSTEMS GO!" : "Not Ready"));
             telemetry.addData("Current Configuration", currentConfiguration + " - " + autoSwitcher.get(currentConfiguration));
             telemetry.addData("Start Location", autoSwitcher.get(START_LOCATION));
@@ -240,11 +252,12 @@ public class Auto extends LinearOpMode {
         }
 
         waitForStart();
+
         //The code between Backdrop side and Audience side begins different, but ends the same. This switch handles the difference
         //However either way we begin with extending the arm, and a few other cleanup things from init, so we do that.
-        propGuess = ColorBlobDetector.PropGuess.LEFT;
+        //propGuess = ColorBlobDetector.PropGuess.LEFT;
         robot.cameraSubsystem.setColorBlobDetector(null);
-        robot.cameraSubsystem.pauseCamera();
+        //robot.cameraSubsystem.pauseCamera();
         armExtend.setTargetPosition(-1600);
         armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         armExtend.setPower(0.8);
@@ -281,15 +294,14 @@ public class Auto extends LinearOpMode {
                         autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 22, 55, -1.57, 1);
                         break;
                     case RIGHT:
-                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 15, 48, -0.685, 1);
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 15, 48.5, -0.685, 1);
                         break;
                     case MIDDLE:
                     case UNKNOWN:
-                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 16, 44, -1.57, 1);
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 16, 46, -1.57, 1);
                         break;
                 }
                 //Finish moving the arm, then stop the arm and drop the pixel.
-                //TODO: Fix Arm and remove comment
                 while (opModeIsActive()) {
                     if (armExtend.getCurrentPosition() < -200) {
                         double error = armTarget - robot.armSubsystem.getAngle();
@@ -306,6 +318,8 @@ public class Auto extends LinearOpMode {
                 sleep(300);
                 if (mirroredGuess == ColorBlobDetector.PropGuess.LEFT) {
                     autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 30, 55, -1.57, 1);
+                } else if(mirroredGuess == ColorBlobDetector.PropGuess.MIDDLE || mirroredGuess == ColorBlobDetector.PropGuess.UNKNOWN) {
+                    autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 16, 50, -1.57, 1);
                 }
                 //Go to the backboard, then the code merge happens
                 break;
@@ -314,14 +328,14 @@ public class Auto extends LinearOpMode {
                 //Audience side code
                 switch (mirroredGuess) {
                     case LEFT:
-                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -32, 55, -2.455, 1);
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -43, 38, -3.14, 1);
                         break;
                     case RIGHT:
-                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -39, 48, -1.57, 1);
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -45.5, 57, -1.57, 1);
                         break;
                     case MIDDLE:
                     case UNKNOWN:
-                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -32, 44, -1.57, 1);
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -39, 44, -1.57, 1);
                         break;
                 }
 
@@ -341,21 +355,26 @@ public class Auto extends LinearOpMode {
                 gripper.setPosition(1);
                 sleep(300);
 
+                while(opModeIsActive() && robot.armSubsystem.getAngle() < 10) {
+                    armAngle.setPower(0.85);
+                }
+                armAngle.setPower(0);
+
                 armExtend.setTargetPosition(base);
 
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -36, 60, -1.57, 1);
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 60, -1.57, 1);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -36, 60, -3.14, 1);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 60, -3.14, 1);
                 break;
         }
-
+        robot.movementSubsystem.requestApriltagSync();
         autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 36, -3.14, 1, MovementSubsystem.GRAB_PIXEL_AUTO);
 
-        double armTargetAngle = 15;
+        double armTargetAngle = 25;
         while ((abs(robot.armSubsystem.getAngle() - armTargetAngle) > 3) && opModeIsActive()) {
             armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - armTargetAngle));
         }
         armAngle.setPower(0);
-        armExtend.setTargetPosition(-1000);
+        armExtend.setTargetPosition(-970);
         armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         armExtend.setPower(0.9);
 
@@ -374,10 +393,10 @@ public class Auto extends LinearOpMode {
         final double LEFT_TO_RIGHT;
         switch (placeMirrored) {
             case LEFT:
-                LEFT_TO_RIGHT = 0;
+                LEFT_TO_RIGHT = autoSwitcher.getAlliance() == AutoSwitcher.Alliance.RED ? 0 : 0;
                 break;
             case RIGHT:
-                LEFT_TO_RIGHT = 2;
+                LEFT_TO_RIGHT = autoSwitcher.getAlliance() == AutoSwitcher.Alliance.RED ? 2 : 2;
                 break;
             default:
                 throw new IllegalStateException("Unexpected value: " + autoSwitcher.getPlaceLocation());
@@ -386,49 +405,49 @@ public class Auto extends LinearOpMode {
         //Drop Pixel on Backdrop. Default points to LEFT edge of the drop zone.
         switch (mirroredGuess) {
             case LEFT:
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50, 46 - LEFT_TO_RIGHT, -3.14, 0.5);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, x1, 44 - LEFT_TO_RIGHT, -3.14, 0.5);
                 break;
             case RIGHT:
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50, 33 - LEFT_TO_RIGHT, -3.14, 0.5);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, x1, 33 - LEFT_TO_RIGHT, -3.14, 0.5);
                 break;
             case MIDDLE:
             default:
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 50, 39 - LEFT_TO_RIGHT, -3.14, 0.5);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, x1, 39 - LEFT_TO_RIGHT, -3.14, 0.5);
         }
 
-        switch (autoSwitcher.getAlliance()) {
-            case RED:
-                switch (propGuess) {
-                    case LEFT:
-                        break;
-                    case RIGHT:
-                        break;
-                    case UNKNOWN:
-                    case MIDDLE:
-                        break;
-                    default:
-                        throw new IllegalStateException("Unexpected value: " + propGuess);
-                }
-                break;
-            case BLUE:
-                switch (propGuess) {
-                    case LEFT:
-                        robot.movementSubsystem.moveTo(PoseSupply.ODOMETRY, 50,43,-3.14,0.5);
-                        break;
-                    case RIGHT:
-                        robot.movementSubsystem.moveTo(PoseSupply.ODOMETRY, 50,29.5,-3.14,0.5);
-                        break;
-                    case UNKNOWN:
-                    case MIDDLE:
-                        robot.movementSubsystem.moveTo(PoseSupply.ODOMETRY, 50,39,-3.14,0.5);
-                        break;
-                    default:
-                        throw new IllegalStateException("Unexpected value: " + propGuess);
-                }
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + autoSwitcher.getStartLocation());
-        }
+//        switch (autoSwitcher.getAlliance()) {
+//            case RED:
+//                switch (propGuess) {
+//                    case LEFT:
+//                        break;
+//                    case RIGHT:
+//                        break;
+//                    case UNKNOWN:
+//                    case MIDDLE:
+//                        break;
+//                    default:
+//                        throw new IllegalStateException("Unexpected value: " + propGuess);
+//                }
+//                break;
+//            case BLUE:
+//                switch (propGuess) {
+//                    case LEFT:
+//                        robot.movementSubsystem.moveTo(PoseSupply.ODOMETRY, 50,43,-3.14,0.5);
+//                        break;
+//                    case RIGHT:
+//                        robot.movementSubsystem.moveTo(PoseSupply.ODOMETRY, 50,29.5,-3.14,0.5);
+//                        break;
+//                    case UNKNOWN:
+//                    case MIDDLE:
+//                        robot.movementSubsystem.moveTo(PoseSupply.ODOMETRY, 50,39,-3.14,0.5);
+//                        break;
+//                    default:
+//                        throw new IllegalStateException("Unexpected value: " + propGuess);
+//                }
+//                break;
+//            default:
+//                throw new IllegalStateException("Unexpected value: " + autoSwitcher.getStartLocation());
+//        }
 
         gripper.setPosition(1);
         sleep(200);
@@ -439,12 +458,12 @@ public class Auto extends LinearOpMode {
         //Park
         switch (autoSwitcher.getParkLocation()) {
             case INSIDE:
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 12, -3.14, 1);
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 56, 12, -3.14, 1);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 15, -3.14, 1);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 46, 15, -3.14, 1);
                 break;
             case OUTSIDE:
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 59, -3.14, 1);
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 56, 59, -3.14, 1);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 60.5, -3.14, 1);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 46, 60.5, -3.14, 1);
                 break;
         }
     }

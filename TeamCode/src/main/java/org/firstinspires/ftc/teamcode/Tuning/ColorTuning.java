@@ -18,8 +18,8 @@ public class ColorTuning {
     public static double BLUE_SAT_UPPER = 255;
     public static double BLUE_VAL_LOWER = 100;
     public static double BLUE_VAL_UPPER = 255;
-    public static double RED_HUE_LOWER = 0;
-    public static double RED_HUE_UPPER = 30;
+    public static double RED_HUE_LOWER = 150;
+    public static double RED_HUE_UPPER = 5;
     public static double RED_SAT_LOWER = 100;
     public static double RED_SAT_UPPER = 255;
     public static double RED_VAL_LOWER = 100;

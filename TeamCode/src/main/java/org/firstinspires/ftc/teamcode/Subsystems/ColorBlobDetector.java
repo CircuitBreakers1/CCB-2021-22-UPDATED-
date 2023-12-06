@@ -56,6 +56,8 @@ public class ColorBlobDetector implements VisionProcessor {
 
     public Scalar lower;
     public Scalar upper;
+    public Scalar lower2;
+    public Scalar upper2;
 
     int gaussSize = 9;
 
@@ -64,6 +66,7 @@ public class ColorBlobDetector implements VisionProcessor {
     ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
     ArrayList<MatOfPoint> filteredContours = new ArrayList<MatOfPoint>();
     Mat processed;
+    Mat thresh2;
     Mat thresh;
     Point mid;
     int midX;
@@ -74,8 +77,10 @@ public class ColorBlobDetector implements VisionProcessor {
         this.color = propColor;
         switch (propColor) {
             case RED:
-                this.lower = new Scalar(RED_HUE_LOWER, RED_SAT_LOWER, RED_VAL_LOWER); //(0, 40, 40); // the lower hsv threshold for your detection
+                this.lower = new Scalar(0, RED_SAT_LOWER, RED_VAL_LOWER); //(0, 40, 40); // the lower hsv threshold for your detection
                 this.upper = new Scalar(RED_HUE_UPPER, RED_SAT_UPPER, RED_VAL_UPPER); //(30, 255, 255); // the upper hsv threshold for your detection
+                this.lower2 = new Scalar(RED_HUE_LOWER, RED_SAT_LOWER, RED_VAL_LOWER);
+                this.upper2 = new Scalar(179, RED_SAT_UPPER, RED_VAL_UPPER);
                 break;
             case BLUE:
                 this.lower = new Scalar(BLUE_HUE_LOWER, BLUE_SAT_LOWER, BLUE_VAL_LOWER); //(90, 40, 40); // the lower hsv threshold for your detection
@@ -116,13 +121,18 @@ public class ColorBlobDetector implements VisionProcessor {
         Imgproc.cvtColor(processed, processed, Imgproc.COLOR_RGB2HSV);
 
         Core.inRange(processed, lower, upper, thresh);
+        if(color == PropColor.RED) {
+            thresh2 = new Mat();
+            Core.inRange(processed, lower2, upper2, thresh2);
+            Core.bitwise_or(thresh, thresh2, thresh);
+        }
 
         Imgproc.findContours(thresh, contours, new Mat(), Imgproc.THRESH_BINARY_INV, Imgproc.CHAIN_APPROX_SIMPLE);
         Imgproc.drawContours(input, contours, -1, new Scalar(255, 255, 255), 1);
 
 
         //Draw bounding lines for tuning now that the contours are already determined
-        Imgproc.line(input, new Point(0, input.height() * leftPercent), new Point(input.width(), input.height() * leftPercent), new Scalar(255, 255, 255));
+        Imgproc.line(input, new Point(input.width() * leftPercent,0), new Point(input.width() * leftPercent, input.height()), new Scalar(255,255,255));
         Imgproc.line(input, new Point(input.width() * (1 - rightPercent), 0), new Point(input.width() * (1 - rightPercent), input.height()), new Scalar(255, 255, 255));
         PropGuess currentGuess = UNKNOWN;
 
@@ -134,10 +144,10 @@ public class ColorBlobDetector implements VisionProcessor {
             Rect textBox = new Rect((int) boundingRect.tl().x - 1, (int) boundingRect.tl().y - 10, 40, 10);
             Imgproc.rectangle(input, textBox, new Scalar(0, 0, 255), -1);
             Imgproc.putText(input, String.valueOf((int) boundingRect.area()), new Point(textBox.tl().x, textBox.br().y - 2), 6, 0.35, new Scalar(0, 0, 0));
-            int centerX = (int) (boundingRect.tl().y + boundingRect.br().y) / 2;
-            if (centerX < input.height() * leftPercent) {
+            int centerX = (int) (boundingRect.tl().x + boundingRect.br().x) / 2;
+            if (centerX < input.width() * leftPercent) {
                 currentGuess = LEFT;
-            } else if (centerX > input.height() * (1 - rightPercent)) {
+            } else if (centerX > input.width() * (1 - rightPercent)) {
                 currentGuess = RIGHT;
             } else {
                 currentGuess = MIDDLE;

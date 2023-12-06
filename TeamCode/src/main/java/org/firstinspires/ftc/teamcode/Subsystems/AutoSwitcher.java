@@ -86,8 +86,8 @@ public class AutoSwitcher {
     private final MovementSubsystem movementSubsystem;
 
     public AutoSwitcher(MovementSubsystem movementSubsystem) {
-        startLocation = StartLocation.BLUE_AUDIENCE;
-        alliance = Alliance.BLUE;
+        startLocation = StartLocation.RED_AUDIENCE;
+        alliance = Alliance.RED;
         placeLocation = PlaceLocation.LEFT;
         parkLocation = ParkLocation.OUTSIDE;
         movementPath = MovementPath.STAGE_DOOR;
@@ -193,15 +193,19 @@ public class AutoSwitcher {
                 switch (startLocation) {
                     case RED_BACKDROP:
                         startLocation = StartLocation.BLUE_AUDIENCE;
+                        alliance = Alliance.BLUE;
                         break;
                     case RED_AUDIENCE:
                         startLocation = StartLocation.RED_BACKDROP;
+                        alliance = Alliance.RED;
                         break;
                     case BLUE_BACKDROP:
                         startLocation = StartLocation.RED_AUDIENCE;
+                        alliance = Alliance.RED;
                         break;
                     case BLUE_AUDIENCE:
                         startLocation = StartLocation.BLUE_BACKDROP;
+                        alliance = Alliance.BLUE;
                         break;
                 }
                 holOdom.updatePose(startLocation.startPose);
@@ -247,7 +251,7 @@ public class AutoSwitcher {
         if (alliance == Alliance.RED) {
             switch (switchType) {
                 case MIRROR_X_AXIS:
-                    x = -x;
+                    y = -y;
                     theta = -theta;
                     break;
                 case MIRROR_X_AXIS_AND_START_Y:

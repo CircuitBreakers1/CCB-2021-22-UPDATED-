@@ -41,6 +41,7 @@ public class MovementSubsystem {
     private final IMU imu;
 
     private static final double precision = 0.4;
+    private boolean apriltagSyncRequested = false;
 
     private final double V1 = 0.1, V2 = 0.999;
     /**
@@ -50,11 +51,8 @@ public class MovementSubsystem {
     private final double A = V1 / (1 - V1);
     private final double K = (1 / D2) * Math.log(V2 / (A * (1 / V2)));
 
-    public static final Runnable GRAB_PIXEL_AUTO = new Runnable() {
-        @Override
-        public void run() {
-            int yes = 14;
-        }
+    public static final Runnable GRAB_PIXEL_AUTO = () -> {
+        int yes = 14;
     };
 
     public MovementSubsystem(HoloDrivetrainSubsystem holoDrivetrain, HolonomicOdometry holOdom, LinearOpMode OpMode, CameraSubsystem cameraSubsystem, ArmSubsystem armSubsystem, IMU imu) {
@@ -83,7 +81,7 @@ public class MovementSubsystem {
     public void moveTo(@NonNull PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, Runnable loop) {
         theta = theta;
 
-        if (loop == null || loop == GRAB_PIXEL_AUTO) {
+        if (loop == null) {
             loop = () -> {};
         }
 
@@ -100,7 +98,18 @@ public class MovementSubsystem {
         //PIDController turnController = new PIDController(TurnPIDP, TurnPIDI, TurnPIDD);
         PAngleController turnController = new PAngleController(TurnPIDP);
 
-        holOdom.updatePose();
+
+        if(apriltagSyncRequested) {
+            Pose2d aprilPose = cameraSubsystem.getPoseFromAprilTag();
+            if(aprilPose != null) {
+                holOdom.updatePose(aprilPose);
+                apriltagSyncRequested = false;
+            } else {
+                holOdom.updatePose();
+            }
+        } else {
+            holOdom.updatePose();
+        }
 
         Pose2d pose;
         double xError = 0;
@@ -155,8 +164,19 @@ public class MovementSubsystem {
             telemetry.update();
         }
 
-        while ((abs(xError) > precision || abs(yError) > precision || turnController.getError(theta, heading) > 0.05) && opMode.opModeIsActive()) {
+        while ((abs(xError) > precision || abs(yError) > precision || turnController.getError(theta, heading) > 0.11) && opMode.opModeIsActive()) {
             holOdom.updatePose();
+
+            telemetry.addData("April Sync Needed", apriltagSyncRequested);
+
+            if(apriltagSyncRequested) {
+                Pose2d aprilPose = cameraSubsystem.getPoseFromAprilTag();
+                if(aprilPose != null) {
+                    holOdom.updatePose(aprilPose);
+                    apriltagSyncRequested = false;
+                }
+            }
+
             if (poseSupply == ODOMETRY) {
                 pose = holOdom.getPose();
 
@@ -377,7 +397,7 @@ public class MovementSubsystem {
         moveTo(poseSupply, x, y, theta, maxSpeed, null);
     }
 
-
+    @Deprecated
     public void moveToPose(double x, double y, double theta, double maxSpeed) {
         //theta = -theta;
 
@@ -519,5 +539,16 @@ public class MovementSubsystem {
         if (input > max) {
             return max;
         } else return Math.max(input, min);
+    }
+
+    public void requestApriltagSync() {
+        apriltagSyncRequested = true;
+//        if(!cameraSubsystem.isPortalStreaming()) {
+//            cameraSubsystem.restartCamera();
+//        }
+    }
+
+    public void cancelApriltagSync() {
+        apriltagSyncRequested = false;
     }
 }

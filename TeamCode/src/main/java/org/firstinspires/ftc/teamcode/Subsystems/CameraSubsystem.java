@@ -35,6 +35,9 @@ public class CameraSubsystem {
     private ColorBlobDetector blueBlobDetector;
     private ColorBlobDetector redBlobDetector;
 
+    //X Y Displacement on robot from Center
+    private double[] cameraLocation = {};
+
     public CameraSubsystem(WebcamName webcamName) {
 
         aprilTagProcessor = new AprilTagProcessor.Builder()
@@ -44,7 +47,7 @@ public class CameraSubsystem {
                 .setDrawCubeProjection(false)
                 .setOutputUnits(DistanceUnit.INCH, AngleUnit.DEGREES)
                 .setTagLibrary(getCurrentGameTagLibrary())
-                .setLensIntrinsics(520.549, 520.549, 313.018, 237.164)
+                .setLensIntrinsics(510.441, 510.441, 336.87, 250.008)
                 .build();
 
         blueBlobDetector = new ColorBlobDetector(BLUE);
@@ -61,6 +64,7 @@ public class CameraSubsystem {
                 .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
                 .build();
 
+        visionPortal.setProcessorEnabled(aprilTagProcessor, true);
         visionPortal.setProcessorEnabled(blueBlobDetector, false);
         visionPortal.setProcessorEnabled(redBlobDetector, false);
     }
@@ -101,23 +105,31 @@ public class CameraSubsystem {
         }
     }
 
+    public boolean isPortalStreaming() {
+        return visionPortal.getCameraState() == VisionPortal.CameraState.STREAMING;
+    }
+
     public Pose2d initFindPosition() {
         return getPoseFromAprilTag();
     }
 
     /**
-     * NOT ABSOLUTE YET
-     **/ //TODO: FIX
+     * Returns Absolute Location Base on AprilTags
+     **/
     @Nullable
     public Pose2d getPoseFromAprilTag() {
-        List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
+        //List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
 
-        for (AprilTagDetection detection : detections) {
-            if (detection.metadata != null) {
-                //Return the first global pose we can find
-                return translateToCam(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll);
-            }
-        }
+//        if(detections.isEmpty()) return null;
+//
+//        for (AprilTagDetection detection : detections) {
+//            if (detection.metadata != null) {
+//                //Return the first global pose we can find
+//                Pose2d pose = translateToCam(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll);
+//                Pose2d aprilPose = PoseSupply.values()[detection.id].globalPose;
+//                return new Pose2d(aprilPose.getX() + pose.getX(), aprilPose.getY() + -pose.getY(), pose.getRotation());
+//            }
+//        }
 
         return null;
     }

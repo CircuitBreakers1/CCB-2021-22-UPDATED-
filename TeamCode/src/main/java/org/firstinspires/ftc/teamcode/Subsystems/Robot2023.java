@@ -187,6 +187,8 @@ public class Robot2023 {
             cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));
             this.visionInit = true;
         }
+        if (opMode != null)
+            movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem, armSubsystem, imu);
     }
 
     public boolean isVisionInit() {

@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
+import org.firstinspires.ftc.teamcode.Subsystems.ColorBlobDetector;
 import org.firstinspires.ftc.teamcode.Subsystems.PoseSupply;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 
@@ -20,12 +21,13 @@ public class CameraTest extends OpMode {
     @Override
     public void init() {
         robot.init(hardwareMap, true, null);
+        //robot.cameraSubsystem.setColorBlobDetector(ColorBlobDetector.PropColor.RED);
     }
 
     @Override
     public void init_loop() {
 //        telemetry.addData("Color Guess", robot.cameraSubsystem.getPropGuess());
-        Pose2d pose = robot.cameraSubsystem.getRelativeAprilTagPose(PoseSupply.APRILTAG_BLUE_MIDDLE);
+        Pose2d pose = robot.cameraSubsystem.getPoseFromAprilTag();
         if (pose != null) realPose = pose;
         telemetry.addData("X", realPose.getX()).addData("Y", realPose.getY()).addData("Theta", realPose.getHeading());
         telemetry.update();

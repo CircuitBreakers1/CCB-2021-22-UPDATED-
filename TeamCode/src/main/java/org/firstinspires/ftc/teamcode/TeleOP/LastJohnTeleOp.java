@@ -47,6 +47,7 @@ import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMBASE;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMD;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMI;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMP;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.shootAngle;
 
 import static java.lang.Math.abs;
 
@@ -94,7 +95,7 @@ public class LastJohnTeleOp extends OpMode {
         telemetry.addData("Status", "Initialized");
         robot.init(hardwareMap, false, null);
 
-        wrist.setPosition(1);
+        wrist.setPosition(0);
 
         armPID.setSetPoint(-224);
 
@@ -111,10 +112,10 @@ public class LastJohnTeleOp extends OpMode {
         telemetry.addData("Moving Arm", extendZeroed ? "Moving to " + base : "Zeroing");
         telemetry.addData("Touch State", viperTouch.getState());
 
-        robot.armSubsystem.setWristAngle(0);
+        wrist.setPosition(0);
 
-        if (!(abs(robot.armSubsystem.getAngle() - 7) < 1 /*Angle not in position*/)) {
-            armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - 7));
+        if (!(abs(robot.armSubsystem.getAngle() - 13) < 3 /*Angle not in position*/)) {
+            armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - 13));
             telemetry.addData("Moving Arm", "True");
         } else {
             armAngle.setPower(0);
@@ -139,6 +140,7 @@ public class LastJohnTeleOp extends OpMode {
     @Override
     public void start() {
         armExtend.setPower(0);
+        armAngle.setPower(0);
         armExtend.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
@@ -177,7 +179,7 @@ public class LastJohnTeleOp extends OpMode {
         robot.holoDrivetrain.smoothDrive(rotX, rotY, -gamepad1.right_stick_x);
 
         if (gamepad1.dpad_up) {
-            shooterRaise.setPosition(0.4);
+            shooterRaise.setPosition(shootAngle);
         } else if (gamepad1.dpad_down) {
             shooterRaise.setPosition(0);
         }
@@ -189,7 +191,10 @@ public class LastJohnTeleOp extends OpMode {
                 double power = toggleIntake ? -1 : 0;
                 intake.setPower(power);
             }
-        } else {
+        } else if (gamepad2.left_bumper) {
+            toggleIntake = true;
+            intake.setPower(1);
+        }else {
             toggleDown = false;
         }
 
@@ -230,6 +235,7 @@ public class LastJohnTeleOp extends OpMode {
 
         switch (armState) {
             case Ready:
+                wrist.setPosition(0);
                 gripper.setPosition(1);
                 gamepad2.setLedColor(0, 0, 255, -1);
                 if (gamepad2.triangle /*Button to initiate grabbing pixel*/) {
@@ -324,18 +330,18 @@ public class LastJohnTeleOp extends OpMode {
             case FreeReadyTransition:
                 gamepad2.setLedColor(255, 255, 0, -1);
                 gripper.setPosition(1);
-                robot.armSubsystem.setWristAngle(0);
+                wrist.setPosition(0);
 
                 telemetry.addData("Arm Angle", robot.armSubsystem.getAngle());
                 telemetry.addData("Arm Extend", armExtend.getCurrentPosition());
                 telemetry.addData("Extend Zeroed", extendZeroed);
 
-                if (abs(robot.armSubsystem.getAngle() - 10) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
+                if (abs(robot.armSubsystem.getAngle() - 13) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
                     armState = ArmState.Ready;
                 }
 
-                if (!(abs(robot.armSubsystem.getAngle() - 10) < 1 /*Angle not in position*/)) {
-                    armAngle.setPower(-0.5 * Math.signum(robot.armSubsystem.getAngle() - 10));
+                if (!(abs(robot.armSubsystem.getAngle() - 13) < 1 /*Angle not in position*/)) {
+                    armAngle.setPower(-0.5 * Math.signum(robot.armSubsystem.getAngle() - 13));
                     telemetry.addData("Moving Arm", "True");
                 } else {
                     armAngle.setPower(0);
@@ -356,7 +362,7 @@ public class LastJohnTeleOp extends OpMode {
                         armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                         extendZeroed = true;
                     }
-                    armExtend.setPower(0.25);
+                    armExtend.setPower(0.70);
                 } else {
                     armExtend.setTargetPosition(base);
                     armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);

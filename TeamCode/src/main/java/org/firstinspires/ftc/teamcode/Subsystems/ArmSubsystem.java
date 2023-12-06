@@ -20,7 +20,7 @@ public class ArmSubsystem {
     //Pickup Angle: 2 Length: -64
     //Free: 23
 
-    private static final double OFFSET = 420.76;
+    private static final double OFFSET = 420.76 + 60;
     private static final double WRIST_MIN = 17.0, WRIST_MAX = 90.0;
 
     public ArmSubsystem(Servo wrist, Servo gripper, DcMotor armAngle, AnalogInput armEncoder, DcMotor armLength) {
