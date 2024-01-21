@@ -97,6 +97,7 @@ public class LastLastJohnTeleOp extends OpMode {
 
         robot.holoDrivetrain.smoothDrive(x, y, gamepad1.right_stick_x);
 
+        robot.liftSubsystem.simpleLift(-gamepad2.left_stick_y);
     }
 
 

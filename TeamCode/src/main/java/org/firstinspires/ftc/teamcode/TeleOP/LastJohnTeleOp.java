@@ -58,6 +58,7 @@ import static java.lang.Math.abs;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -70,6 +71,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 /**
  * Demonstrates new features
  */
+@Disabled
 @TeleOp(name = "Old:(TeleOP", group = "")
 public class LastJohnTeleOp extends OpMode {
 

@@ -15,6 +15,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -28,66 +29,107 @@ import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
  * more complex functionality is passed off into different subsystems
  */
 public class NewRobot2023 {
-    //All values in IN
-    public static final float wheelRadius = (float) 1.37795 / 2;
-    public static final float ticksPerRev = 1440;
-    public static final float ticksToIn = (float) ((2 * PI * wheelRadius) / ticksPerRev);
 
-    /**
-     * Max acceptable deviation when moving using odometry. Functions as the radius of a circle
-     */
 
+    //Motors
     public static MotorEx leftFront;
     public static MotorEx leftBack;
     public static MotorEx rightFront;
     public static MotorEx rightBack;
+    public static DcMotor leftLift;
+    public static DcMotor rightLift;
+    public static DcMotor intake;
+    public static MotorEx leftOdo;
+    public static MotorEx rightOdo;
+    public static MotorEx frontOdo;
 
-    private boolean visionInit = false;
-    private boolean startLocationBasedOnApril = false;
-    private double recalibrateTime = 0;
+    //Servos
 
-    public static final String LOGCATTAG = "Robot Logging: ";
 
-    //Tuning Values
-    float colorGain = 2;
-    double trackwidth = 14.14;
-    double odoOffset = 6.5515;
-    public static int base = ARMBASE;
+    //Sensors
+    public static IMU imu;
 
     //Subsystems
     public HoloDrivetrainSubsystem holoDrivetrain;
     public static HolonomicOdometry holOdom;
-    public MovementSubsystem movementSubsystem;
-    public ArmSubsystem armSubsystem;
+    public NewMovementSubsystem movementSubsystem;
     public CameraSubsystem cameraSubsystem;
+    public LiftSubsystem liftSubsystem;
     public ColorDetectionSubsystem colorDetectionSubsystem;
 
-    /**
-     * @param s The minimum time between recalibrating position based on AprilTag.
-     * Once the time has elapsed, the robot will reopen the camera stream, and attempt
-     * to recalibrate its position. Once it has done so, it will reclose the camera stream.
-     */
-    public NewRobot2023(double s) {
-        recalibrateTime = s;
-    }
+    //Tuning Values - All values in inches unless noted
+    float colorGain = 2; //Units: None
+    double trackwidth = 14.14;
+    double odoOffset = 6.5515;
+    public static final float wheelRadius = (float) 1.37795 / 2;
+    public static final float ticksPerRev = 1440; //Units: Ticks/Rev
+    public static final float ticksToIn = (float) ((2 * PI * wheelRadius) / ticksPerRev); //Units: In/Ticks
 
-    public NewRobot2023() {
-        recalibrateTime = -1;
-    }
+
+    public NewRobot2023() {}
 
     public void init(HardwareMap ahwMap, boolean initVision, LinearOpMode opMode) {
-        leftFront = new MotorEx(ahwMap, "leftFront");
-        leftBack = new MotorEx(ahwMap, "leftBack");
-        rightFront = new MotorEx(ahwMap, "rightFront");
-        rightBack = new MotorEx(ahwMap, "rightBack");
+        //Init Motors
+        {
+            leftFront = new MotorEx(ahwMap, "leftFront");
+            leftBack = new MotorEx(ahwMap, "leftBack");
+            rightFront = new MotorEx(ahwMap, "rightFront");
+            rightBack = new MotorEx(ahwMap, "rightBack");
 
-        leftFront.setInverted(true);
-        rightBack.setInverted(true);
+            leftLift = ahwMap.get(DcMotor.class, "leftLift");
+            rightLift = ahwMap.get(DcMotor.class, "rightLift");
+            //intake = ahwMap.get(DcMotor.class, "intake");
 
-        holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
-    }
+            leftFront.setInverted(true);
+            rightBack.setInverted(true);
 
-    public boolean isVisionInit() {
-        return visionInit;
+            leftOdo.setDistancePerPulse(ticksToIn);
+            rightOdo.setDistancePerPulse(ticksToIn);
+            frontOdo.setDistancePerPulse(ticksToIn);
+
+            leftOdo.resetEncoder();
+            rightOdo.resetEncoder();
+            frontOdo.resetEncoder();
+        }
+
+        //Init Servos
+        {
+
+        }
+
+
+        //Init Sensors
+        {
+            RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD;
+            RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
+            RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+            imu.initialize(new IMU.Parameters(orientationOnRobot));
+        }
+
+        //Init Subsystems
+        {
+            holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
+            holOdom = new HolonomicOdometry(
+                    () -> (leftOdo.getCurrentPosition() * ticksToIn * LEFTMULT),
+                    () -> rightOdo.getCurrentPosition() * -ticksToIn * RIGHTMULT,
+                    () -> frontOdo.getCurrentPosition() * ticksToIn * BACKMULT,
+                    trackwidth,
+                    odoOffset * OFFSETMULT
+            );
+
+            holOdom.updatePose();
+            holOdom.updatePose(new Pose2d(0, 0, new Rotation2d(0)));
+
+            liftSubsystem = new LiftSubsystem(leftLift, rightLift, null, null, null, null, null);
+
+            if(initVision) {
+                cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));
+            }
+
+            if(opMode != null) {
+                movementSubsystem = new NewMovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem);
+            }
+        }
+
     }
 }

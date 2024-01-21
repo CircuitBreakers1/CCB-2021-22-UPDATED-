@@ -4,6 +4,8 @@ import com.acmerobotics.dashboard.config.Config;
 
 @Config
 public class AutoTuning {
+
+    public static boolean pauseForTuning = false;
     public static double x1 = 50.2;
     public static int ARMLENGTH = -1100;
     public static double ARMANGLE = -5.5;
