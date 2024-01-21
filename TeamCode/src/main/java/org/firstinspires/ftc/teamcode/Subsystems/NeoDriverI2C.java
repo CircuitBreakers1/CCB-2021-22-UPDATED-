@@ -15,7 +15,7 @@ import java.nio.ByteOrder;
 public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
 
     private boolean isRGBW;
-    private int numPixels;
+    private short numPixels;
 
     public NeoDriverI2C(I2cDeviceSynch i2cDeviceSynch, boolean deviceClientIsOwned) {
         super(i2cDeviceSynch, deviceClientIsOwned);
@@ -32,7 +32,7 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
         return true;
     }
 
-    public void setNumPixels(int numPixels) {
+    public void setNumPixels(short numPixels) {
         this.numPixels = numPixels;
     }
 
@@ -113,43 +113,40 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
         }
 
         writeBytes(Register.SHOW, new byte[] {0x0});
+        clear();
     }
 
     /**
      * Sets the color of multiple pixels
      *
-     * @param startPixel The pixel to begin writing (Inclusive)
      * @param endPixel The pixel to stop writing (Inclusive)
      * @param color The color to use
      */
-    public void setPixels(int startPixel, int endPixel, Color color) {
-        if (startPixel < 0 || endPixel >= numPixels) {
+    public void setPixels(short endPixel, Color color) {
+        if (endPixel >= numPixels) {
             throw new IllegalArgumentException("Pixel range out of bounds");
         }
+        byte[] addr = TypeConversion.shortToByteArray((short) 0);
+        clear(endPixel);
 
-        int pixels = endPixel - startPixel + 1;
+        //Clear all pixels in range by setting them to black
 
-        for (int i = 0; i < pixels; i += 9) {
-            short startAddr = (short) (i + startPixel);
-            int maxWriteThisBatch = Math.min(pixels - i, 9);
-            byte[] data = new byte[(maxWriteThisBatch * 3) + 2];
-            byte[] strtAddr = TypeConversion.shortToByteArray(startAddr);
-            data[0] = strtAddr[0];
-            data[1] = strtAddr[1];
-
-            for (int j = 0; j < maxWriteThisBatch; j++) {
-                data[2 + (j * 3)] = (byte) color.r;
-                data[3 + (j * 3)] = (byte) color.g;
-                data[4 + (j * 3)] = (byte) color.b;
-            }
-
-            writeBytes(Register.BUF, data);
-            writeBytes(Register.SHOW, new byte[] {0x1});
+        byte[] output = new byte[2 + 3 * (endPixel + 1)];
+        output[0] = addr[0];
+        output[1] = addr[1];
+        for(int i = 2; i < output.length; i += 3) {
+            output[i] = color.g;
+            output[i + 1] = color.r;
+            output[i + 2] = color.b;
         }
+
+        writeBytes(Register.BUF, output);
+        writeBytes(Register.SHOW, new byte[] {0x1});
+        writeBytes(Register.SHOW, new byte[] {0x0});
     }
 
     public void setAllPixels(Color color) {
-        setPixels(0, numPixels - 1, color);
+        setPixels((short) (numPixels - 1), color);
     }
 
     public static class Color {
@@ -167,12 +164,32 @@ public class NeoDriverI2C extends I2cDeviceSynchDevice<I2cDeviceSynch> {
 
     //Set the color of the first pixel to red.
     public int test() {
-        short startAddr = 0;
+        short startAddr = 3;
         byte[] startAddrBytes = TypeConversion.shortToByteArray(startAddr);
         byte[] data = new byte[] {startAddrBytes[0], startAddrBytes[1], 0x00, (byte) 0xFF, 0x00};
         writeBytes(Register.BUF, data);
         writeBytes(Register.SHOW, new byte[] {0x1});
         writeBytes(Register.SHOW, new byte[] {0x0});
         return data.length;
+    }
+
+    public void clear() {
+        clear((short) (numPixels - 1));
+    }
+
+    public void clear(int end) {
+        byte[] addr = TypeConversion.shortToByteArray((short) 0);
+        byte[] clear = new byte[2 + 3 * (end + 1)];
+        clear[0] = addr[0];
+        clear[1] = addr[1];
+        for(int i = 2; i < clear.length; i += 3) {
+            clear[i] = 0x0;
+            clear[i + 1] = 0x0;
+            clear[i + 2] = 0x0;
+        }
+
+        writeBytes(Register.BUF, clear);
+        writeBytes(Register.SHOW, new byte[] {0x1});
+        writeBytes(Register.SHOW, new byte[] {0x0});
     }
 }

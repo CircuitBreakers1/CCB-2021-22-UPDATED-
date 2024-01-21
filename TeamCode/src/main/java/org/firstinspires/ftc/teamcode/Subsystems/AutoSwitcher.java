@@ -11,7 +11,8 @@ public class AutoSwitcher {
         START_LOCATION,
         PARK_LOCATION,
         MOVEMENT_PATH,
-        PLACE_LOCATION;
+        PLACE_LOCATION,
+        DELAY_SECONDS;
 
         public static ConfigSetting cycleUp(ConfigSetting setting) {
             switch (setting) {
@@ -22,6 +23,8 @@ public class AutoSwitcher {
                 case MOVEMENT_PATH:
                     return PLACE_LOCATION;
                 case PLACE_LOCATION:
+                    return DELAY_SECONDS;
+                case DELAY_SECONDS:
                     return START_LOCATION;
             }
             return START_LOCATION;
@@ -30,13 +33,16 @@ public class AutoSwitcher {
         public static ConfigSetting cycleDown(ConfigSetting setting) {
             switch (setting) {
                 case START_LOCATION:
-                    return PLACE_LOCATION;
+                    return DELAY_SECONDS;
                 case PLACE_LOCATION:
                     return MOVEMENT_PATH;
                 case PARK_LOCATION:
                     return START_LOCATION;
                 case MOVEMENT_PATH:
                     return PARK_LOCATION;
+                case DELAY_SECONDS:
+                    return PLACE_LOCATION;
+
             }
             return START_LOCATION;
         }
@@ -83,14 +89,17 @@ public class AutoSwitcher {
     private MovementPath movementPath;
     private Alliance alliance;
     private PlaceLocation placeLocation;
+    private int delaySec;
+    private int delayMin = 0, delayMax = 10;
     private final MovementSubsystem movementSubsystem;
 
     public AutoSwitcher(MovementSubsystem movementSubsystem) {
-        startLocation = StartLocation.RED_AUDIENCE;
-        alliance = Alliance.RED;
+        startLocation = StartLocation.BLUE_BACKDROP;
+        alliance = Alliance.BLUE;
         placeLocation = PlaceLocation.LEFT;
         parkLocation = ParkLocation.OUTSIDE;
         movementPath = MovementPath.STAGE_DOOR;
+        delaySec = 0;
         this.movementSubsystem = movementSubsystem;
     }
 
@@ -104,6 +113,8 @@ public class AutoSwitcher {
                 return movementPath.toString();
             case PLACE_LOCATION:
                 return placeLocation.toString();
+            case DELAY_SECONDS:
+                return String.valueOf(delaySec);
         }
         return "";
     }
@@ -126,6 +137,12 @@ public class AutoSwitcher {
 
     public PlaceLocation getPlaceLocation() {
         return placeLocation;
+    }
+    public int getDelayMS() {
+        return delaySec * 1000;
+    }
+    public int getDelaySec() {
+        return delaySec;
     }
 
     public void toggleUp(ConfigSetting setting) {
@@ -183,6 +200,9 @@ public class AutoSwitcher {
                         placeLocation = PlaceLocation.LEFT;
                         break;
                 }
+                break;
+            case DELAY_SECONDS:
+                if(delaySec < delayMax) delaySec++;
                 break;
         }
     }
@@ -243,10 +263,13 @@ public class AutoSwitcher {
                         break;
                 }
                 break;
+            case DELAY_SECONDS:
+                if(delaySec > delayMin) delaySec--;
+                break;
         }
     }
 
-    public void moveSwitch(PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, Runnable loop, SwitchType switchType) {
+    public void moveSwitch(PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, boolean precise, Runnable loop, SwitchType switchType) {
         //Blue side is default, so no need to change anything for it.
         if (alliance == Alliance.RED) {
             switch (switchType) {
@@ -264,14 +287,22 @@ public class AutoSwitcher {
                     break;
             }
         }
-        movementSubsystem.moveTo(poseSupply, x, y, theta, maxSpeed, loop);
+        movementSubsystem.moveTo(poseSupply, x, y, theta, maxSpeed, precise, loop);
     }
 
     public void moveSwitch(PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, Runnable loop) {
-        moveSwitch(poseSupply, x, y, theta, maxSpeed, loop, SwitchType.MIRROR_X_AXIS);
+        moveSwitch(poseSupply, x, y, theta, maxSpeed, true, loop, SwitchType.MIRROR_X_AXIS);
+    }
+
+    public void moveSwitch(PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, boolean precise, Runnable loop) {
+        moveSwitch(poseSupply, x, y, theta, maxSpeed, precise, loop, SwitchType.MIRROR_X_AXIS);
+    }
+
+    public void moveSwitch(PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, boolean precise) {
+        moveSwitch(poseSupply, x, y, theta, maxSpeed, precise, null, SwitchType.MIRROR_X_AXIS);
     }
 
     public void moveSwitch(PoseSupply poseSupply, double x, double y, double theta, double maxSpeed) {
-        moveSwitch(poseSupply, x, y, theta, maxSpeed, null, SwitchType.MIRROR_X_AXIS);
+        moveSwitch(poseSupply, x, y, theta, maxSpeed, true, null, SwitchType.MIRROR_X_AXIS);
     }
 }

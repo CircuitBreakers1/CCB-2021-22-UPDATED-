@@ -6,6 +6,7 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armExtend;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.base;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.gripper;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.viperTouch;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMPICKUPANGLE;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFD;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFI;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFP;
@@ -78,7 +79,7 @@ public class MovementSubsystem {
      * @param maxSpeed Max motor speeds
      * @param loop Runnable to be ran in the loop
      */
-    public void moveTo(@NonNull PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, Runnable loop) {
+    public void moveTo(@NonNull PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, boolean precise, Runnable loop) {
         theta = theta;
 
         if (loop == null) {
@@ -164,7 +165,8 @@ public class MovementSubsystem {
             telemetry.update();
         }
 
-        while ((abs(xError) > precision || abs(yError) > precision || turnController.getError(theta, heading) > 0.11) && opMode.opModeIsActive()) {
+        double realPrecision = precise ? precision : 2;
+        while ((abs(xError) > realPrecision || abs(yError) > realPrecision || turnController.getError(theta, heading) > 0.11) && opMode.opModeIsActive()) {
             holOdom.updatePose();
 
             telemetry.addData("April Sync Needed", apriltagSyncRequested);
@@ -172,6 +174,7 @@ public class MovementSubsystem {
             if(apriltagSyncRequested) {
                 Pose2d aprilPose = cameraSubsystem.getPoseFromAprilTag();
                 if(aprilPose != null) {
+                    holOdom.updatePose();
                     holOdom.updatePose(aprilPose);
                     apriltagSyncRequested = false;
                 }
@@ -207,6 +210,8 @@ public class MovementSubsystem {
             telemetry.addData("Arm State", armState);
             telemetry.addData("Is Doing Arm Thing", loop == GRAB_PIXEL_AUTO);
             telemetry.addData("Extend Zeroed", extendZeroed);
+            telemetry.addData("X", holOdom.getPose().getX());
+            telemetry.addData("Y", holOdom.getPose().getY());
             telemetry.addData("X Distance", xError);
             telemetry.addData("Y Distance", yError);
             telemetry.addData("X PID Output", xPID);
@@ -291,7 +296,7 @@ public class MovementSubsystem {
                         break;
                     case LowerArm:
                         armAngle.setPower(-0.85);
-                        if (abs(armSubsystem.getAngle() - 2) < 1) {
+                        if (abs(armSubsystem.getAngle() - ARMPICKUPANGLE) < 1) {
                             armAngle.setPower(0);
                             armState = ArmSubsystem.ArmState.Grip;
                         }
@@ -362,7 +367,7 @@ public class MovementSubsystem {
                         break;
                     case LowerArm:
                         armAngle.setPower(-0.85);
-                        if (abs(armSubsystem.getAngle() - 2) < 1) {
+                        if (abs(armSubsystem.getAngle() - ARMPICKUPANGLE) < 1) {
                             armAngle.setPower(0);
                             armState = ArmSubsystem.ArmState.Grip;
                         }
@@ -394,7 +399,11 @@ public class MovementSubsystem {
     }
 
     public void moveTo(@NonNull PoseSupply poseSupply, double x, double y, double theta, double maxSpeed) {
-        moveTo(poseSupply, x, y, theta, maxSpeed, null);
+        moveTo(poseSupply, x, y, theta, maxSpeed, true,null);
+    }
+
+    public void moveTo(@NonNull PoseSupply poseSupply, double x, double y, double theta, double maxSpeed, boolean precise) {
+        moveTo(poseSupply, x, y, theta, maxSpeed, precise,null);
     }
 
     @Deprecated

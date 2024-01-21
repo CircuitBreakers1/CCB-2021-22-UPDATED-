@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.Subsystems.ColorBlobDetector.PropCo
 import static org.firstinspires.ftc.teamcode.Subsystems.ColorBlobDetector.PropColor.RED;
 import static org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase.getCurrentGameTagLibrary;
 import static java.lang.Math.cos;
+import static java.lang.Math.hypot;
 import static java.lang.Math.sin;
 
 import android.util.Size;
@@ -36,7 +37,7 @@ public class CameraSubsystem {
     private ColorBlobDetector redBlobDetector;
 
     //X Y Displacement on robot from Center
-    private double[] cameraLocation = {};
+    private double[] cameraLocation = { -8.25, -2.875};
 
     public CameraSubsystem(WebcamName webcamName) {
 
@@ -114,22 +115,25 @@ public class CameraSubsystem {
     }
 
     /**
-     * Returns Absolute Location Base on AprilTags
+     * Returns Absolute Location Based on AprilTags
      **/
     @Nullable
     public Pose2d getPoseFromAprilTag() {
-        //List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
+        List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
 
 //        if(detections.isEmpty()) return null;
-//
-//        for (AprilTagDetection detection : detections) {
-//            if (detection.metadata != null) {
-//                //Return the first global pose we can find
-//                Pose2d pose = translateToCam(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll);
-//                Pose2d aprilPose = PoseSupply.values()[detection.id].globalPose;
-//                return new Pose2d(aprilPose.getX() + pose.getX(), aprilPose.getY() + -pose.getY(), pose.getRotation());
-//            }
-//        }
+
+        for (AprilTagDetection detection : detections) {
+            if (detection.metadata != null) {
+                //Return the first global pose we can find
+                Pose2d pose = translateToCam(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll);
+//                return pose;
+                Pose2d aprilPose = PoseSupply.values()[detection.id].globalPose;
+                Pose2d cameraGlobal = new Pose2d(aprilPose.getX() + -pose.getX(), aprilPose.getY() + pose.getY(), pose.getRotation());
+                Pose2d robotGlobal = translateCamToCenter(cameraGlobal);
+                return robotGlobal;
+            }
+        }
 
         return null;
     }
@@ -167,6 +171,15 @@ public class CameraSubsystem {
         return null;
     }
 
+    private Pose2d translateCamToCenter(Pose2d cam) {
+        double theta = cam.getHeading();
+//        double x = cam.getX() - (cameraLocation[0] * cos(theta)) + (cameraLocation[1] * sin(theta));
+//        double y = cam.getY() + (cameraLocation[1] * sin(theta)) + (cameraLocation[0] * cos(theta));
+        double d = hypot(cameraLocation[0], cameraLocation[1]);
+        double x = cam.getX() + d * cos(theta);
+        double y = cam.getY() + d * sin(theta);
+        return new Pose2d(x, y, cam.getRotation());
+    }
 
     private Pose2d translateToCam(double x, double y, double z, double yaw, double pitch, double roll) {
         yaw = Math.toRadians(yaw);

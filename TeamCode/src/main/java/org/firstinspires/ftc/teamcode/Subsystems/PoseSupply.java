@@ -14,7 +14,12 @@ public enum PoseSupply {
     APRILTAG_BLUE_RIGHT(3, new Pose2d(63.5, 29.5, new Rotation2d(0)), 1, 2),
     APRILTAG_RED_LEFT(4, new Pose2d(63.5, -29.5, new Rotation2d(0)), 5, 6),
     APRILTAG_RED_MIDDLE(5, new Pose2d(63.5, -35.5, new Rotation2d(0)), 4, 6),
-    APRILTAG_RED_RIGHT(6, new Pose2d(63.5, -41.5, new Rotation2d(0)), 4, 6);
+    APRILTAG_RED_RIGHT(6, new Pose2d(63.5, -41.5, new Rotation2d(0)), 4, 6),
+    APRILTAG_RED_AUDIENCE_BIG(7, new Pose2d(-70.375, -41, new Rotation2d(0))),
+    APRILTAG_RED_AUDIENCE_SMALL(8, new Pose2d(-70.375, -35.5, new Rotation2d(0))),
+    APRILTAG_BLUE_AUDIENCE_SMALL(9, new Pose2d(-70.375, 35.5, new Rotation2d(0)), 10),
+    APRILTAG_BLUE_AUDIENCE_BIG(10, new Pose2d(-70.375, 41, new Rotation2d(0)), 9),
+    ;
 
     int id;
     final ArrayList<Integer> substitutions = new ArrayList<>();

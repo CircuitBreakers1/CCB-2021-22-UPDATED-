@@ -11,17 +11,25 @@ public class NeoDriverTest extends OpMode {
     @Override
     public void init() {
         neoDriver = hardwareMap.get(NeoDriverI2C.class, "neoDriver");
-        neoDriver.setNumPixels(5);
+        neoDriver.setNumPixels((short) 10);
         neoDriver.setRGBW(false);
         neoDriver.init();
-        //neoDriver.setAllPixels(new NeoDriverI2C.Color(255, 0, 0));
-        int debug = neoDriver.test();
-        telemetry.addData("Write Length", debug);
-        telemetry.addData("Manufacturer ID", neoDriver.getManufacturer().name());
+//        neoDriver.test();
+        //neoDriver.setAllPixels(new NeoDriverI2C.Color((short) 255, (short) 0, (short) 0));
+        neoDriver.setPixels((short) 9, new NeoDriverI2C.Color((short) 0, (short) 255, (short) 0));
+        neoDriver.setPixels((short) 4, new NeoDriverI2C.Color((short) 255, (short) 0, (short) 0));
+////        int debug = neoDriver.test();
+//        byte[] test2 = {test[0], test[1]};
+//        telemetry.addData("Write Spot", test2[0] + " " + test2[1]);
+//        telemetry.addData("Manufacturer ID", neoDriver.getManufacturer().name());
     }
 
     @Override
     public void loop() {
 
+    }
+
+    public void stop() {
+        neoDriver.clear();
     }
 }

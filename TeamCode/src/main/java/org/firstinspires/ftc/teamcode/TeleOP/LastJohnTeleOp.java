@@ -44,9 +44,13 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.slidePush;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.viperTouch;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.wrist;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMBASE;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMBASE;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMD;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMI;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMP;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMPICKUPANGLE;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.GRIPCLOSED;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.GRIPOPEN;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.shootAngle;
 
 import static java.lang.Math.abs;
@@ -66,7 +70,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 /**
  * Demonstrates new features
  */
-@TeleOp(name = "TeleOP", group = "")
+@TeleOp(name = "Old:(TeleOP", group = "")
 public class LastJohnTeleOp extends OpMode {
 
     Robot2023 robot = new Robot2023();
@@ -107,9 +111,9 @@ public class LastJohnTeleOp extends OpMode {
 
     @Override
     public void init_loop() {
-        telemetry.addData("Angle Error:", abs(robot.armSubsystem.getAngle() - 7));
+        telemetry.addData("Angle Error:", abs(robot.armSubsystem.getAngle() - 13));
         telemetry.addData("Current Position:", armExtend.getCurrentPosition());
-        telemetry.addData("Moving Arm", extendZeroed ? "Moving to " + base : "Zeroing");
+        telemetry.addData("Moving Arm", extendZeroed ? "Moving to " + ARMBASE : "Zeroing");
         telemetry.addData("Touch State", viperTouch.getState());
 
         wrist.setPosition(0);
@@ -131,7 +135,7 @@ public class LastJohnTeleOp extends OpMode {
             }
             armExtend.setPower(0.25);
         } else {
-            armExtend.setTargetPosition(base);
+            armExtend.setTargetPosition(ARMBASE);
             armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             armExtend.setPower(0.8);
         }
@@ -147,6 +151,7 @@ public class LastJohnTeleOp extends OpMode {
 
     @Override
     public void loop() {
+        //robot.colorDetectionSubsystem.updateColors();
         dashTele.addData("Arm Angle", robot.armSubsystem.getAngle());
         dashTele.update();
 
@@ -235,8 +240,11 @@ public class LastJohnTeleOp extends OpMode {
 
         switch (armState) {
             case Ready:
+                armExtend.setTargetPosition(ARMBASE);
+                armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                armExtend.setPower(0.8);
                 wrist.setPosition(0);
-                gripper.setPosition(1);
+                gripper.setPosition(GRIPOPEN);
                 gamepad2.setLedColor(0, 0, 255, -1);
                 if (gamepad2.triangle /*Button to initiate grabbing pixel*/) {
                     armState = ArmState.LowerArm;
@@ -248,7 +256,7 @@ public class LastJohnTeleOp extends OpMode {
             case LowerArm:
                 gamepad2.setLedColor(255, 0, 0, -1);
                 armAngle.setPower(-0.85);
-                if (abs(robot.armSubsystem.getAngle() - 2) < 1) {
+                if (abs(robot.armSubsystem.getAngle() - ARMPICKUPANGLE) < 1) {
                     armAngle.setPower(0);
                     armState = ArmState.Grip;
                 }
@@ -258,7 +266,7 @@ public class LastJohnTeleOp extends OpMode {
                 if (gripTime == 0) {
                     gripTime = System.currentTimeMillis();
                 }
-                gripper.setPosition(0);
+                gripper.setPosition(GRIPCLOSED);
                 if (System.currentTimeMillis() - gripTime > 500) {
                     armState = ArmState.RaiseArm;
                     gripTime = 0;
@@ -287,7 +295,9 @@ public class LastJohnTeleOp extends OpMode {
                 }
 
                 if (gamepad2.square) {
-                    gripper.setPosition(1);
+                    gripper.setPosition(GRIPOPEN);
+                } else if (gamepad2.back) {
+                    gripper.setPosition(GRIPCLOSED);
                 }
 
                 if (true /*Angle Stick Pushed up and not at max angle, or down and not at min angle*/) {
@@ -322,21 +332,21 @@ public class LastJohnTeleOp extends OpMode {
                     armState = ArmState.FreeReadyTransition;
                     armAngle.setPower(0);
                     armExtend.setPower(0);
-                    armExtend.setTargetPosition(base);
+                    armExtend.setTargetPosition(ARMBASE);
                     armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     extendZeroed = false;
                 }
                 break;
             case FreeReadyTransition:
                 gamepad2.setLedColor(255, 255, 0, -1);
-                gripper.setPosition(1);
+                gripper.setPosition(GRIPOPEN);
                 wrist.setPosition(0);
 
                 telemetry.addData("Arm Angle", robot.armSubsystem.getAngle());
                 telemetry.addData("Arm Extend", armExtend.getCurrentPosition());
                 telemetry.addData("Extend Zeroed", extendZeroed);
 
-                if (abs(robot.armSubsystem.getAngle() - 13) < 1 && abs(armExtend.getCurrentPosition() - base) < 10 && extendZeroed) {
+                if (abs(robot.armSubsystem.getAngle() - 13) < 1 && abs(armExtend.getCurrentPosition() - ARMBASE) < 10 && extendZeroed) {
                     armState = ArmState.Ready;
                 }
 
@@ -364,7 +374,7 @@ public class LastJohnTeleOp extends OpMode {
                     }
                     armExtend.setPower(0.70);
                 } else {
-                    armExtend.setTargetPosition(base);
+                    armExtend.setTargetPosition(ARMBASE);
                     armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                     armExtend.setPower(0.8);
                 }

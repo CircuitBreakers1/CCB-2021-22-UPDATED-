@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.Auto;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.ConfigSetting.DELAY_SECONDS;
 import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.ConfigSetting.PLACE_LOCATION;
 import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.ConfigSetting.START_LOCATION;
 import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.StartLocation.BLUE_AUDIENCE;
@@ -10,11 +11,19 @@ import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.SwitchType.
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armAngle;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armExtend;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.base;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.frontOdo;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.gripper;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.holOdom;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.leftFront;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.leftOdo;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.rightOdo;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.shotRelease;
+import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.slidePush;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.viperTouch;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.wrist;
+import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.ARMANGLE;
+import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.ARMANGLE2;
+import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.ARMLENGTH;
 import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.t1;
 import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.t2;
 import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.t3;
@@ -25,12 +34,17 @@ import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.y1;
 import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.y2;
 import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.y3;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMBASE;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMPICKUPANGLE;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.GRIPCLOSED;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.GRIPOPEN;
 
+import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -116,16 +130,16 @@ public class Auto extends LinearOpMode {
             //Perform Arm Maneuver
             switch (armState) {
                 case Ready:
-                    gripper.setPosition(0);
+                    gripper.setPosition(GRIPCLOSED);
                     robot.armSubsystem.setWristAngle(0);
                     if (gamepad1.a && systemStates[4] && systemStates[5]) {
                         armState = ArmSubsystem.ArmState.LowerArm;
                     }
                     break;
                 case LowerArm:
-                    gripper.setPosition(1);
+                    gripper.setPosition(GRIPOPEN);
                     armAngle.setPower(-0.85);
-                    if (abs(robot.armSubsystem.getAngle() - 2) < 1) {
+                    if (abs(robot.armSubsystem.getAngle() - ARMPICKUPANGLE) < 1) {
                         armAngle.setPower(0);
                         armState = ArmSubsystem.ArmState.Grip;
                     }
@@ -134,7 +148,7 @@ public class Auto extends LinearOpMode {
                     if (gripTime == 0) {
                         gripTime = System.currentTimeMillis();
                     }
-                    gripper.setPosition(0);
+                    gripper.setPosition(GRIPCLOSED);
                     if (System.currentTimeMillis() - gripTime > 500) {
                         armState = ArmSubsystem.ArmState.RaiseArm;
                         gripTime = 0;
@@ -212,6 +226,12 @@ public class Auto extends LinearOpMode {
                 dpadPressed[1] = false;
             }
 
+            if (gamepad1.triangle) {
+                shotRelease.setPosition(0);
+            } else if (gamepad1.square) {
+                shotRelease.setPosition(0.5);
+            }
+
             //Check System States -- Arm Maneuver updates after arm is moved, so we don't need to check that here
             systemStates[1] = robot.colorDetectionSubsystem.getBayColors()[0] == ColorDetectionSubsystem.BayColor.YELLOW;
             propGuess = robot.cameraSubsystem.getPropGuess();
@@ -233,6 +253,7 @@ public class Auto extends LinearOpMode {
             telemetry.addLine("Status: " + (allSystemsGo ? "ALL SYSTEMS GO!" : "Not Ready"));
             telemetry.addData("Current Configuration", currentConfiguration + " - " + autoSwitcher.get(currentConfiguration));
             telemetry.addData("Start Location", autoSwitcher.get(START_LOCATION));
+            telemetry.addData("Delay Seconds", autoSwitcher.get(DELAY_SECONDS));
             telemetry.addData("Place Location", autoSwitcher.get(ConfigSetting.PLACE_LOCATION));
             telemetry.addData("Park Location", autoSwitcher.get(ConfigSetting.PARK_LOCATION));
             telemetry.addData("Movement Path", autoSwitcher.get(ConfigSetting.MOVEMENT_PATH));
@@ -288,6 +309,10 @@ public class Auto extends LinearOpMode {
         switch (autoSwitcher.getStartLocation()) {
             case RED_BACKDROP:
             case BLUE_BACKDROP:
+                //Delay
+                if(autoSwitcher.getDelayMS() != 0) {
+                    sleep(autoSwitcher.getDelayMS());
+                }
                 //Backdrop side code
                 switch (mirroredGuess) {
                     case LEFT:
@@ -314,12 +339,12 @@ public class Auto extends LinearOpMode {
                 }
                 armAngle.setPower(0);
                 //Drop the pixel.
-                gripper.setPosition(1);
+                gripper.setPosition(GRIPOPEN);
                 sleep(300);
                 if (mirroredGuess == ColorBlobDetector.PropGuess.LEFT) {
-                    autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 30, 55, -1.57, 1);
+                    autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 30, 55, -1.57, 1, false);
                 } else if(mirroredGuess == ColorBlobDetector.PropGuess.MIDDLE || mirroredGuess == ColorBlobDetector.PropGuess.UNKNOWN) {
-                    autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 16, 50, -1.57, 1);
+                    autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 16, 50, -1.57, 1, false);
                 }
                 //Go to the backboard, then the code merge happens
                 break;
@@ -331,11 +356,11 @@ public class Auto extends LinearOpMode {
                         autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -43, 38, -3.14, 1);
                         break;
                     case RIGHT:
-                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -45.5, 57, -1.57, 1);
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -45.5, 55, -1.57, 1);
                         break;
                     case MIDDLE:
                     case UNKNOWN:
-                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -39, 44, -1.57, 1);
+                        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -39, 44.5, -1.57, 1);
                         break;
                 }
 
@@ -352,7 +377,7 @@ public class Auto extends LinearOpMode {
                 }
                 armAngle.setPower(0);
                 //Drop the pixel.
-                gripper.setPosition(1);
+                gripper.setPosition(GRIPOPEN);
                 sleep(300);
 
                 while(opModeIsActive() && robot.armSubsystem.getAngle() < 10) {
@@ -362,19 +387,21 @@ public class Auto extends LinearOpMode {
 
                 armExtend.setTargetPosition(base);
 
-                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -36, 60, -3.14, 1);
+                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -44, 60, -3.14, 1);
+                if(autoSwitcher.getDelayMS() != 0) {
+                    sleep(autoSwitcher.getDelayMS());
+                }
                 autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 60, -3.14, 1);
                 break;
         }
-        robot.movementSubsystem.requestApriltagSync();
-        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 36, -3.14, 1, MovementSubsystem.GRAB_PIXEL_AUTO);
+        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 36, -3.14, 1, false, MovementSubsystem.GRAB_PIXEL_AUTO);
 
         double armTargetAngle = 25;
         while ((abs(robot.armSubsystem.getAngle() - armTargetAngle) > 3) && opModeIsActive()) {
             armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - armTargetAngle));
         }
         armAngle.setPower(0);
-        armExtend.setTargetPosition(-970);
+        armExtend.setTargetPosition(-1075);
         armExtend.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         armExtend.setPower(0.9);
 
@@ -449,11 +476,93 @@ public class Auto extends LinearOpMode {
 //                throw new IllegalStateException("Unexpected value: " + autoSwitcher.getStartLocation());
 //        }
 
-        gripper.setPosition(1);
-        sleep(200);
+        gripper.setPosition(GRIPOPEN);
+        sleep(500);
         armExtend.setTargetPosition(base);
         sleep(500);
-        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 36, -3.14, 1);
+        autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 36, -3.14, 1, false);
+
+
+//        int cycleAmount = 1;
+//        switch (autoSwitcher.getMovementPath()) {
+//            case INSIDE_TRUSS:
+//            case OUTSIDE_TRUSS:
+////                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 0, 50, 0, 1);
+////                break;
+//            case STAGE_DOOR:
+//                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 11, 0, 1, false);
+//                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -24, 11, PI / 8, 1, true);
+////                armExtend.setTargetPosition(-1200);
+////                armTargetAngle = -3;
+////                while ((abs(robot.armSubsystem.getAngle() - armTargetAngle) > 3) && opModeIsActive()) {
+////                    armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - armTargetAngle));
+////                }
+////                armAngle.setPower(0);
+////                gripper.setPosition(0);
+//                //robot.movementSubsystem.requestApriltagSync();
+//                //Check for apriltag
+//                long curTime = System.currentTimeMillis();
+//                while (opModeIsActive() && System.currentTimeMillis() < curTime + 5000) {
+//                    Pose2d aprilPose = robot.cameraSubsystem.getPoseFromAprilTag();
+//                    if(aprilPose != null) {
+//                        holOdom.updatePose();
+//                        holOdom.updatePose(aprilPose);
+//                        holOdom.updatePose();
+//                        holOdom.updatePose(aprilPose);
+//                        leftOdo.resetEncoder();
+//                        rightOdo.resetEncoder();
+//                        frontOdo.resetEncoder();
+//                        holOdom.updatePose();
+//                        telemetry.addLine("AprilTag Locked!");
+//                        Pose2d realPose = holOdom.getPose();
+//                        telemetry.addData("X", realPose.getX()).addData("Y", realPose.getY()).addData("Theta", realPose.getHeading());
+//                        telemetry.update();
+//                        //sleep(2000);
+//                        break;
+//                    }
+//                }
+//                armExtend.setTargetPosition(ARMLENGTH + 200);
+//                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, -55.5, 8.75, 0, 1);
+//                gripper.setPosition(1);
+//                //Extend Arm
+//                armExtend.setTargetPosition(ARMLENGTH);
+//                while(opModeIsActive() && (armExtend.getCurrentPosition() < ARMLENGTH - 50 || armExtend.getCurrentPosition() > ARMLENGTH + 50)) {
+//                    idle();
+//                }
+//                //Lower Arm
+//                armTargetAngle = ARMANGLE;
+//                while ((abs(robot.armSubsystem.getAngle() - armTargetAngle) > 3) && opModeIsActive()) {
+//                    armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - armTargetAngle));
+//                }
+//                armAngle.setPower(0);
+//                //Grip
+//                gripper.setPosition(0);
+//                sleep(500);
+//                //Raise Arm
+//                armTargetAngle = ARMANGLE2;
+//                while ((abs(robot.armSubsystem.getAngle() - armTargetAngle) > 3) && opModeIsActive()) {
+//                    armAngle.setPower(-0.8 * Math.signum(robot.armSubsystem.getAngle() - armTargetAngle));
+//                }
+//                armAngle.setPower(0);
+//                //Retract Arm
+//                armExtend.setTargetPosition(ARMBASE);
+//                while(opModeIsActive() && (armExtend.getCurrentPosition() < ARMBASE - 50 || armExtend.getCurrentPosition() > ARMBASE + 50)) {
+//                    idle();
+//                }
+////                gripper.setPosition(1);
+////                //Sweep
+////                slidePush.setPosition(0.77);
+////                sleep(1500);
+////                slidePush.setPosition(0.64);
+//                autoSwitcher.moveSwitch(PoseSupply.ODOMETRY, 36, 11, 3.14, 1, false);
+//                while (opModeIsActive()) {
+//                    telemetry.addData("Can See Tag?", robot.cameraSubsystem.getPoseFromAprilTag() != null);
+//                    telemetry.update();
+//                    idle();
+//                }
+//                return;
+//            //break;
+//        }
 
         //Park
         switch (autoSwitcher.getParkLocation()) {

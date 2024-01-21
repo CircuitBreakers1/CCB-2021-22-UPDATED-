@@ -5,7 +5,10 @@ import com.acmerobotics.dashboard.config.Config;
 @Config
 public class tuningConstants2023 {
 
-    public static double shootAngle = 0.35;
+    public static double GRIPOPEN = 0.47;
+    public static double GRIPCLOSED = 0.36;
+
+    public static double shootAngle = 0.5;
     public static double LEFTMULT = -1;
     public static double RIGHTMULT = -1;
     public static double BACKMULT = 1;
@@ -16,7 +19,8 @@ public class tuningConstants2023 {
     public static double NEWPIDFI = 0.500736377;
     public static double NEWPIDFD = 0.0380919;
 
-    public static int ARMBASE = -70;
+    public static int ARMBASE = -160;
+    public static double ARMPICKUPANGLE = -3;
 
     public static double TurnPIDP = 1;
     public static double TurnPIDI = 0.0;

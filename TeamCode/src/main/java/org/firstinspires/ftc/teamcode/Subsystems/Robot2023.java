@@ -66,6 +66,7 @@ public class Robot2023 {
     public static Servo slidePush;
     public static Servo shooterRaise;
     public static IMU imu;
+    public static NeoDriverI2C neoDriver;
 
     private boolean visionInit = false;
     private boolean startLocationBasedOnApril = false;
@@ -128,6 +129,10 @@ public class Robot2023 {
         shooterRaise = ahwMap.get(Servo.class, "shooterRaise");
 
         imu = ahwMap.get(IMU.class, "imu");
+        neoDriver = ahwMap.get(NeoDriverI2C.class, "neoDriver");
+        neoDriver.setNumPixels((short) 10);
+        neoDriver.setRGBW(false);
+        neoDriver.init();
 
         rightBay = ahwMap.get(NormalizedColorSensor.class, "rightBay");
         leftBay = ahwMap.get(NormalizedColorSensor.class, "leftBay");
@@ -181,7 +186,7 @@ public class Robot2023 {
         armSubsystem = new ArmSubsystem(wrist, gripper, armAngle, armAngleEncoder, armExtend);
         if (opMode != null)
             movementSubsystem = new MovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem, armSubsystem, imu);
-        colorDetectionSubsystem = new ColorDetectionSubsystem(leftBay, rightBay);
+        colorDetectionSubsystem = new ColorDetectionSubsystem(leftBay, rightBay, neoDriver);
 
         if (initVision) {
             cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));

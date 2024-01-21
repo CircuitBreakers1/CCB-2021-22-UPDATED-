@@ -11,11 +11,18 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.opencv.core.Scalar;
 
-import javax.annotation.Nullable;
-
 public class ColorDetectionSubsystem {
     private NormalizedColorSensor leftBay;
     private NormalizedColorSensor rightBay;
+    private NeoDriverI2C neoDriver;
+
+    private BayColor[] colors = {EMPTY, EMPTY};
+
+    NeoDriverI2C.Color purple = new NeoDriverI2C.Color((short) 169, (short) 115, (short) 222);
+    NeoDriverI2C.Color yellow = new NeoDriverI2C.Color((short) 255, (short) 255, (short) 0);
+    NeoDriverI2C.Color green = new NeoDriverI2C.Color((short) 0, (short) 255, (short) 0);
+    NeoDriverI2C.Color white = new NeoDriverI2C.Color((short) 255, (short) 255, (short) 255);
+    NeoDriverI2C.Color black = new NeoDriverI2C.Color((short) 0, (short) 0, (short) 0);
 
     float gain = 2;
     double maxDist = 2;
@@ -40,9 +47,10 @@ public class ColorDetectionSubsystem {
         }
     }
 
-    public ColorDetectionSubsystem(NormalizedColorSensor left, NormalizedColorSensor right) {
+    public ColorDetectionSubsystem(NormalizedColorSensor left, NormalizedColorSensor right, NeoDriverI2C neoDriver) {
         leftBay = left;
         rightBay = right;
+        this.neoDriver = neoDriver;
     }
 
     /**
@@ -78,6 +86,44 @@ public class ColorDetectionSubsystem {
             }
         }
         return colors;
+    }
+
+    public void updateColors() {
+        BayColor[] updatedColors = getBayColors();
+        if(updatedColors[1] != colors[1]) {
+            colors[1] = updatedColors[1];
+            if (colors[1] == EMPTY) {
+                neoDriver.setPixels((short) 9, black);
+            } else if (colors[1] == UNKNOWN) {
+                neoDriver.setPixels((short) 9, white);
+            } else if (colors[1] == BayColor.PURPLE) {
+                neoDriver.setPixels((short) 9, purple);
+            } else if (colors[1] == BayColor.YELLOW) {
+                neoDriver.setPixels((short) 9, yellow);
+            } else if (colors[1] == BayColor.GREEN) {
+                neoDriver.setPixels((short) 9, green);
+            } else if (colors[1] == BayColor.WHITE) {
+                neoDriver.setPixels((short) 9, white);
+            }
+        }
+        if (updatedColors[0] != colors[0]) {
+            colors[0] = updatedColors[0];
+            if (colors[0] == EMPTY) {
+                neoDriver.setPixels((short) 4, black);
+            } else if (colors[0] == UNKNOWN) {
+                neoDriver.setPixels((short) 4, white);
+            } else if (colors[0] == BayColor.PURPLE) {
+                neoDriver.setPixels((short) 4, purple);
+            } else if (colors[0] == BayColor.YELLOW) {
+                neoDriver.setPixels((short) 4, yellow);
+            } else if (colors[0] == BayColor.GREEN) {
+                neoDriver.setPixels((short) 4, green);
+            } else if (colors[0] == BayColor.WHITE) {
+                neoDriver.setPixels((short) 4, white);
+            }
+        }
+
+
     }
 
     /**
