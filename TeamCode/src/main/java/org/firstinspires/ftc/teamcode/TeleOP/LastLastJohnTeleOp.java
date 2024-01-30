@@ -29,41 +29,17 @@
 
 package org.firstinspires.ftc.teamcode.TeleOP;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armAngle;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armExtend;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.gripper;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.holOdom;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.imu;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.intake;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.lift;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.liftRaise;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.shooterRaise;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.shotRelease;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.slidePush;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.viperTouch;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.wrist;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMBASE;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMD;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMI;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMP;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMPICKUPANGLE;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.GRIPCLOSED;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.GRIPOPEN;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.shootAngle;
-import static java.lang.Math.abs;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.intake;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftRotate;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.rightRotate;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.LEFTPOS;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.RIGHTPOS;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.intakePower;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.arcrobotics.ftclib.controller.PIDController;
-import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotor;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.teamcode.Subsystems.ArmSubsystem.ArmState;
 import org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023;
-import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 
 /**
  * Demonstrates new features
@@ -73,6 +49,8 @@ public class LastLastJohnTeleOp extends OpMode {
 
     NewRobot2023 robot = new NewRobot2023();
 
+    boolean toggleDown = false;
+    boolean toggleIntake = false;
 
 
     @Override
@@ -94,6 +72,35 @@ public class LastLastJohnTeleOp extends OpMode {
     public void loop() {
         double x = gamepad1.left_stick_x;
         double y = -gamepad1.left_stick_y;
+
+        rightRotate.setPosition(RIGHTPOS);
+        leftRotate.setPosition(LEFTPOS);
+
+        //Right Base 0.195
+        //Left Base 0.49
+
+//        if(gamepad2.a) {
+//            rightRotate.setPosition(0.195);
+//            leftRotate.setPosition(0.49);
+//        } else if (gamepad2.b) {
+//            rightRotate.setPosition(0.195 + ARMROTATECONST);
+//            leftRotate.setPosition(0.49 + ARMROTATECONST);
+//        }
+//        rightRotate.setPosition(ARMROTATECONST);
+
+        if (gamepad2.a) {
+            if (!toggleDown) {
+                toggleDown = true;
+                toggleIntake = !toggleIntake;
+                double power = toggleIntake ? intakePower : 0;
+                intake.setPower(power);
+            }
+        } else if (gamepad2.left_bumper) {
+            toggleIntake = true;
+            intake.setPower(-intakePower);
+        }else {
+            toggleDown = false;
+        }
 
         robot.holoDrivetrain.smoothDrive(x, y, gamepad1.right_stick_x);
 

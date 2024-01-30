@@ -16,6 +16,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
@@ -44,6 +45,9 @@ public class NewRobot2023 {
     public static MotorEx frontOdo;
 
     //Servos
+    public static Servo leftRotate;
+    public static Servo rightRotate;
+    public static Servo frontStage;
 
 
     //Sensors
@@ -78,47 +82,51 @@ public class NewRobot2023 {
 
             leftLift = ahwMap.get(DcMotor.class, "leftLift");
             rightLift = ahwMap.get(DcMotor.class, "rightLift");
-            //intake = ahwMap.get(DcMotor.class, "intake");
+            intake = ahwMap.get(DcMotor.class, "intake");
 
             leftFront.setInverted(true);
             rightBack.setInverted(true);
 
-            leftOdo.setDistancePerPulse(ticksToIn);
-            rightOdo.setDistancePerPulse(ticksToIn);
-            frontOdo.setDistancePerPulse(ticksToIn);
-
-            leftOdo.resetEncoder();
-            rightOdo.resetEncoder();
-            frontOdo.resetEncoder();
+            rightLift.setDirection(DcMotorSimple.Direction.REVERSE);
+//
+//            leftOdo.setDistancePerPulse(ticksToIn);
+//            rightOdo.setDistancePerPulse(ticksToIn);
+//            frontOdo.setDistancePerPulse(ticksToIn);
+//
+//            leftOdo.resetEncoder();
+//            rightOdo.resetEncoder();
+//            frontOdo.resetEncoder();
         }
 
         //Init Servos
         {
-
+            rightRotate = ahwMap.get(Servo.class, "rightRotate");
+            leftRotate = ahwMap.get(Servo.class, "leftRotate");
+            frontStage = ahwMap.get(Servo.class, "frontStage");
         }
 
 
         //Init Sensors
         {
-            RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD;
-            RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
-            RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
-            imu.initialize(new IMU.Parameters(orientationOnRobot));
+//            RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.BACKWARD;
+//            RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
+//            RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
+//            imu.initialize(new IMU.Parameters(orientationOnRobot));
         }
 
         //Init Subsystems
         {
             holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
-            holOdom = new HolonomicOdometry(
-                    () -> (leftOdo.getCurrentPosition() * ticksToIn * LEFTMULT),
-                    () -> rightOdo.getCurrentPosition() * -ticksToIn * RIGHTMULT,
-                    () -> frontOdo.getCurrentPosition() * ticksToIn * BACKMULT,
-                    trackwidth,
-                    odoOffset * OFFSETMULT
-            );
-
-            holOdom.updatePose();
-            holOdom.updatePose(new Pose2d(0, 0, new Rotation2d(0)));
+//            holOdom = new HolonomicOdometry(
+//                    () -> (leftOdo.getCurrentPosition() * ticksToIn * LEFTMULT),
+//                    () -> rightOdo.getCurrentPosition() * -ticksToIn * RIGHTMULT,
+//                    () -> frontOdo.getCurrentPosition() * ticksToIn * BACKMULT,
+//                    trackwidth,
+//                    odoOffset * OFFSETMULT
+//            );
+//
+//            holOdom.updatePose();
+//            holOdom.updatePose(new Pose2d(0, 0, new Rotation2d(0)));
 
             liftSubsystem = new LiftSubsystem(leftLift, rightLift, null, null, null, null, null);
 
