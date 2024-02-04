@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode.TeleOP;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.frontStage;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.intake;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftRotate;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.rightRotate;
@@ -40,6 +41,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023;
+import org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023;
 
 /**
  * Demonstrates new features
@@ -73,8 +75,16 @@ public class LastLastJohnTeleOp extends OpMode {
         double x = gamepad1.left_stick_x;
         double y = -gamepad1.left_stick_y;
 
-        rightRotate.setPosition(RIGHTPOS);
-        leftRotate.setPosition(LEFTPOS);
+//        rightRotate.setPosition(RIGHTPOS);
+//        leftRotate.setPosition(LEFTPOS);
+
+        //Ground 0.76
+        //Up 0.7
+        //5 Stack 0.735
+        //4 Stack 0.74
+        //3 Stack 0.75
+        //2 Stack 0.755
+        frontStage.setPosition(tuningConstants2023.frontStage);
 
         //Right Base 0.195
         //Left Base 0.49

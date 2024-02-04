@@ -43,5 +43,7 @@ public class tuningConstants2023 {
     public static double endY = 0;
     public static double endThetaPI = 0.25;
 
-    public static double intakePower = 0.5;
+    public static double intakePower = 1;
+
+    public static double frontStage = 0.0;
 }
