@@ -173,10 +173,10 @@ public class RedLeft extends LinearOpMode {
 //        moveTo(11.2, 60, 0.5);
 //        pickupLeft.setPower(1);
 //        pickupRight.setPower(-1);
-//        LiftSubsystem.setPosition(coneLevel[5 - conesInStack]);
+//        PixelSubsystem.setPosition(coneLevel[5 - conesInStack]);
 //
-//        while(coneTouch.getState() || !LiftSubsystem.isAtTarget()) {
-//            LiftSubsystem.updatePositional();
+//        while(coneTouch.getState() || !PixelSubsystem.isAtTarget()) {
+//            PixelSubsystem.updatePositional();
 //        }
 
         /*
@@ -193,7 +193,7 @@ public class RedLeft extends LinearOpMode {
         //Begin the cycle loop
         while(opModeIsActive()) {
             //Set arm height and go to cone stack
-            LiftSubsystem.setTarget(ConeStack);
+            PixelSubsystem.setTarget(ConeStack);
             //moveTo(16, 60, 0.5);
 
             //Check if there is time to pickup cone, otherwise park
@@ -211,10 +211,10 @@ public class RedLeft extends LinearOpMode {
             }
             pickupLeft.setPower(1);
             pickupRight.setPower(-1);
-            LiftSubsystem.setPosition(coneLevel[5 - conesInStack]);
+            PixelSubsystem.setPosition(coneLevel[5 - conesInStack]);
 
-            while(coneTouch.getState() && !LiftSubsystem.isAtTarget()) {
-                LiftSubsystem.updatePositional();
+            while(coneTouch.getState() && !PixelSubsystem.isAtTarget()) {
+                PixelSubsystem.updatePositional();
             }
 
             conesInStack--;
@@ -222,19 +222,19 @@ public class RedLeft extends LinearOpMode {
             pickupLeft.setPower(0.1);
             pickupRight.setPower(-0.1);
 
-            LiftSubsystem.setTarget(High);
+            PixelSubsystem.setTarget(High);
 
             while(opModeIsActive() && armLift.getCurrentPosition() < 700) {
 
             }
 //
 //            while(armLift.getCurrentPosition() < Intake.getPosition()) {
-//                LiftSubsystem.updatePositional();
+//                PixelSubsystem.updatePositional();
 //            }
 //
 //            moveTo(16, 60, 0.5);
 
-//            LiftSubsystem.setTarget(Min);
+//            PixelSubsystem.setTarget(Min);
 
             //Check if there is time to drop off cone, otherwise park
             if(getRemainingTime(startTime, getRuntime()) < dropTime + movementTime + parkFromJunction[park]) {
@@ -249,7 +249,7 @@ public class RedLeft extends LinearOpMode {
             pickupRight.setPower(1);
             double startDrop = getRuntime();
             while (getRuntime() - startDrop < 1.5) {
-                LiftSubsystem.updatePositional();
+                PixelSubsystem.updatePositional();
             }
             pickupLeft.setPower(0);
             pickupRight.setPower(0);

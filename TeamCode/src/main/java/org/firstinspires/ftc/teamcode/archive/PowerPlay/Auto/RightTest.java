@@ -108,7 +108,7 @@ public class RightTest extends LinearOpMode {
 //        pickupLeft.setPower(0.1);
 //        pickupRight.setPower(-0.1);
 //
-//        LiftSubsystem.setTarget(Medium);
+//        PixelSubsystem.setTarget(Medium);
 //
 //
 //
@@ -130,7 +130,7 @@ public class RightTest extends LinearOpMode {
 //        moveTo(36, 59.5, 0.6, false);
 //        turn(0, 0.5);
 //
-//        LiftSubsystem.setTarget(ConeStack);
+//        PixelSubsystem.setTarget(ConeStack);
 //        //moveTo(16, 60, 0.5);
 //
 //
@@ -138,10 +138,10 @@ public class RightTest extends LinearOpMode {
 ////        moveTo(11.2, 60, 0.5);
 ////        pickupLeft.setPower(1);
 ////        pickupRight.setPower(-1);
-////        LiftSubsystem.setPosition(coneLevel[5 - conesInStack]);
+////        PixelSubsystem.setPosition(coneLevel[5 - conesInStack]);
 ////
-////        while(coneTouch.getState() || !LiftSubsystem.isAtTarget()) {
-////            LiftSubsystem.updatePositional();
+////        while(coneTouch.getState() || !PixelSubsystem.isAtTarget()) {
+////            PixelSubsystem.updatePositional();
 ////        }
 //
 //        //Cycle timing information
@@ -157,7 +157,7 @@ public class RightTest extends LinearOpMode {
 //        //Begin the cycle loop
 //        while(opModeIsActive()) {
 //            //Set arm height and go to cone stack
-//            LiftSubsystem.setTarget(ConeStack);
+//            PixelSubsystem.setTarget(ConeStack);
 //            //moveTo(16, 60, 0.5);
 //
 //            //Check if there is time to pickup cone, otherwise park
@@ -169,10 +169,10 @@ public class RightTest extends LinearOpMode {
 //            moveTo(62.25, 59.5, 0.6);
 //            pickupLeft.setPower(1);
 //            pickupRight.setPower(-1);
-//            LiftSubsystem.setPosition(coneLevel[5 - conesInStack]);
+//            PixelSubsystem.setPosition(coneLevel[5 - conesInStack]);
 //
-//            while(coneTouch.getState() && !LiftSubsystem.isAtTarget()) {
-//                LiftSubsystem.updatePositional();
+//            while(coneTouch.getState() && !PixelSubsystem.isAtTarget()) {
+//                PixelSubsystem.updatePositional();
 //            }
 //
 //            conesInStack--;
@@ -180,7 +180,7 @@ public class RightTest extends LinearOpMode {
 //            pickupLeft.setPower(0.1);
 //            pickupRight.setPower(-0.1);
 //
-//            LiftSubsystem.setTarget(High);
+//            PixelSubsystem.setTarget(High);
 //
 //            while(opModeIsActive() && armLift.getCurrentPosition() < 700) {
 //
@@ -199,7 +199,7 @@ public class RightTest extends LinearOpMode {
 //            pickupRight.setPower(1);
 //            double startDrop = getRuntime();
 //            while (getRuntime() - startDrop < 1.5) {
-//                LiftSubsystem.updatePositional();
+//                PixelSubsystem.updatePositional();
 //            }
 //            pickupLeft.setPower(0);
 //            pickupRight.setPower(0);
@@ -222,14 +222,14 @@ public class RightTest extends LinearOpMode {
 //            turn(0,0.5);
 //        }
 //
-//        LiftSubsystem.setTarget(Min);
+//        PixelSubsystem.setTarget(Min);
 //
 //        //Park in designated spot
 //        holOdom.updatePose();
 //        moving = holOdom.getPose();
 //        double x = moving.getX(), y = moving.getY();
 //
-//        LiftSubsystem.setTarget(Min);
+//        PixelSubsystem.setTarget(Min);
 //        switch (color) {
 //            case RED:
 //                moveTo(12, 58, 0.7);
@@ -246,7 +246,7 @@ public class RightTest extends LinearOpMode {
 //
 //        //Allow the arm to stabilize
 //        while (opModeIsActive()) {
-//            LiftSubsystem.updatePositional();
+//            PixelSubsystem.updatePositional();
 //            if (armLift.getCurrentPosition() < 10) {
 //                break;
 //            }

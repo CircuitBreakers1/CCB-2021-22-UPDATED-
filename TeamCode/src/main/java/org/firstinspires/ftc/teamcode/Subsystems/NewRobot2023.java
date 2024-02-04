@@ -1,23 +1,12 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMBASE;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.BACKMULT;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.LEFTMULT;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.OFFSETMULT;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.RIGHTMULT;
 import static java.lang.Math.PI;
 
-import com.arcrobotics.ftclib.geometry.Pose2d;
-import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
@@ -48,18 +37,20 @@ public class NewRobot2023 {
     public static Servo leftRotate;
     public static Servo rightRotate;
     public static Servo frontStage;
+    public static Servo leftFinger;
+    public static Servo rightFinger;
 
 
     //Sensors
     public static IMU imu;
+    public static NormalizedColorSensor colorSensor;
 
     //Subsystems
     public HoloDrivetrainSubsystem holoDrivetrain;
     public static HolonomicOdometry holOdom;
     public NewMovementSubsystem movementSubsystem;
     public CameraSubsystem cameraSubsystem;
-    public LiftSubsystem liftSubsystem;
-    public ColorDetectionSubsystem colorDetectionSubsystem;
+    public PixelSubsystem pixelSubsystem;
 
     //Tuning Values - All values in inches unless noted
     float colorGain = 2; //Units: None
@@ -103,6 +94,8 @@ public class NewRobot2023 {
             rightRotate = ahwMap.get(Servo.class, "rightRotate");
             leftRotate = ahwMap.get(Servo.class, "leftRotate");
             frontStage = ahwMap.get(Servo.class, "frontStage");
+            leftFinger = ahwMap.get(Servo.class, "leftFinger");
+            rightFinger = ahwMap.get(Servo.class, "rightFinger");
         }
 
 
@@ -112,6 +105,8 @@ public class NewRobot2023 {
 //            RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
 //            RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 //            imu.initialize(new IMU.Parameters(orientationOnRobot));
+
+            colorSensor = ahwMap.get(NormalizedColorSensor.class, "colorSensor");
         }
 
         //Init Subsystems
@@ -128,7 +123,7 @@ public class NewRobot2023 {
 //            holOdom.updatePose();
 //            holOdom.updatePose(new Pose2d(0, 0, new Rotation2d(0)));
 
-            liftSubsystem = new LiftSubsystem(leftLift, rightLift, null, null, null, null, null);
+            pixelSubsystem = new PixelSubsystem(leftLift, rightLift, intake, frontStage, null, null, leftFinger, rightFinger, null, colorSensor);
 
             if(initVision) {
                 cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));

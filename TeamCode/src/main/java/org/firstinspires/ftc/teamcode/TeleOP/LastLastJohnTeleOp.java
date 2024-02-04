@@ -29,35 +29,23 @@
 
 package org.firstinspires.ftc.teamcode.TeleOP;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.frontStage;
-import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.intake;
-import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftRotate;
-import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.rightRotate;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.LEFTPOS;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.RIGHTPOS;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.intakePower;
-
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023;
-import org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023;
 
 /**
  * Demonstrates new features
  */
-@TeleOp(name = "TeleOP", group = "")
+@TeleOp(name = "TeleOP")
 public class LastLastJohnTeleOp extends OpMode {
-
     NewRobot2023 robot = new NewRobot2023();
-
     boolean toggleDown = false;
-    boolean toggleIntake = false;
-
 
     @Override
     public void init() {
         robot.init(hardwareMap, false, null);
+        robot.pixelSubsystem.initGamepadsForTeleOP(gamepad1, gamepad2);
     }
 
     @Override
@@ -74,49 +62,25 @@ public class LastLastJohnTeleOp extends OpMode {
     public void loop() {
         double x = gamepad1.left_stick_x;
         double y = -gamepad1.left_stick_y;
+        robot.holoDrivetrain.smoothDrive(x, y, gamepad1.right_stick_x);
 
-//        rightRotate.setPosition(RIGHTPOS);
-//        leftRotate.setPosition(LEFTPOS);
-
-        //Ground 0.76
-        //Up 0.7
-        //5 Stack 0.735
-        //4 Stack 0.74
-        //3 Stack 0.75
-        //2 Stack 0.755
-        frontStage.setPosition(tuningConstants2023.frontStage);
-
-        //Right Base 0.195
-        //Left Base 0.49
-
-//        if(gamepad2.a) {
-//            rightRotate.setPosition(0.195);
-//            leftRotate.setPosition(0.49);
-//        } else if (gamepad2.b) {
-//            rightRotate.setPosition(0.195 + ARMROTATECONST);
-//            leftRotate.setPosition(0.49 + ARMROTATECONST);
-//        }
-//        rightRotate.setPosition(ARMROTATECONST);
-
-        if (gamepad2.a) {
+        if (gamepad2.cross || gamepad1.cross) {
             if (!toggleDown) {
                 toggleDown = true;
-                toggleIntake = !toggleIntake;
-                double power = toggleIntake ? intakePower : 0;
-                intake.setPower(power);
+                robot.pixelSubsystem.toggleIntake();
             }
-        } else if (gamepad2.left_bumper) {
-            toggleIntake = true;
-            intake.setPower(-intakePower);
+        } else if (gamepad2.circle || gamepad1.circle) {
+            robot.pixelSubsystem.output();
         }else {
             toggleDown = false;
         }
 
-        robot.holoDrivetrain.smoothDrive(x, y, gamepad1.right_stick_x);
-
-        robot.liftSubsystem.simpleLift(-gamepad2.left_stick_y);
+        robot.pixelSubsystem.liftControl(-gamepad2.left_stick_y);
+        robot.pixelSubsystem.returnArm(gamepad2.triangle);
+        robot.pixelSubsystem.flipVertical(gamepad2.dpad_up || gamepad2.dpad_down);
+        robot.pixelSubsystem.flipHorizontal(gamepad2.dpad_left || gamepad2.dpad_right);
+        robot.pixelSubsystem.dropLeft(gamepad2.left_bumper);
+        robot.pixelSubsystem.dropRight(gamepad2.right_bumper);
+        robot.pixelSubsystem.runPixelSystem();
     }
-
-
-
 }

@@ -175,12 +175,12 @@ public class MainAuto extends AutoSwitcher {
             }
 //
 //            while(armLift.getCurrentPosition() < Intake.getPosition()) {
-//                LiftSubsystem.updatePositional();
+//                PixelSubsystem.updatePositional();
 //            }
 //
 //            moveTo(16, 60, 0.5);
 
-//            LiftSubsystem.setTarget(Min);
+//            PixelSubsystem.setTarget(Min);
 
             //Check if there is time to drop off cone, otherwise park
             if (getRemainingTime(startTime, this.opMode.getRuntime()) < dropTime + movementTime + parkFromJunction[(int) mirror(park, 1)]) {

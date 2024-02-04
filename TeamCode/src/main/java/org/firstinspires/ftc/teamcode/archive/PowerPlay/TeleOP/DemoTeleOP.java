@@ -184,7 +184,7 @@ public class DemoTeleOP extends LinearOpMode {
                 LiftSubsystem.setTarget(Min);
             }
 
-            //LiftSubsystem.manualControl(-gamepad2.right_stick_y);
+            //PixelSubsystem.manualControl(-gamepad2.right_stick_y);
 
             LiftSubsystem.updatePositional();
 
