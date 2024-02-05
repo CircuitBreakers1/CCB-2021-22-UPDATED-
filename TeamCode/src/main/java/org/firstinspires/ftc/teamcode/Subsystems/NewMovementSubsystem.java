@@ -1,5 +1,9 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
+import static org.firstinspires.ftc.teamcode.Tuning.NewTuning.PID_D;
+import static org.firstinspires.ftc.teamcode.Tuning.NewTuning.PID_I;
+import static org.firstinspires.ftc.teamcode.Tuning.NewTuning.PID_P;
+import static org.firstinspires.ftc.teamcode.Tuning.NewTuning.TURN_P;
 import static org.firstinspires.ftc.teamcode.Tuning.OldAutoTuning.pauseForTuning;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFD;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFI;
@@ -25,7 +29,7 @@ public class NewMovementSubsystem {
     private final HolonomicOdometry holOdom;
     private final CameraSubsystem cameraSubsystem;
     private final PixelSubsystem pixelSubsystem;
-    private static final double precision = 0.4;
+    private static final double precision = 0; //0.4;
     private boolean apriltagSyncRequested = false;
     //Minimum inches to travel in a given time period to avoid timing out
     private static final double minInches = 0.25;
@@ -55,16 +59,16 @@ public class NewMovementSubsystem {
     public void moveTo(double x, double y, double theta, double maxSpeed, boolean precise, Runnable loop) {
         //Ku = 0.39, Tu = 0.719
         //Z-N Values: Kp = 0.078, Ki = 0.217, Kd = 0.0185
-        PIDController xController = new PIDController(NEWPIDFP, NEWPIDFI, NEWPIDFD);
+        PIDController xController = new PIDController(PID_P, PID_I, PID_D);
         xController.setSetPoint(x);
-        PIDController yController = new PIDController(NEWPIDFP, NEWPIDFI, NEWPIDFD);
+        PIDController yController = new PIDController(PID_P, PID_I, PID_D);
         yController.setSetPoint(y);
 
         //Ku = 8.9 Tu = 0.13347
         //Z-N Values: Kp = 1.78, Ki = 26.7, Kd = 0.0784
         //Better Kp = 0.6, Ki, Kd = 0
         //PIDController turnController = new PIDController(TurnPIDP, TurnPIDI, TurnPIDD);
-        PAngleController turnController = new PAngleController(TurnPIDP);
+        PAngleController turnController = new PAngleController(TURN_P);
 
 
         if(apriltagSyncRequested) {
@@ -146,9 +150,9 @@ public class NewMovementSubsystem {
 
             lastPose = pose;
             double time = System.currentTimeMillis() - timestamp;
-            if(time > maxTime * 1000) {
-                double translationAdjust = translationDistance / (time / (maxTime * 1000));
-                double rotationAdjust = rotationDistance / (time / (maxTime * 1000));
+            if(time > minTime * 1000) {
+                double translationAdjust = translationDistance / (time / (minTime * 1000));
+                double rotationAdjust = rotationDistance / (time / (minTime * 1000));
 
                 if(translationAdjust < minInches && rotationAdjust < minDegrees) {
                     break;
@@ -171,6 +175,7 @@ public class NewMovementSubsystem {
             thetaVelocity = clip(thetaPID, maxSpeed, -maxSpeed);
 
 
+            System.out.println("X Velocity: " + xVelocity + " Time: " + opMode.getRuntime());
             System.out.println("Theta Velocity: " + thetaVelocity + " Time: " + opMode.getRuntime());
 
             telemetry.addData("X", holOdom.getPose().getX());
@@ -214,10 +219,10 @@ public class NewMovementSubsystem {
                 rbSpeed /= maxMotorSpeed;
             }
 
-            //holoDrivetrain.drive(lfSpeed, rfSpeed, lbSpeed, rbSpeed);
+            holoDrivetrain.drive(lfSpeed, rfSpeed, lbSpeed, rbSpeed);
             //Flipped for gaslighting purposes
             //holoDrivetrain.drive(-rbSpeed, -lbSpeed, -rfSpeed, -lfSpeed);
-            holoDrivetrain.drive(-rbSpeed, -lbSpeed, -rfSpeed, -lfSpeed);
+//            holoDrivetrain.drive(-rbSpeed, -lbSpeed, -rfSpeed, -lfSpeed);
 
             if (opMode.gamepad1.b) {
                 break;
