@@ -1,13 +1,6 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.PoseSupply.ODOMETRY;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armAngle;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armExtend;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.base;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.gripper;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.viperTouch;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.pauseForTuning;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMPICKUPANGLE;
+import static org.firstinspires.ftc.teamcode.Tuning.OldAutoTuning.pauseForTuning;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFD;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFI;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.NEWPIDFP;
@@ -16,40 +9,30 @@ import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.odoUseIM
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
-import androidx.annotation.NonNull;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.geometry.Pose2d;
-import com.arcrobotics.ftclib.geometry.Transform2d;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class NewMovementSubsystem {
     private final HoloDrivetrainSubsystem holoDrivetrain;
-
     private final LinearOpMode opMode;
     private Telemetry telemetry;
     private final HolonomicOdometry holOdom;
     private final CameraSubsystem cameraSubsystem;
+    private final PixelSubsystem pixelSubsystem;
     private static final double precision = 0.4;
     private boolean apriltagSyncRequested = false;
+    //Minimum inches to travel in a given time period to avoid timing out
+    private static final double minInches = 0.25;
+    private static final double minDegrees = 5;
+    private static final double minTime = 2;
 
-    private final double V1 = 0.1, V2 = 0.999;
-    /**
-     * Distance from point to begin slowing down
-     */
-    private final double D1 = 0.0, D2 = 6.0;
-    private final double A = V1 / (1 - V1);
-    private final double K = (1 / D2) * Math.log(V2 / (A * (1 / V2)));
-
-    public NewMovementSubsystem(HoloDrivetrainSubsystem holoDrivetrain, HolonomicOdometry holOdom, LinearOpMode OpMode, CameraSubsystem cameraSubsystem) {
+    public NewMovementSubsystem(HoloDrivetrainSubsystem holoDrivetrain, HolonomicOdometry holOdom, LinearOpMode OpMode, CameraSubsystem cameraSubsystem, PixelSubsystem pixelSubsystem) {
         this.holoDrivetrain = holoDrivetrain;
         this.holOdom = holOdom;
         this.opMode = OpMode;
@@ -57,6 +40,7 @@ public class NewMovementSubsystem {
         this.cameraSubsystem = cameraSubsystem;
         FtcDashboard dashboard = FtcDashboard.getInstance();
         this.telemetry = new MultipleTelemetry(telemetry, dashboard.getTelemetry());
+        this.pixelSubsystem = pixelSubsystem;
     }
 
 
@@ -96,11 +80,17 @@ public class NewMovementSubsystem {
         }
 
         Pose2d pose;
+        Pose2d lastPose;
+        double timestamp = System.currentTimeMillis();
         double xError;
         double yError;
         double heading;
+        double translationDistance = 0;
+        double rotationDistance = 0;
+
 
         pose = holOdom.getPose();
+        lastPose = pose;
 
         heading = -pose.getHeading();
         xError = x - pose.getX();
@@ -133,9 +123,10 @@ public class NewMovementSubsystem {
             telemetry.update();
         }
 
-        double realPrecision = precise ? precision : 2;
+        double realPrecision = precise ? precision : 1;
         while ((abs(xError) > realPrecision || abs(yError) > realPrecision || turnController.getError(theta, heading) > 0.11) && opMode.opModeIsActive()) {
             holOdom.updatePose();
+            pixelSubsystem.runPixelSystem();
 
             telemetry.addData("April Sync Needed", apriltagSyncRequested);
 
@@ -149,6 +140,23 @@ public class NewMovementSubsystem {
             }
 
             pose = holOdom.getPose();
+
+            translationDistance += Math.hypot(pose.getX() - lastPose.getX(), pose.getY() - lastPose.getY());
+            rotationDistance += Math.abs(Math.toDegrees(pose.getHeading()) - Math.toDegrees(lastPose.getHeading()));
+
+            lastPose = pose;
+            double time = System.currentTimeMillis() - timestamp;
+            if(time > maxTime * 1000) {
+                double translationAdjust = translationDistance / (time / (maxTime * 1000));
+                double rotationAdjust = rotationDistance / (time / (maxTime * 1000));
+
+                if(translationAdjust < minInches && rotationAdjust < minDegrees) {
+                    break;
+                }
+                translationDistance = 0;
+                rotationDistance = 0;
+                timestamp = System.currentTimeMillis();
+            }
 
             heading = -pose.getHeading();
             xError = x - pose.getX();

@@ -1,54 +1,29 @@
 package org.firstinspires.ftc.teamcode.Auto;
 
 import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.ConfigSetting.DELAY_SECONDS;
-import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.ConfigSetting.PLACE_LOCATION;
 import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.ConfigSetting.START_LOCATION;
-import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.StartLocation.BLUE_AUDIENCE;
-import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.StartLocation.BLUE_BACKDROP;
-import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.StartLocation.RED_AUDIENCE;
-import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.StartLocation.RED_BACKDROP;
-import static org.firstinspires.ftc.teamcode.Subsystems.AutoSwitcher.SwitchType.MIRROR_X_AXIS_AND_START_Y;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armAngle;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armExtend;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.base;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.frontOdo;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.gripper;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.holOdom;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.leftFront;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.leftOdo;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.rightOdo;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.shotRelease;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.slidePush;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.viperTouch;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.wrist;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.ARMANGLE;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.ARMANGLE2;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.ARMLENGTH;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.t1;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.t2;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.t3;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.x1;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.x2;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.x3;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.y1;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.y2;
-import static org.firstinspires.ftc.teamcode.Tuning.AutoTuning.y3;
+import static org.firstinspires.ftc.teamcode.Tuning.OldAutoTuning.x1;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMBASE;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.ARMPICKUPANGLE;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.GRIPCLOSED;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.GRIPOPEN;
 
-import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.signum;
 
 import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
-import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.util.RobotLog;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.Subsystems.ArmSubsystem;
@@ -60,7 +35,8 @@ import org.firstinspires.ftc.teamcode.Subsystems.MovementSubsystem;
 import org.firstinspires.ftc.teamcode.Subsystems.PoseSupply;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 
-@Autonomous(name = "Auto", group = "Auto")
+@Autonomous(name = "OldAuto", group = "Auto")
+@Disabled
 public class Auto extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {

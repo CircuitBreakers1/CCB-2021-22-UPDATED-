@@ -24,7 +24,6 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil;
 import java.io.File;
 
 @TeleOp(name = "Odometry Tuning", group = "")
-@Disabled
 public class odometryTuning extends LinearOpMode {
     //Drive motors
     DcMotor right_front, right_back, left_front, left_back;

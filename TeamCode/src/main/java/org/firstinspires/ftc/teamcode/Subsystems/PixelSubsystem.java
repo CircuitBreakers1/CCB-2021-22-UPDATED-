@@ -18,6 +18,7 @@ import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import org.opencv.core.Mat;
 import org.opencv.core.Scalar;
 
 /** @noinspection UnusedReturnValue, CommentedOutCode */
@@ -70,7 +71,7 @@ public class PixelSubsystem {
 
     //Enum Set points
     enum ThruPositions {
-        BASE(0.525), BACKDROP(0.465);
+        BASE(0.525), BACKDROP(0.465), PD(0.48);
         private final double position;
         ThruPositions(double position) {
             this.position = position;
@@ -103,7 +104,9 @@ public class PixelSubsystem {
     }
 
     enum LiftStates {
-        BASE, AUTO_RAISE, FLIP_OUT, VERTICAL_MANUAL, HORIZONTAL_MANUAL, MIN_RAISE, FLIP_IN, BASE_RETURN
+        BASE, AUTO_RAISE, FLIP_OUT, VERTICAL_MANUAL, HORIZONTAL_MANUAL, MIN_RAISE, FLIP_IN, BASE_RETURN,
+        FULL_MANUAL,
+        PD_RAISE, PD_FLIP, PD_LOWER, PD_READY
     }
 
     enum IntakeState {
@@ -122,24 +125,6 @@ public class PixelSubsystem {
         this.liftTouch = liftTouch;
         this.colorSensor = colorSensor;
         this.frontStage = frontStage;
-
-        try {
-            leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            rightLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-            while(!liftTouch.getState()) {
-                leftLift.setPower(-0.5);
-                rightLift.setPower(-0.5);
-            }
-
-            leftLift.setPower(0);
-            rightLift.setPower(0);
-            leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-            rightLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-            leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            rightLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        } catch (NullPointerException ignored) {}
 
         whiteRumble = new Gamepad.RumbleEffect.Builder()
                 .addStep(0.75, 0, 250)
@@ -166,6 +151,18 @@ public class PixelSubsystem {
         this.gamepad1 = gamepad1;
         this.gamepad2 = gamepad2;
         teleOp = true;
+    }
+
+    public void initArm() {
+        while(liftTouch.getState()) {
+            leftLift.setPower(-0.5);
+            rightLift.setPower(-0.5);
+        }
+
+        leftLift.setPower(0);
+        rightLift.setPower(0);
+        leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     @Deprecated
@@ -241,6 +238,7 @@ public class PixelSubsystem {
             case AUTO_RAISE:
                 leftLift.setPower(1);
                 setFingers(CLOSED, CLOSED);
+                fingerOverride = false;
                 if(leftLift.getCurrentPosition() > minFlipHeight) {
                     liftState = LiftStates.FLIP_OUT;
                     leftLift.setPower(0);
@@ -287,7 +285,7 @@ public class PixelSubsystem {
                 leftDrop = false;
                 liftSetpoint = 0;
                 setRotationPosition(RotationPositions.VERTICAL);
-                leftLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+                leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
                 if(flipTimestamp == -1) {
                     flipTimestamp = System.currentTimeMillis();
@@ -328,6 +326,41 @@ public class PixelSubsystem {
 //                    liftState = LiftStates.BASE;
 //                    fingerOverride = false;
 //                }
+                break;
+            case FULL_MANUAL:
+                leftLift.setTargetPosition(liftSetpoint);
+                leftLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                leftLift.setPower(1);
+                break;
+            case PD_RAISE:
+                leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                leftLift.setPower(1);
+                if (leftLift.getCurrentPosition() > minFlipHeight) {
+                    leftLift.setPower(0);
+                    liftState = LiftStates.PD_FLIP;
+                }
+                break;
+            case PD_FLIP:
+                setThroughPosition(ThruPositions.PD);
+                if (flipTimestamp == -1) {
+                    flipTimestamp = System.currentTimeMillis();
+                } else if (System.currentTimeMillis() - flipTimestamp > 500) {
+                    liftState = LiftStates.PD_LOWER;
+                    flipTimestamp = -1;
+                }
+                break;
+            case PD_LOWER:
+                leftLift.setTargetPosition(25);
+                leftLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                leftLift.setPower(0.75);
+                //If error < 3, set to PD_READY
+                if (Math.abs(leftLift.getCurrentPosition() - 25) < 5) {
+                    leftLift.setPower(0);
+                    liftState = LiftStates.PD_READY;
+                }
+                break;
+            case PD_READY:
+                leftLift.setPower(0);
                 break;
         }
 
@@ -411,6 +444,10 @@ public class PixelSubsystem {
         }
     }
 
+    public void setFingerOverride(boolean b) {
+        fingerOverride = b;
+    }
+
     /** @noinspection unused*/
     public boolean liftSet(int position) {
         liftSetpoint = position;
@@ -478,6 +515,30 @@ public class PixelSubsystem {
         return false;
     }
 
+    public void enableFullManual() {
+        liftState = LiftStates.FULL_MANUAL;
+        liftSetpoint = leftLift.getCurrentPosition();
+    }
+
+    /**
+     * Disables full manual control. <b>The Lift will automatically rezero</b>
+     */
+    public void disableFullManual() {
+        liftState = LiftStates.MIN_RAISE;
+    }
+
+    public void requestPD() {
+        liftState = LiftStates.PD_RAISE;
+    }
+
+    public boolean isPDReady() {
+        return liftState == LiftStates.PD_READY;
+    }
+
+    public void endPDresumeND() {
+        liftState = LiftStates.AUTO_RAISE;
+    }
+
     //Internal Private Methods
     private ColorDetectionSubsystem.BayColor getColor() {
         float[] HSV = new float[3];
@@ -509,7 +570,7 @@ public class PixelSubsystem {
         return a.val[0] <= b.val[0] && a.val[1] <= b.val[1] && a.val[2] <= b.val[2];
     }
 
-    private void setFingers(FingerPositions left, FingerPositions right) {
+    public void setFingers(FingerPositions left, FingerPositions right) {
         if(left == OPEN) {
             leftFinger.setPosition(LEFT_OPEN.getPosition());
         } else if(left == CLOSED) {

@@ -131,11 +131,11 @@ public class NewRobot2023 {
             pixelSubsystem = new PixelSubsystem(leftLift, rightLift, intake, frontStage, through, rotate, leftFinger, rightFinger, touch, colorSensor);
 
             if(initVision) {
-                cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));
+                cameraSubsystem = null; //new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));
             }
 
             if(opMode != null) {
-                movementSubsystem = new NewMovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem);
+                movementSubsystem = new NewMovementSubsystem(holoDrivetrain, holOdom, opMode, cameraSubsystem, pixelSubsystem);
             }
         }
 

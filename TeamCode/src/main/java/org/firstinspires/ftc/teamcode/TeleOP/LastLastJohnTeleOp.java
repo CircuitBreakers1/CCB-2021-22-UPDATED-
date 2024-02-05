@@ -46,6 +46,7 @@ public class LastLastJohnTeleOp extends OpMode {
     public void init() {
         robot.init(hardwareMap, false, null);
         robot.pixelSubsystem.initGamepadsForTeleOP(gamepad1, gamepad2);
+        robot.pixelSubsystem.initArm();
     }
 
     @Override
