@@ -60,16 +60,17 @@ public class PixelSubsystem {
     private boolean rightDrop = false;
     private int liftSetpoint = 0;
     private boolean frontStageOverride = false;
+    private boolean fingerOverride = false;
 
     /** @noinspection FieldCanBeLocal*/ //Tuning Constants
     //TODO: Find actual values
-    private final int minFlipHeight = 1000;
+    private final int minFlipHeight = 460;
     /** @noinspection FieldCanBeLocal*/
     private final double colorTriggerDist = 1.25;
 
     //Enum Set points
     enum ThruPositions {
-        BASE(0.415), BACKDROP(0.365);
+        BASE(0.525), BACKDROP(0.465);
         private final double position;
         ThruPositions(double position) {
             this.position = position;
@@ -80,7 +81,7 @@ public class PixelSubsystem {
     }
 
     enum RotationPositions {
-        BASE(0.605), VERTICAL(0.605), HORIZONTAL(0.547);
+        BASE(0.617), VERTICAL(0.617), HORIZONTAL(0.555);
         private final double position;
         RotationPositions(double position) {
             this.position = position;
@@ -90,8 +91,8 @@ public class PixelSubsystem {
         }
     }
 
-    enum FingerPositions {
-        LEFT_OPEN(0.0), LEFT_CLOSED(0.0), RIGHT_OPEN(0.0), RIGHT_CLOSED(0.0), OPEN(0), CLOSED(0);
+    public enum FingerPositions {
+        LEFT_OPEN(1.0), LEFT_CLOSED(0.8), RIGHT_OPEN(0.75), RIGHT_CLOSED(0.55), OPEN(0), CLOSED(0);
         private final double position;
         FingerPositions(double position) {
             this.position = position;
@@ -231,7 +232,11 @@ public class PixelSubsystem {
         //Lifts
         switch (liftState) {
             case BASE:
-                setFingers(OPEN, OPEN);
+                if(fingerOverride) {
+                    setFingers(CLOSED, CLOSED);
+                } else {
+                    setFingers(OPEN, OPEN);
+                }
                 break;
             case AUTO_RAISE:
                 leftLift.setPower(1);
@@ -256,14 +261,8 @@ public class PixelSubsystem {
                 FingerPositions right = rightDrop ? OPEN : CLOSED;
                 setFingers(left, right);
                 if(teleOp) {
-                    if(liftPower != 0) {
-                        leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                        leftLift.setPower(liftPower);
-                    } else {
-                        leftLift.setTargetPosition(leftLift.getCurrentPosition());
-                        leftLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        leftLift.setPower(1);
-                    }
+                    leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    leftLift.setPower(liftPower);
                 } else {
                     if(liftSetpoint == 0) {
                         liftSetpoint = leftLift.getCurrentPosition();
@@ -279,14 +278,8 @@ public class PixelSubsystem {
                 FingerPositions right2 = rightDrop ? OPEN : CLOSED;
                 setFingers(left2, right2);
                 if(teleOp) {
-                    if(liftPower != 0) {
-                        leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                        leftLift.setPower(liftPower);
-                    } else {
-                        leftLift.setTargetPosition(leftLift.getCurrentPosition());
-                        leftLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                        leftLift.setPower(1);
-                    }
+                    leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    leftLift.setPower(liftPower);
                 }
                 break;
             case MIN_RAISE:
@@ -295,18 +288,20 @@ public class PixelSubsystem {
                 liftSetpoint = 0;
                 setRotationPosition(RotationPositions.VERTICAL);
                 leftLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-                leftLift.setPower(1);
+
                 if(flipTimestamp == -1) {
                     flipTimestamp = System.currentTimeMillis();
                 } else if(System.currentTimeMillis() - flipTimestamp > 500) {
                     flipTimestamp = -2;
                 }
                 if(leftLift.getCurrentPosition() > minFlipHeight) {
+                    leftLift.setPower(0);
                     if(flipTimestamp == -2) {
                         liftState = LiftStates.FLIP_IN;
                         flipTimestamp = -1;
-                        leftLift.setPower(0);
                     }
+                } else {
+                    leftLift.setPower(-1);
                 }
                 break;
             case FLIP_IN:
@@ -319,19 +314,20 @@ public class PixelSubsystem {
                 }
                 break;
             case BASE_RETURN:
-                leftLift.setPower(0.5);
-//                if (liftTouch.getState()) {
-//                    leftLift.setPower(0);
-//                    leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-//                    leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//                    liftState = LiftStates.BASE;
-//                }
-                if (leftLift.getCurrentPosition() < 10) {
+                leftLift.setPower(-0.5);
+                if (liftTouch.getState()) {
                     leftLift.setPower(0);
                     leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
                     leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     liftState = LiftStates.BASE;
                 }
+//                if (leftLift.getCurrentPosition() < 0) {
+//                    leftLift.setPower(0);
+//                    leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//                    leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+//                    liftState = LiftStates.BASE;
+//                    fingerOverride = false;
+//                }
                 break;
         }
 
@@ -407,6 +403,12 @@ public class PixelSubsystem {
             return true;
         }
         return false;
+    }
+
+    public void fingerOverrideBase(boolean yes) {
+        if(yes && liftState == LiftStates.BASE) {
+            fingerOverride = !fingerOverride;
+        }
     }
 
     /** @noinspection unused*/

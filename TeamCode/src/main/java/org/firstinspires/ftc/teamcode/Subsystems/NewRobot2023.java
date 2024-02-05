@@ -7,6 +7,7 @@ import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
@@ -34,8 +35,8 @@ public class NewRobot2023 {
     public static MotorEx frontOdo;
 
     //Servos
-    public static Servo leftRotate;
-    public static Servo rightRotate;
+    public static Servo through;
+    public static Servo rotate;
     public static Servo frontStage;
     public static Servo leftFinger;
     public static Servo rightFinger;
@@ -44,6 +45,7 @@ public class NewRobot2023 {
     //Sensors
     public static IMU imu;
     public static NormalizedColorSensor colorSensor;
+    public static DigitalChannel touch;
 
     //Subsystems
     public HoloDrivetrainSubsystem holoDrivetrain;
@@ -79,6 +81,8 @@ public class NewRobot2023 {
             rightBack.setInverted(true);
 
             rightLift.setDirection(DcMotorSimple.Direction.REVERSE);
+            leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+            leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 //
 //            leftOdo.setDistancePerPulse(ticksToIn);
 //            rightOdo.setDistancePerPulse(ticksToIn);
@@ -91,8 +95,8 @@ public class NewRobot2023 {
 
         //Init Servos
         {
-            rightRotate = ahwMap.get(Servo.class, "rightRotate");
-            leftRotate = ahwMap.get(Servo.class, "leftRotate");
+            rotate = ahwMap.get(Servo.class, "rotate");
+            through = ahwMap.get(Servo.class, "through");
             frontStage = ahwMap.get(Servo.class, "frontStage");
             leftFinger = ahwMap.get(Servo.class, "leftFinger");
             rightFinger = ahwMap.get(Servo.class, "rightFinger");
@@ -107,6 +111,7 @@ public class NewRobot2023 {
 //            imu.initialize(new IMU.Parameters(orientationOnRobot));
 
             colorSensor = ahwMap.get(NormalizedColorSensor.class, "colorSensor");
+            touch = ahwMap.get(DigitalChannel.class, "touch");
         }
 
         //Init Subsystems
@@ -123,7 +128,7 @@ public class NewRobot2023 {
 //            holOdom.updatePose();
 //            holOdom.updatePose(new Pose2d(0, 0, new Rotation2d(0)));
 
-            pixelSubsystem = new PixelSubsystem(leftLift, rightLift, intake, frontStage, null, null, leftFinger, rightFinger, null, colorSensor);
+            pixelSubsystem = new PixelSubsystem(leftLift, rightLift, intake, frontStage, through, rotate, leftFinger, rightFinger, touch, colorSensor);
 
             if(initVision) {
                 cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));

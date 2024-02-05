@@ -29,6 +29,12 @@
 
 package org.firstinspires.ftc.teamcode.TeleOP;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftFinger;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftLift;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.rightFinger;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.rotate;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.through;
+import static org.firstinspires.ftc.teamcode.Subsystems.PixelSubsystem.FingerPositions.LEFT_OPEN;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armAngle;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.armExtend;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.gripper;
@@ -43,6 +49,10 @@ import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.viperTouch;
 import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.wrist;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.GRIPCLOSED;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.GRIPOPEN;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.leftFingerr;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.rightFingerr;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.rotater;
+import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.thrur;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -50,6 +60,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.RobotLog;
 
+import org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 
 /**
@@ -57,17 +68,11 @@ import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
  */
 @TeleOp(name = "Simple Movement", group = "Concept")
 public class SimpleMovement extends OpMode {
-
-    private ElapsedTime runtime = new ElapsedTime();
-
-
-    Robot2023 robot = new Robot2023();
+    NewRobot2023 robot = new NewRobot2023();
 
     @Override
     public void init() {
-        robot.init(hardwareMap, false, null);
-        telemetry.addData("Status", "Initialized");
-
+        robot.init(hardwareMap,false, null);
     }
 
     @Override
@@ -76,73 +81,20 @@ public class SimpleMovement extends OpMode {
 
     @Override
     public void start() {
-        runtime.reset();
-        armExtend.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
     }
 
     @Override
     public void loop() {
-        armExtend.setPower(gamepad2.right_stick_y);
+//        rotate.setPosition(rotater);
+//        through.setPosition(thrur);
 
-        armAngle.setPower(-gamepad2.left_stick_y);
-
-        telemetry.addData("Touch Sensor", viperTouch.getState());
-
-        if (gamepad2.a) {
-            slidePush.setPosition(0.63);
-        } else if (gamepad2.b) {
-            slidePush.setPosition(0.77); //Out
-        }
-
-        if (gamepad1.a) {
-            leftFront.set(0.5);
-        } else {
-            leftFront.set(0);
-        }
-        if (gamepad1.b) {
-            rightFront.set(0.5);
-        } else {
-            rightFront.set(0);
-        }
-        if (gamepad1.x) {
-            leftBack.set(0.5);
-        } else {
-            leftBack.set(0);
-        }
-        if (gamepad1.y) {
-            rightBack.set(0.5);
-        } else {
-            rightBack.set(0);
-        }
-        if (gamepad1.left_bumper) {
-            intake.setPower(0.5);
-        } else {
-            intake.setPower(0);
-        }
-
-        if (gamepad2.x) {
-            wrist.setPosition(0.1);
-        } else if (gamepad2.y) {
-            wrist.setPosition(1);
-        }
-
-        if(gamepad2.left_bumper) {
-            gripper.setPosition(GRIPOPEN);
-        } else if (gamepad2.right_bumper) {
-            gripper.setPosition(GRIPCLOSED);
-        }
+        leftFinger.setPosition(LEFT_OPEN.getPosition());
+//        rightFinger.setPosition(rightFingerr);
 
 
-        telemetry.addData("Status", "Run Time: " + runtime.toString());
-        telemetry.addData("Arm Angle", robot.armSubsystem.getAngle());
-        telemetry.addData("LF", leftFront.getCurrentPosition());
-        telemetry.addData("RF", rightFront.getCurrentPosition());
-        telemetry.addData("LB", leftBack.getCurrentPosition());
-        telemetry.addData("RB", rightBack.getCurrentPosition());
-        telemetry.addData("Intake", intake.getCurrentPosition());
-        telemetry.addData("Lift", lift.getCurrentPosition());
-        telemetry.addData("armAngle", armAngle.getCurrentPosition());
-        telemetry.addData("Extend", armExtend.getCurrentPosition());
-        RobotLog.d("Run Time: " + runtime.toString());
+
+        robot.pixelSubsystem.simpleLift(-gamepad1.left_stick_y);
+        telemetry.addData("lift", leftLift.getCurrentPosition());
     }
 }

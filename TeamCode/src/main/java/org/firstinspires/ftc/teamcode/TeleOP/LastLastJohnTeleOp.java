@@ -41,7 +41,7 @@ import org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023;
 public class LastLastJohnTeleOp extends OpMode {
     NewRobot2023 robot = new NewRobot2023();
     boolean toggleDown = false;
-
+    boolean squareToggle = false;
     @Override
     public void init() {
         robot.init(hardwareMap, false, null);
@@ -75,12 +75,22 @@ public class LastLastJohnTeleOp extends OpMode {
             toggleDown = false;
         }
 
+        if(gamepad2.square) {
+            if(!squareToggle) {
+                robot.pixelSubsystem.fingerOverrideBase(true);
+            }
+            squareToggle = true;
+        } else {
+            squareToggle = false;
+        }
+
         robot.pixelSubsystem.liftControl(-gamepad2.left_stick_y);
         robot.pixelSubsystem.returnArm(gamepad2.triangle);
         robot.pixelSubsystem.flipVertical(gamepad2.dpad_up || gamepad2.dpad_down);
         robot.pixelSubsystem.flipHorizontal(gamepad2.dpad_left || gamepad2.dpad_right);
         robot.pixelSubsystem.dropLeft(gamepad2.left_bumper);
         robot.pixelSubsystem.dropRight(gamepad2.right_bumper);
+
         robot.pixelSubsystem.runPixelSystem();
     }
 }
