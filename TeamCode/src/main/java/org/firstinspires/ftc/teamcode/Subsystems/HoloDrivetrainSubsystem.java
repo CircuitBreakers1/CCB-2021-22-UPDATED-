@@ -38,7 +38,7 @@ public class HoloDrivetrainSubsystem {
      * @param targetPower The power to set the motor to
      */
     public void smoothDecelerate(MotorEx motor, double targetPower) {
-        double maxDecelerate = 0.5;
+        double maxDecelerate = 1.5;
         double currentPower = motor.get();
         if (abs(targetPower) > abs(currentPower) - abs(maxDecelerate)) {
             motor.set(targetPower);

@@ -189,7 +189,7 @@ public class Robot2023 {
         colorDetectionSubsystem = new ColorDetectionSubsystem(leftBay, rightBay, neoDriver);
 
         if (initVision) {
-            cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));
+            cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"),ahwMap.get(WebcamName.class, "Webcam2"));
             this.visionInit = true;
         }
         if (opMode != null)

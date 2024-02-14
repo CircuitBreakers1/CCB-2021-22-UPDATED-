@@ -36,28 +36,38 @@ import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftOdo;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.rightOdo;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.rotate;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.shoot;
-import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.through;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.touch;
 import static org.firstinspires.ftc.teamcode.Subsystems.PixelSubsystem.FingerPositions.LEFT_OPEN;
+import static org.firstinspires.ftc.teamcode.Tuning.NewTuning.colorThresh;
 import static org.firstinspires.ftc.teamcode.Tuning.NewTuning.shooter;
 import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.rotater;
-import static org.firstinspires.ftc.teamcode.Tuning.tuningConstants2023.thrur;
 
+import com.acmerobotics.dashboard.FtcDashboard;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023;
 
 /**
  * Demonstrates empty OpMode
  */
-@TeleOp(name = "Simple Movement", group = "Concept")
-public class SimpleMovement extends OpMode {
+@TeleOp(name = "Color Sensor Test", group = "Concept")
+public class ColorSensorTest extends OpMode {
     NewRobot2023 robot = new NewRobot2023();
+    FtcDashboard dashboard;
+    Telemetry telemetry1;
+    int pixelCount = 0;
+    int timestammp = 0;
+    boolean detected;
 
     @Override
     public void init() {
         robot.init(hardwareMap,false, null);
+        dashboard = FtcDashboard.getInstance();
+        telemetry1 = dashboard.getTelemetry();
     }
 
     @Override
@@ -68,25 +78,25 @@ public class SimpleMovement extends OpMode {
 
     @Override
     public void start() {
-
+        robot.pixelSubsystem.toggleIntake();
+        robot.pixelSubsystem.runPixelSystem();
     }
 
     @Override
     public void loop() {
-        rotate.setPosition(rotater);
-//        through.setPosition(thrur);
-
-        leftFinger.setPosition(LEFT_OPEN.getPosition());
-//        rightFinger.setPosition(rightFingerr);
-
-
-        shoot.setPosition(shooter);
-
-        robot.pixelSubsystem.simpleLift(-gamepad1.left_stick_y);
-        telemetry.addData("lift", leftLift.getCurrentPosition());
-        telemetry.addData("Left Odo", leftOdo.getCurrentPosition());
-        telemetry.addData("Right Odo", rightOdo.getCurrentPosition());
-        telemetry.addData("Back Odo", frontOdo.getCurrentPosition());
-        telemetry.addData("Touch", touch.getState());
+        double colorDist = ((DistanceSensor) NewRobot2023.colorSensor).getDistance(DistanceUnit.CM);
+        if(colorDist < colorThresh) {
+            if(!detected) {
+                pixelCount++;
+            }
+            detected = true;
+        } else {
+            detected = false;
+        }
+        telemetry1.addData("Threshold", colorThresh);
+        telemetry1.addData("Color Distance", colorDist);
+        telemetry1.addData("Detected?", detected);
+        telemetry1.addData("Pixel Count", pixelCount);
+        telemetry1.update();
     }
 }

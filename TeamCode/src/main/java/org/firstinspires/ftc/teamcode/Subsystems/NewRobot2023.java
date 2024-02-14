@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.Subsystems;
 
 import static java.lang.Math.PI;
 
+import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.arcrobotics.ftclib.geometry.Rotation2d;
 import com.arcrobotics.ftclib.hardware.motors.MotorEx;
 import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -40,6 +42,7 @@ public class NewRobot2023 {
     public static Servo frontStage;
     public static Servo leftFinger;
     public static Servo rightFinger;
+    public static Servo shoot;
 
 
     //Sensors
@@ -56,8 +59,8 @@ public class NewRobot2023 {
 
     //Tuning Values - All values in inches unless noted
     float colorGain = 2; //Units: None
-    double trackwidth = 14.14;
-    double odoOffset = 6.5515;
+    double trackwidth = 11.8705;
+    double odoOffset = 1.1705;
     public static final float wheelRadius = (float) 1.37795 / 2;
     public static final float ticksPerRev = 1440; //Units: Ticks/Rev
     public static final float ticksToIn = (float) ((2 * PI * wheelRadius) / ticksPerRev); //Units: In/Ticks
@@ -77,20 +80,24 @@ public class NewRobot2023 {
             rightLift = ahwMap.get(DcMotor.class, "rightLift");
             intake = ahwMap.get(DcMotor.class, "intake");
 
+            leftOdo = new MotorEx(ahwMap, "leftFront");
+            rightOdo = new MotorEx(ahwMap, "leftBack");
+            frontOdo = new MotorEx(ahwMap, "rightFront");
+
             leftFront.setInverted(true);
             rightBack.setInverted(true);
 
             rightLift.setDirection(DcMotorSimple.Direction.REVERSE);
             leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
             leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-//
-//            leftOdo.setDistancePerPulse(ticksToIn);
-//            rightOdo.setDistancePerPulse(ticksToIn);
-//            frontOdo.setDistancePerPulse(ticksToIn);
-//
-//            leftOdo.resetEncoder();
-//            rightOdo.resetEncoder();
-//            frontOdo.resetEncoder();
+
+            leftOdo.setDistancePerPulse(ticksToIn);
+            rightOdo.setDistancePerPulse(ticksToIn);
+            frontOdo.setDistancePerPulse(ticksToIn);
+
+            leftOdo.resetEncoder();
+            rightOdo.resetEncoder();
+            frontOdo.resetEncoder();
         }
 
         //Init Servos
@@ -100,6 +107,7 @@ public class NewRobot2023 {
             frontStage = ahwMap.get(Servo.class, "frontStage");
             leftFinger = ahwMap.get(Servo.class, "leftFinger");
             rightFinger = ahwMap.get(Servo.class, "rightFinger");
+            shoot = ahwMap.get(Servo.class, "shoot");
         }
 
 
@@ -117,21 +125,21 @@ public class NewRobot2023 {
         //Init Subsystems
         {
             holoDrivetrain = new HoloDrivetrainSubsystem(leftFront, rightFront, leftBack, rightBack);
-//            holOdom = new HolonomicOdometry(
-//                    () -> (leftOdo.getCurrentPosition() * ticksToIn * LEFTMULT),
-//                    () -> rightOdo.getCurrentPosition() * -ticksToIn * RIGHTMULT,
-//                    () -> frontOdo.getCurrentPosition() * ticksToIn * BACKMULT,
-//                    trackwidth,
-//                    odoOffset * OFFSETMULT
-//            );
-//
-//            holOdom.updatePose();
-//            holOdom.updatePose(new Pose2d(0, 0, new Rotation2d(0)));
+            holOdom = new HolonomicOdometry(
+                    () -> leftOdo.getCurrentPosition() * ticksToIn,
+                    () -> rightOdo.getCurrentPosition() * ticksToIn,
+                    () -> frontOdo.getCurrentPosition() * ticksToIn,
+                    -trackwidth,
+                    odoOffset
+            );
+
+            holOdom.updatePose();
+            holOdom.updatePose(new Pose2d(0, 0, new Rotation2d(0)));
 
             pixelSubsystem = new PixelSubsystem(leftLift, rightLift, intake, frontStage, through, rotate, leftFinger, rightFinger, touch, colorSensor);
 
             if(initVision) {
-                cameraSubsystem = null; //new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"));
+                cameraSubsystem = new CameraSubsystem(ahwMap.get(WebcamName.class, "Webcam"), ahwMap.get(WebcamName.class, "Webcam2"));
             }
 
             if(opMode != null) {
@@ -139,5 +147,29 @@ public class NewRobot2023 {
             }
         }
 
+    }
+
+    public void resetOdo(Pose2d pose) {
+        leftOdo.resetEncoder();
+        rightOdo.resetEncoder();
+        frontOdo.resetEncoder();
+        holOdom = new HolonomicOdometry(
+                () -> leftOdo.getCurrentPosition() * ticksToIn,
+                () -> rightOdo.getCurrentPosition() * ticksToIn,
+                () -> frontOdo.getCurrentPosition() * ticksToIn,
+                -trackwidth,
+                odoOffset
+        );
+
+        holOdom.updatePose();
+        holOdom.updatePose(pose);
+    }
+
+    public void shoot() {
+        shoot.setPosition(0.2);
+    }
+
+    public void resetShoot() {
+        shoot.setPosition(0);
     }
 }

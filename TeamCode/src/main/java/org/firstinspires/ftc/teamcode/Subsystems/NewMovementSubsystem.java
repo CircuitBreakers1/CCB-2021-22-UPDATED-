@@ -29,7 +29,7 @@ public class NewMovementSubsystem {
     private final HolonomicOdometry holOdom;
     private final CameraSubsystem cameraSubsystem;
     private final PixelSubsystem pixelSubsystem;
-    private static final double precision = 0; //0.4;
+    private static final double precision = 0.3;
     private boolean apriltagSyncRequested = false;
     //Minimum inches to travel in a given time period to avoid timing out
     private static final double minInches = 0.25;
@@ -57,6 +57,9 @@ public class NewMovementSubsystem {
      * @param loop Runnable to be ran in the loop
      */
     public void moveTo(double x, double y, double theta, double maxSpeed, boolean precise, Runnable loop) {
+        theta = -theta;
+
+
         //Ku = 0.39, Tu = 0.719
         //Z-N Values: Kp = 0.078, Ki = 0.217, Kd = 0.0185
         PIDController xController = new PIDController(PID_P, PID_I, PID_D);
@@ -66,7 +69,7 @@ public class NewMovementSubsystem {
 
         //Ku = 8.9 Tu = 0.13347
         //Z-N Values: Kp = 1.78, Ki = 26.7, Kd = 0.0784
-        //Better Kp = 0.6, Ki, Kd = 0
+        //Better Kp = 0.6, Ki = Kd = 0
         //PIDController turnController = new PIDController(TurnPIDP, TurnPIDI, TurnPIDD);
         PAngleController turnController = new PAngleController(TURN_P);
 
@@ -85,7 +88,6 @@ public class NewMovementSubsystem {
 
         Pose2d pose;
         Pose2d lastPose;
-        double timestamp = System.currentTimeMillis();
         double xError;
         double yError;
         double heading;
@@ -127,8 +129,10 @@ public class NewMovementSubsystem {
             telemetry.update();
         }
 
+        double timestamp = System.currentTimeMillis();
+
         double realPrecision = precise ? precision : 1;
-        while ((abs(xError) > realPrecision || abs(yError) > realPrecision || turnController.getError(theta, heading) > 0.11) && opMode.opModeIsActive()) {
+        while ((abs(xError) > realPrecision || abs(yError) > realPrecision || abs(turnController.getError(theta, heading)) > 0.11) && opMode.opModeIsActive()) {
             holOdom.updatePose();
             pixelSubsystem.runPixelSystem();
 
@@ -152,9 +156,9 @@ public class NewMovementSubsystem {
             double time = System.currentTimeMillis() - timestamp;
             if(time > minTime * 1000) {
                 double translationAdjust = translationDistance / (time / (minTime * 1000));
-                double rotationAdjust = rotationDistance / (time / (minTime * 1000));
+                //double rotationAdjust = rotationDistance / (time / (minTime * 1000));
 
-                if(translationAdjust < minInches && rotationAdjust < minDegrees) {
+                if(translationAdjust < minInches) {
                     break;
                 }
                 translationDistance = 0;
@@ -200,10 +204,10 @@ public class NewMovementSubsystem {
             double x_rotated = xVelocity * Math.cos(heading) - yVelocity * Math.sin(heading);
             double y_rotated = xVelocity * Math.sin(heading) + yVelocity * Math.cos(heading);
 
-            double lfSpeed = x_rotated - y_rotated - thetaVelocity;
-            double lbSpeed = x_rotated + y_rotated - thetaVelocity;
-            double rfSpeed = x_rotated + y_rotated + thetaVelocity;
-            double rbSpeed = x_rotated - y_rotated + thetaVelocity;
+            double lfSpeed = x_rotated - y_rotated + thetaVelocity;
+            double lbSpeed = x_rotated + y_rotated + thetaVelocity;
+            double rfSpeed = x_rotated + y_rotated - thetaVelocity;
+            double rbSpeed = x_rotated - y_rotated - thetaVelocity;
 
             double lfTemp = abs(lfSpeed);
             double lbTemp = abs(lbSpeed);

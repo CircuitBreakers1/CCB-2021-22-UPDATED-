@@ -7,14 +7,18 @@ import static org.firstinspires.ftc.teamcode.Subsystems.PixelSubsystem.FingerPos
 import static org.firstinspires.ftc.teamcode.Subsystems.PixelSubsystem.FingerPositions.OPEN;
 import static org.firstinspires.ftc.teamcode.Subsystems.PixelSubsystem.FingerPositions.RIGHT_CLOSED;
 import static org.firstinspires.ftc.teamcode.Subsystems.PixelSubsystem.FingerPositions.RIGHT_OPEN;
+import static org.firstinspires.ftc.teamcode.Tuning.NewTuning.PDHeight;
 
 import android.graphics.Color;
 
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.PIDCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -47,13 +51,14 @@ public class PixelSubsystem {
     private final Gamepad.RumbleEffect yellowRumble;
     private final Gamepad.RumbleEffect greenRumble;
     private final Gamepad.RumbleEffect purpleRumble;
+    private final PIDController armPID;
 
     //Memory
     private LiftStates liftState = LiftStates.BASE;
     private IntakeState intakeState = IntakeState.OFF;
     private boolean teleOp = false;
     private boolean colorTriggered = false;
-    private int pixelCount = 0;
+    public int pixelCount = 0;
     private double outputTimestamp = -1;
     private double flipTimestamp = -1;
     private double liftPower = 0.0;
@@ -62,16 +67,17 @@ public class PixelSubsystem {
     private int liftSetpoint = 0;
     private boolean frontStageOverride = false;
     private boolean fingerOverride = false;
+    private boolean rumbleRequested = false;
 
     /** @noinspection FieldCanBeLocal*/ //Tuning Constants
     //TODO: Find actual values
     private final int minFlipHeight = 460;
     /** @noinspection FieldCanBeLocal*/
-    private final double colorTriggerDist = 1.25;
+    private final double colorTriggerDist = 6;
 
     //Enum Set points
     enum ThruPositions {
-        BASE(0.525), BACKDROP(0.465), PD(0.48);
+        BASE(0.525), BACKDROP(0.475), PD(0.48);
         private final double position;
         ThruPositions(double position) {
             this.position = position;
@@ -82,7 +88,7 @@ public class PixelSubsystem {
     }
 
     enum RotationPositions {
-        BASE(0.617), VERTICAL(0.617), HORIZONTAL(0.555);
+        BASE(0.46), VERTICAL(0.46), HORIZONTAL(0.16);
         private final double position;
         RotationPositions(double position) {
             this.position = position;
@@ -93,7 +99,7 @@ public class PixelSubsystem {
     }
 
     public enum FingerPositions {
-        LEFT_OPEN(1.0), LEFT_CLOSED(0.8), RIGHT_OPEN(0.75), RIGHT_CLOSED(0.55), OPEN(0), CLOSED(0);
+        LEFT_OPEN(0.99), LEFT_CLOSED(0.8), RIGHT_OPEN(0.75), RIGHT_CLOSED(0.55), OPEN(0), CLOSED(0);
         private final double position;
         FingerPositions(double position) {
             this.position = position;
@@ -126,6 +132,10 @@ public class PixelSubsystem {
         this.colorSensor = colorSensor;
         this.frontStage = frontStage;
 
+
+        armPID = new PIDController(10,0.04999,0);
+        armPID.setTolerance(50);
+
         whiteRumble = new Gamepad.RumbleEffect.Builder()
                 .addStep(0.75, 0, 250)
                 .addStep(0, 0.75, 250)
@@ -153,7 +163,18 @@ public class PixelSubsystem {
         teleOp = true;
     }
 
+    public void setTeleOp() {
+        teleOp = true;
+    }
+
     public void initArm() {
+        setThroughPosition(ThruPositions.BASE);
+        thru.setPosition(ThruPositions.BASE.getPosition());
+        setRotationPosition(RotationPositions.BASE);
+        double timestamp = System.currentTimeMillis();
+        while(System.currentTimeMillis() - timestamp < 100) {
+        }
+
         while(liftTouch.getState()) {
             leftLift.setPower(-0.5);
             rightLift.setPower(-0.5);
@@ -171,36 +192,54 @@ public class PixelSubsystem {
         rightLift.setPower(power);
     }
 
+    double intakeScheduler = -1;
     public void runPixelSystem() {
         //Intake
         if(((DistanceSensor) colorSensor).getDistance(DistanceUnit.CM) < colorTriggerDist) {
             if(!colorTriggered) {
                 pixelCount++;
                 if(pixelCount >= 2) {
-                    intakeState = IntakeState.UNSTABLE_OUTPUT;
+                    intakeScheduler = System.currentTimeMillis() + 750;
                 }
-                colorTriggered = true;
-                switch (getColor()) {
-                    case WHITE:
-                        gamepad1.runRumbleEffect(whiteRumble);
-                        gamepad2.runRumbleEffect(whiteRumble);
-                        break;
-                    case YELLOW:
-                        gamepad1.runRumbleEffect(yellowRumble);
-                        gamepad2.runRumbleEffect(yellowRumble);
-                        break;
-                    case GREEN:
-                        gamepad1.runRumbleEffect(greenRumble);
-                        gamepad2.runRumbleEffect(greenRumble);
-                        break;
-                    case PURPLE:
-                        gamepad1.runRumbleEffect(purpleRumble);
-                        gamepad2.runRumbleEffect(purpleRumble);
-                        break;
+                rumbleRequested = true;
+                if(teleOp) {
+//                    gamepad1.rumble(750);
+//                    gamepad2.rumble(750);
+//                    gamepad1.runRumbleEffect(whiteRumble);
+//                    gamepad2.runRumbleEffect(whiteRumble);
+//                    switch (getColor()) {
+//                        case YELLOW:
+//                            gamepad1.runRumbleEffect(yellowRumble);
+//                            gamepad2.runRumbleEffect(yellowRumble);
+//                            break;
+//                        case GREEN:
+//                            gamepad1.runRumbleEffect(greenRumble);
+//                            gamepad2.runRumbleEffect(greenRumble);
+//                            break;
+//                        case PURPLE:
+//                            gamepad1.runRumbleEffect(purpleRumble);
+//                            gamepad2.runRumbleEffect(purpleRumble);
+//                            break;
+//                        case WHITE:
+//                        default:
+//                            gamepad1.runRumbleEffect(whiteRumble);
+//                            gamepad2.runRumbleEffect(whiteRumble);
+//                    }
                 }
             }
+            colorTriggered = true;
         } else {
             colorTriggered = false;
+        }
+
+        if(intakeScheduler != -1 && System.currentTimeMillis() > intakeScheduler && !teleOp) {
+            if(teleOp) {
+                intakeState = IntakeState.UNSTABLE_OUTPUT;
+            } else {
+                intakeState = IntakeState.OFF;
+                frontStageOverride = false;
+            }
+            intakeScheduler = -1;
         }
 
         switch (intakeState) {
@@ -260,14 +299,13 @@ public class PixelSubsystem {
                 setFingers(left, right);
                 if(teleOp) {
                     leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    if(liftPower == 0) liftPower = 0.1;
                     leftLift.setPower(liftPower);
                 } else {
                     if(liftSetpoint == 0) {
                         liftSetpoint = leftLift.getCurrentPosition();
                     }
-                    leftLift.setTargetPosition(liftSetpoint);
-                    leftLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    leftLift.setPower(1);
+                    leftLift.setPower(getPIDOutput(liftSetpoint));
                 }
                 break;
             case HORIZONTAL_MANUAL:
@@ -277,6 +315,7 @@ public class PixelSubsystem {
                 setFingers(left2, right2);
                 if(teleOp) {
                     leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    if(liftPower == 0) liftPower = 0.1;
                     leftLift.setPower(liftPower);
                 }
                 break;
@@ -284,6 +323,7 @@ public class PixelSubsystem {
                 rightDrop = false;
                 leftDrop = false;
                 liftSetpoint = 0;
+                pixelCount = 0;
                 setRotationPosition(RotationPositions.VERTICAL);
                 leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
@@ -304,6 +344,7 @@ public class PixelSubsystem {
                 break;
             case FLIP_IN:
                 setThroughPosition(ThruPositions.BASE);
+                leftLift.setPower(0.1);
                 if (flipTimestamp == -1) {
                     flipTimestamp = System.currentTimeMillis();
                 } else if (System.currentTimeMillis() - flipTimestamp > 500) {
@@ -313,12 +354,23 @@ public class PixelSubsystem {
                 break;
             case BASE_RETURN:
                 leftLift.setPower(-0.5);
-                if (liftTouch.getState()) {
-                    leftLift.setPower(0);
-                    leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-                    leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-                    liftState = LiftStates.BASE;
+
+                if(gamepad2 != null) {
+                    if (!liftTouch.getState() || gamepad2.start) {
+                        leftLift.setPower(0);
+                        leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                        liftState = LiftStates.BASE;
+                    }
+                } else {
+                    if (!liftTouch.getState()) {
+                        leftLift.setPower(0);
+                        leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+                        leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                        liftState = LiftStates.BASE;
+                    }
                 }
+
 //                if (leftLift.getCurrentPosition() < 0) {
 //                    leftLift.setPower(0);
 //                    leftLift.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -328,9 +380,10 @@ public class PixelSubsystem {
 //                }
                 break;
             case FULL_MANUAL:
-                leftLift.setTargetPosition(liftSetpoint);
-                leftLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                leftLift.setPower(1);
+                if(liftSetpoint == 0) {
+                    liftSetpoint = leftLift.getCurrentPosition();
+                }
+                leftLift.setPower(getPIDOutput(liftSetpoint));
                 break;
             case PD_RAISE:
                 leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
@@ -350,11 +403,10 @@ public class PixelSubsystem {
                 }
                 break;
             case PD_LOWER:
-                leftLift.setTargetPosition(25);
-                leftLift.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                leftLift.setPower(0.75);
+                int set = 330;
+                leftLift.setPower(getPIDOutput(set));
                 //If error < 3, set to PD_READY
-                if (Math.abs(leftLift.getCurrentPosition() - 25) < 5) {
+                if (Math.abs(leftLift.getCurrentPosition() - set) < 30) {
                     leftLift.setPower(0);
                     liftState = LiftStates.PD_READY;
                 }
@@ -486,7 +538,7 @@ public class PixelSubsystem {
         if (!returnArm) {
             return false;
         }
-        if (liftState == LiftStates.VERTICAL_MANUAL || liftState == LiftStates.HORIZONTAL_MANUAL) {
+        if (liftState == LiftStates.VERTICAL_MANUAL || liftState == LiftStates.HORIZONTAL_MANUAL || liftState == LiftStates.PD_READY) {
             liftState = LiftStates.MIN_RAISE;
             return true;
         }
@@ -517,7 +569,7 @@ public class PixelSubsystem {
 
     public void enableFullManual() {
         liftState = LiftStates.FULL_MANUAL;
-        liftSetpoint = leftLift.getCurrentPosition();
+        liftSetpoint = 0;
     }
 
     /**
@@ -537,6 +589,12 @@ public class PixelSubsystem {
 
     public void endPDresumeND() {
         liftState = LiftStates.AUTO_RAISE;
+    }
+
+    public boolean rumbleProcess() {
+        boolean temp = rumbleRequested;
+        rumbleRequested = false;
+        return temp;
     }
 
     //Internal Private Methods
@@ -593,5 +651,10 @@ public class PixelSubsystem {
     }
     private void setRotationPosition(RotationPositions position) {
         rotation.setPosition(position.getPosition());
+    }
+
+    private double getPIDOutput(int setpoint) {
+        if(Math.abs(setpoint - leftLift.getCurrentPosition()) < 30) return 0.1;
+        return armPID.calculate(leftLift.getCurrentPosition(), setpoint);
     }
 }

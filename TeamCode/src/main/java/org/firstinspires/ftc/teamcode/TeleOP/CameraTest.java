@@ -8,13 +8,14 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.stream.CameraStreamSource;
 import org.firstinspires.ftc.teamcode.Subsystems.ColorBlobDetector;
+import org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023;
 import org.firstinspires.ftc.teamcode.Subsystems.PoseSupply;
 import org.firstinspires.ftc.teamcode.Subsystems.Robot2023;
 
 @TeleOp(name = "Camera Test", group = "")
 public class CameraTest extends OpMode {
 
-    Robot2023 robot = new Robot2023();
+    NewRobot2023 robot = new NewRobot2023();
     FtcDashboard dash = FtcDashboard.getInstance();
     Pose2d realPose = new Pose2d();
     Pose2d pose2 = new Pose2d();

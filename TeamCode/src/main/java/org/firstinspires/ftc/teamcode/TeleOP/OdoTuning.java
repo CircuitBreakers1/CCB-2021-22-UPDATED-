@@ -29,6 +29,10 @@
 
 package org.firstinspires.ftc.teamcode.TeleOP;
 
+import static org.firstinspires.ftc.teamcode.Tuning.NewTuning.endT;
+import static org.firstinspires.ftc.teamcode.Tuning.NewTuning.endX;
+import static org.firstinspires.ftc.teamcode.Tuning.NewTuning.endY;
+
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -48,7 +52,7 @@ public class OdoTuning extends LinearOpMode {
       robot.pixelSubsystem.initArm();
 
       waitForStart();
-      robot.movementSubsystem.moveTo(10,0,0, 0.5);
+      robot.movementSubsystem.moveTo(endX, endY, Math.toRadians(endT), 1);
 
 
   }

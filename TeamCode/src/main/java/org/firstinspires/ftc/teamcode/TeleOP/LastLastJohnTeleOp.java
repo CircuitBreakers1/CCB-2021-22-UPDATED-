@@ -29,8 +29,13 @@
 
 package org.firstinspires.ftc.teamcode.TeleOP;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.holOdom;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.shoot;
+
+import com.arcrobotics.ftclib.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023;
 
@@ -42,11 +47,17 @@ public class LastLastJohnTeleOp extends OpMode {
     NewRobot2023 robot = new NewRobot2023();
     boolean toggleDown = false;
     boolean squareToggle = false;
+    private Gamepad.RumbleEffect whiteRumble;
     @Override
     public void init() {
         robot.init(hardwareMap, false, null);
         robot.pixelSubsystem.initGamepadsForTeleOP(gamepad1, gamepad2);
         robot.pixelSubsystem.initArm();
+
+        whiteRumble = new Gamepad.RumbleEffect.Builder()
+                .addStep(0.75, 0, 750)
+                .addStep(0, 0.75, 750)
+                .build();
     }
 
     @Override
@@ -61,16 +72,17 @@ public class LastLastJohnTeleOp extends OpMode {
 
     @Override
     public void loop() {
+        robot.pixelSubsystem.setTeleOp();
         double x = gamepad1.left_stick_x;
         double y = -gamepad1.left_stick_y;
         robot.holoDrivetrain.smoothDrive(x, y, gamepad1.right_stick_x);
 
-        if (gamepad2.cross || gamepad1.cross) {
+        if (gamepad1.cross) {
             if (!toggleDown) {
                 toggleDown = true;
                 robot.pixelSubsystem.toggleIntake();
             }
-        } else if (gamepad2.circle || gamepad1.circle) {
+        } else if (gamepad1.circle) {
             robot.pixelSubsystem.output();
         }else {
             toggleDown = false;
@@ -85,7 +97,13 @@ public class LastLastJohnTeleOp extends OpMode {
             squareToggle = false;
         }
 
-        robot.pixelSubsystem.liftControl(-gamepad2.left_stick_y);
+        if(gamepad1.dpad_up) {
+            robot.shoot();
+        } else if(gamepad1.dpad_down) {
+            robot.resetShoot();
+        }
+
+        robot.pixelSubsystem.liftControl(-gamepad2.right_stick_y);
         robot.pixelSubsystem.returnArm(gamepad2.triangle);
         robot.pixelSubsystem.flipVertical(gamepad2.dpad_up || gamepad2.dpad_down);
         robot.pixelSubsystem.flipHorizontal(gamepad2.dpad_left || gamepad2.dpad_right);
@@ -93,5 +111,18 @@ public class LastLastJohnTeleOp extends OpMode {
         robot.pixelSubsystem.dropRight(gamepad2.right_bumper);
 
         robot.pixelSubsystem.runPixelSystem();
+
+        if(robot.pixelSubsystem.rumbleProcess()) {
+            gamepad1.runRumbleEffect(whiteRumble);
+            gamepad2.runRumbleEffect(whiteRumble);
+        }
+
+        holOdom.updatePose();
+
+        Pose2d pose = holOdom.getPose();
+        telemetry.addData("X", pose.getX());
+        telemetry.addData("Y", pose.getY());
+        telemetry.addData("Heading", Math.toDegrees(pose.getHeading()));
+        telemetry.addData("Pixels", robot.pixelSubsystem.pixelCount);
     }
 }

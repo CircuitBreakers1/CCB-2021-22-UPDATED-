@@ -8,16 +8,29 @@ import static org.firstinspires.ftc.teamcode.Subsystems.NewAutoSwitcher.ConfigSe
 import static org.firstinspires.ftc.teamcode.Subsystems.NewAutoSwitcher.ConfigSetting.START_LOCATION;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewAutoSwitcher.PlaceLocation;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewAutoSwitcher.PlaceLocation.LEFT;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.frontOdo;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.holOdom;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftFront;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftLift;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftOdo;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.rightOdo;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.shoot;
 import static org.firstinspires.ftc.teamcode.Subsystems.PixelSubsystem.FingerPositions.CLOSED;
 import static org.firstinspires.ftc.teamcode.Subsystems.PixelSubsystem.FingerPositions.OPEN;
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.holOdom;
+import static org.firstinspires.ftc.teamcode.Tuning.NewTuning.x;
+import static org.firstinspires.ftc.teamcode.Tuning.NewTuning.y;
 
+import com.arcrobotics.ftclib.geometry.Pose2d;
+import com.arcrobotics.ftclib.kinematics.HolonomicOdometry;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 import org.firstinspires.ftc.teamcode.Subsystems.ColorBlobDetector;
 import org.firstinspires.ftc.teamcode.Subsystems.NewAutoSwitcher;
 import org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023;
+import org.firstinspires.ftc.teamcode.Subsystems.PoseSupply;
 
 @Autonomous(name = "Auto")
 public class NewAuto extends LinearOpMode {
@@ -47,6 +60,8 @@ public class NewAuto extends LinearOpMode {
         boolean aPressed = false;
 
         holOdom.updatePose(autoSwitcher.getStartLocation().startPose);
+
+        PIDFCoefficients coefficients = leftFront.motorEx.getPIDFCoefficients(DcMotorEx.RunMode.RUN_TO_POSITION);
 
         robot.pixelSubsystem.initArm();
 
@@ -116,7 +131,7 @@ public class NewAuto extends LinearOpMode {
                     if(!armUp) {
                         robot.pixelSubsystem.enableFullManual();
                         robot.pixelSubsystem.setFingers(OPEN, OPEN);
-                        robot.pixelSubsystem.liftSet(200);
+                        robot.pixelSubsystem.liftSet(500);
                     } else {
                         robot.pixelSubsystem.setFingers(CLOSED, CLOSED);
                         robot.pixelSubsystem.setFingerOverride(true);
@@ -130,7 +145,13 @@ public class NewAuto extends LinearOpMode {
                 aPressed = false;
             }
 
-            propGuess = ColorBlobDetector.PropGuess.MIDDLE; //robot.cameraSubsystem.getPropGuess();
+            if(gamepad1.square) {
+                robot.shoot();
+            } else if (gamepad1.triangle) {
+                robot.resetShoot();
+            }
+
+            propGuess = robot.cameraSubsystem.getPropGuess();
             systemStates[1] = propGuess != ColorBlobDetector.PropGuess.UNKNOWN;
 
             systemStates[2] = !armUp;
@@ -160,7 +181,9 @@ public class NewAuto extends LinearOpMode {
 
         waitForStart();
 
-        //robot.cameraSubsystem.setColorBlobDetector(null);
+        double timer = System.currentTimeMillis();
+
+        robot.cameraSubsystem.setColorBlobDetector(null);
         robot.pixelSubsystem.requestPD();
 
         ColorBlobDetector.PropGuess mirroredGuess = propGuess;
@@ -181,22 +204,24 @@ public class NewAuto extends LinearOpMode {
                 if(autoSwitcher.getDelayMS() != 0) {
                     sleep(autoSwitcher.getDelayMS());
                 }
-
                 switch (mirroredGuess) {
                     case LEFT:
-                        autoSwitcher.moveSwitch(22, 55, -1.57, 1);
+                        autoSwitcher.moveSwitch(22, 48, -1.57, 1);
                         break;
                     case RIGHT:
-                        autoSwitcher.moveSwitch(15, 48.5, -0.685, 1);
+                        autoSwitcher.moveSwitch(18, 34, 3.14, 1);
+                        autoSwitcher.moveSwitch(15, 34, 3.14, 1);
                         break;
                     case MIDDLE:
                     case UNKNOWN:
-                        autoSwitcher.moveSwitch(16, 46, -1.57, 1);
+                        autoSwitcher.moveSwitch(16, 35.5, -1.57, 1);
                         break;
                 }
 
                 while(!robot.pixelSubsystem.isPDReady() && opModeIsActive()) {
                     robot.pixelSubsystem.runPixelSystem();
+                    telemetry.addData("Lift Postion", leftLift.getCurrentPosition());
+                    telemetry.update();
                 }
 
                 robot.pixelSubsystem.setFingers(OPEN, CLOSED);
@@ -213,11 +238,55 @@ public class NewAuto extends LinearOpMode {
                 }
                 break;
             case BLUE_AUDIENCE: case RED_AUDIENCE:
+                //Place Purple Pixel
+                switch (mirroredGuess) {
+                    case LEFT:
+                        autoSwitcher.moveSwitch(-43, 38, -3.14, 1);
+                        break;
+                    case RIGHT:
+                        autoSwitcher.moveSwitch(-45.5, 55, -1.57, 1);
+                        break;
+                    case MIDDLE:
+                    case UNKNOWN:
+                        autoSwitcher.moveSwitch(-39, 44.5, -1.57, 1);
+                        break;
+                }
+
+                while(!robot.pixelSubsystem.isPDReady() && opModeIsActive()) {
+                    robot.pixelSubsystem.runPixelSystem();
+                }
+
+                robot.pixelSubsystem.setFingers(OPEN, CLOSED);
+
+                sleep(300);
+
+                robot.pixelSubsystem.returnArm(true);
+                //Grab one white pixel from stack
+                //Recenter using apriltag
+//                robot.movementSubsystem.requestApriltagSync();
+                requestOpModeStop();
+                //Move to ready spot
+
+                robot.pixelSubsystem.toggleIntake();
+                robot.pixelSubsystem.frontStageOverride(5);
+
+                //Move to grab
+
+                //Wait until pixel is detected
+
+                robot.pixelSubsystem.toggleIntake();
+                robot.pixelSubsystem.fingerOverrideBase(true);
+
+                //Go to Backdrop
+
+                //Recenter using apriltag
                 break;
         }
 
         //Merged Code
-        autoSwitcher.moveSwitch(36, 36, -3.14, 1, false);
+//        robot.movementSubsystem.requestApriltagSync();
+        autoSwitcher.moveSwitch(36, 36, 0, 1, false);
+        robot.pixelSubsystem.liftSet(1100);
 
         PlaceLocation placeMirrored = autoSwitcher.getPlaceLocation();
         if (autoSwitcher.getAlliance() == NewAutoSwitcher.Alliance.RED) {
@@ -233,33 +302,119 @@ public class NewAuto extends LinearOpMode {
 
         final double LEFT_TO_RIGHT = placeMirrored == LEFT ? 0 : 2;
 
+
+
         //Drop Pixel on Backdrop. Default points to LEFT edge of the drop zone.
         switch (mirroredGuess) {
             case LEFT:
-                autoSwitcher.moveSwitch(50.2, 44 - LEFT_TO_RIGHT, -3.14, 0.5);
+                autoSwitcher.moveSwitch(48, 41, 0, 0.5);
                 break;
             case RIGHT:
-                autoSwitcher.moveSwitch(50.2, 33 - LEFT_TO_RIGHT, -3.14, 0.5);
+                autoSwitcher.moveSwitch(48, 27.5, 0, 0.5);
                 break;
             case MIDDLE:
             default:
-                autoSwitcher.moveSwitch(50.2, 39 - LEFT_TO_RIGHT, -3.14, 0.5);
+                autoSwitcher.moveSwitch(48.25, 38.5, 0, 0.5);
         }
-
+        robot.pixelSubsystem.flipHorizontal(true);
+        robot.pixelSubsystem.runPixelSystem();
+        sleep(700);
         robot.pixelSubsystem.dropRight(true);
-        sleep(300);
-        autoSwitcher.moveSwitch(36, 36, -3.14, 1, false);
-        robot.pixelSubsystem.returnArm(true);
+        robot.pixelSubsystem.runPixelSystem();
+        sleep(700);
 
+        //Cycling Loop
+        int cycles = 1;
+        for (int i = 0; i < cycles; i++) {
+            autoSwitcher.moveSwitch(42, 36, 0, 1, false);
+            robot.pixelSubsystem.returnArm(true);
+            double yMovement = i == 0 ? 17 : 12;
+            autoSwitcher.moveSwitch(42, yMovement, 0, 1, false);
+            autoSwitcher.moveSwitch(-24, yMovement, 0, 1, false);
+
+            autoSwitcher.moveSwitch(-24, yMovement, Math.toRadians(-40), 1, false);
+            double timestamp = System.currentTimeMillis();
+            telemetry.addData("Camera Status", "Looking");
+            telemetry.update();
+            while (System.currentTimeMillis() - timestamp < 2000 && opModeIsActive()) {
+                Pose2d pose2d = robot.cameraSubsystem.getPoseFromAprilTag();
+                if (pose2d != null) {
+                    holOdom.updatePose(pose2d);
+                    Pose2d firstOutput = holOdom.getPose();
+                    robot.resetOdo(pose2d);
+                    holOdom.updatePose();
+                    Pose2d secondOutput = holOdom.getPose();
+
+                    telemetry.addData("April Input X", pose2d.getX())
+                            .addData("Y", pose2d.getY())
+                            .addData("Heading", pose2d.getHeading());
+                    telemetry.addData("First Output X", firstOutput.getX())
+                            .addData("Y", firstOutput.getY())
+                            .addData("Heading", firstOutput.getHeading());
+                    telemetry.addData("Second Output X", secondOutput.getX())
+                            .addData("Y", secondOutput.getY())
+                            .addData("Heading", secondOutput.getHeading());
+                    telemetry.addData("April Lock Time", System.currentTimeMillis() - timestamp);
+                    telemetry.update();
+                    break;
+                }
+            }
+
+            autoSwitcher.moveSwitch(-52, 10.75, 0, 1, true);
+            robot.pixelSubsystem.toggleIntake();
+            robot.pixelSubsystem.frontStageOverride(5 - i);
+            autoSwitcher.moveSwitch(-56.5, 10.75, 0, 1, true);
+            robot.pixelSubsystem.frontStageOverride(4 - i);
+            double timestamo = System.currentTimeMillis();
+            while (opModeIsActive()) {
+                if((System.currentTimeMillis() - timestamo > 2000 && robot.pixelSubsystem.pixelCount > 0) || System.currentTimeMillis() - timestamo > 4000) {
+                    robot.pixelSubsystem.toggleIntake();
+                    break;
+                }
+                robot.pixelSubsystem.runPixelSystem();
+                if (robot.pixelSubsystem.pixelCount >= 2) {
+                    break;
+                }
+                autoSwitcher.moveSwitch(-55.5, 10.75, 0, 1, true);
+                if (robot.pixelSubsystem.pixelCount >= 2) {
+                    break;
+                }
+                autoSwitcher.moveSwitch(-56.75, 10.75, 0, 1, true);
+            }
+            robot.pixelSubsystem.fingerOverrideBase(true);
+            robot.pixelSubsystem.runPixelSystem();
+            autoSwitcher.moveSwitch(40, 10, 0, 1);
+
+            robot.pixelSubsystem.liftSet(1275);
+            autoSwitcher.moveSwitch(40, 38, 0, 1);
+            autoSwitcher.moveSwitch(46, 38, 0, 1);
+
+            robot.pixelSubsystem.dropRight(true);
+            robot.pixelSubsystem.runPixelSystem();
+
+            timestamo = System.currentTimeMillis();
+            while (opModeIsActive() && System.currentTimeMillis() - timestamo < 500) {
+                robot.pixelSubsystem.runPixelSystem();
+            }
+            robot.pixelSubsystem.returnArm(true);
+
+
+        }
+        autoSwitcher.moveSwitch(45, 30, 0, 1);
         switch (autoSwitcher.getParkLocation()) {
             case INSIDE:
-                autoSwitcher.moveSwitch(36, 15, -3.14, 1);
-                autoSwitcher.moveSwitch(46, 15, -3.14, 1);
+                autoSwitcher.moveSwitch(46, 15, 0, 1);
                 break;
             case OUTSIDE:
-                autoSwitcher.moveSwitch(36, 60.5, -3.14, 1);
-                autoSwitcher.moveSwitch(46, 60.5, -3.14, 1);
+                autoSwitcher.moveSwitch(46, 60.5, 0, 1);
                 break;
+        }
+
+        telemetry.addData("Runtime", "%.2f", (System.currentTimeMillis() - timer) / 1000);
+        telemetry.update();
+
+        while (opModeIsActive()) {
+            robot.pixelSubsystem.runPixelSystem();
         }
     }
 }

@@ -35,7 +35,7 @@ public class odometryTuning extends LinearOpMode {
 
     //Hardware Map Names for drive motors and odometry wheels. THIS WILL CHANGE ON EACH ROBOT, YOU NEED TO UPDATE THESE VALUES ACCORDINGLY
     String rfName = "rightFront", rbName = "rightBack", lfName = "leftFront", lbName = "leftBack";
-    String verticalLeftEncoderName = "armAngle", verticalRightEncoderName = "intake", horizontalEncoderName = "lift";
+    String verticalLeftEncoderName = "leftFront", verticalRightEncoderName = "leftBack", horizontalEncoderName = "rightFront";
 
     final double PIVOT_SPEED = 0.5;
 
@@ -59,8 +59,8 @@ public class odometryTuning extends LinearOpMode {
         imu = hardwareMap.get(IMU.class, "imu");
 
         //Initialize IMU parameters
-        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.UP;
-        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.FORWARD;
+        RevHubOrientationOnRobot.LogoFacingDirection logoDirection = RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
+        RevHubOrientationOnRobot.UsbFacingDirection usbDirection = RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
         RevHubOrientationOnRobot orientationOnRobot = new RevHubOrientationOnRobot(logoDirection, usbDirection);
 
@@ -80,14 +80,14 @@ public class odometryTuning extends LinearOpMode {
 
         //Begin calibration (if robot is unable to pivot at these speeds, please adjust the constant at the top of the code
         while (getZAngle() < 90 && opModeIsActive()) {
-            right_front.setPower(-PIVOT_SPEED);
-            right_back.setPower(-PIVOT_SPEED);
-            left_front.setPower(-PIVOT_SPEED);
-            left_back.setPower(PIVOT_SPEED);
+//            right_front.setPower(PIVOT_SPEED);
+//            right_back.setPower(-PIVOT_SPEED);
+//            left_front.setPower(PIVOT_SPEED);
+//            left_back.setPower(-PIVOT_SPEED);
             if (getZAngle() < 60) {
-                setPowerAll(-PIVOT_SPEED, -PIVOT_SPEED, PIVOT_SPEED, PIVOT_SPEED);
+                setPowerAll(PIVOT_SPEED, PIVOT_SPEED, -PIVOT_SPEED, -PIVOT_SPEED);
             } else {
-                setPowerAll(-PIVOT_SPEED / 2, -PIVOT_SPEED / 2, PIVOT_SPEED / 2, PIVOT_SPEED / 2);
+                setPowerAll(PIVOT_SPEED / 2, PIVOT_SPEED / 2, -PIVOT_SPEED / 2, -PIVOT_SPEED / 2);
             }
 
             telemetry.addData("IMU Angle", getZAngle());
@@ -193,8 +193,7 @@ public class odometryTuning extends LinearOpMode {
         left_front.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         left_back.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        left_front.setDirection(DcMotorSimple.Direction.REVERSE);
-        right_front.setDirection(DcMotorSimple.Direction.REVERSE);
+        //left_front.setDirection(DcMotorSimple.Direction.REVERSE);
         right_back.setDirection(DcMotorSimple.Direction.REVERSE);
 
 

@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode.Subsystems;
 
-import static org.firstinspires.ftc.teamcode.Subsystems.Robot2023.holOdom;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.holOdom;
 import static java.lang.Math.PI;
 
 import com.arcrobotics.ftclib.geometry.Pose2d;
@@ -50,10 +50,10 @@ public class NewAutoSwitcher {
 
     public enum StartLocation {
         //Assume robot is 17" long and 17" wide. Start centered on tile, touching wall
-        RED_BACKDROP(12, -63.5, -PI / 2),
-        RED_AUDIENCE(-36, -63.5, -PI / 2),
-        BLUE_BACKDROP(12, 63.5, PI / 2),
-        BLUE_AUDIENCE(-36, 63.5, PI / 2);
+        RED_BACKDROP(12, -63.5, PI / 2),
+        RED_AUDIENCE(-36, -63.5, PI / 2),
+        BLUE_BACKDROP(12, 63.5, -PI / 2),
+        BLUE_AUDIENCE(-36, 63.5, -PI / 2);
 
         public final Pose2d startPose;
 

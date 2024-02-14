@@ -46,10 +46,10 @@ public class tuningConstants2023 {
     public static double intakePower = 1;
 
     public static double frontStage = 0.0;
-    public static double rotater = 0.0;
+    public static double rotater = 0.48;
     public static double leftFingerr = 0.0;
     public static double rightFingerr = 0.0;
-    public static double thrur = 0.0;
+    public static double thrur = 0.525;
 
 
 }

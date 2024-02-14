@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.Subsystems;
 import static org.firstinspires.ftc.teamcode.Subsystems.ColorBlobDetector.PropColor.BLUE;
 import static org.firstinspires.ftc.teamcode.Subsystems.ColorBlobDetector.PropColor.RED;
 import static org.firstinspires.ftc.vision.apriltag.AprilTagGameDatabase.getCurrentGameTagLibrary;
+import static java.lang.Math.PI;
 import static java.lang.Math.cos;
 import static java.lang.Math.hypot;
 import static java.lang.Math.sin;
@@ -18,6 +19,8 @@ import org.apache.commons.math3.geometry.euclidean.threed.RotationOrder;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
+import org.firstinspires.ftc.robotcore.external.ClassFactory;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.CameraName;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -35,11 +38,19 @@ public class CameraSubsystem {
     private ColorBlobDetector.PropColor currentColor = null;
     private ColorBlobDetector blueBlobDetector;
     private ColorBlobDetector redBlobDetector;
+    private WebcamName front;
+    private WebcamName back;
 
     //X Y Displacement on robot from Center
-    private double[] cameraLocation = { -8.25, -2.875};
+    //Values are squared so sign is irrelevant
+    private double[] cameraLocation = {4.5, 0};
 
-    public CameraSubsystem(WebcamName webcamName) {
+    public CameraSubsystem(WebcamName webcamNameBack, WebcamName webcamNameFront) {
+        front = webcamNameFront;
+        back = webcamNameBack;
+
+
+        //1642.25, 1642.25, 1295.9, 737.061
 
         aprilTagProcessor = new AprilTagProcessor.Builder()
                 .setDrawTagID(true)
@@ -54,20 +65,29 @@ public class CameraSubsystem {
         blueBlobDetector = new ColorBlobDetector(BLUE);
         redBlobDetector = new ColorBlobDetector(RED);
 
+        CameraName switcherCam = ClassFactory.getInstance()
+                .getCameraManager().nameForSwitchableCamera(back, front);
+
         visionPortal = new VisionPortal.Builder()
                 .addProcessor(blueBlobDetector)
                 .addProcessor(redBlobDetector)
                 .addProcessor(aprilTagProcessor)
                 .enableLiveView(true)
                 .setAutoStopLiveView(true)
-                .setCamera(webcamName)
+                .setCamera(switcherCam)
                 .setCameraResolution(new Size(640, 480))
                 .setStreamFormat(VisionPortal.StreamFormat.MJPEG)
                 .build();
 
+        double systemtime = System.currentTimeMillis();
+        while(systemtime + 500 > System.currentTimeMillis()) {}
+
+        visionPortal.setActiveCamera(front);
+
         visionPortal.setProcessorEnabled(aprilTagProcessor, true);
         visionPortal.setProcessorEnabled(blueBlobDetector, false);
         visionPortal.setProcessorEnabled(redBlobDetector, false);
+
     }
 
     public void setColorBlobDetector(ColorBlobDetector.PropColor color) {
@@ -76,15 +96,18 @@ public class CameraSubsystem {
         if (color == null) {
             visionPortal.setProcessorEnabled(redBlobDetector, false);
             visionPortal.setProcessorEnabled(blueBlobDetector, false);
+            visionPortal.setActiveCamera(back);
             return;
         }
 
         if (color == BLUE) {
             visionPortal.setProcessorEnabled(redBlobDetector, false);
             visionPortal.setProcessorEnabled(blueBlobDetector, true);
+            visionPortal.setActiveCamera(front);
         } else if (color == RED) {
             visionPortal.setProcessorEnabled(redBlobDetector, true);
             visionPortal.setProcessorEnabled(blueBlobDetector, false);
+            visionPortal.setActiveCamera(front);
         }
     }
 
@@ -128,6 +151,7 @@ public class CameraSubsystem {
                 //Return the first global pose we can find
                 Pose2d pose = translateToCam(detection.ftcPose.x, detection.ftcPose.y, detection.ftcPose.z, detection.ftcPose.yaw, detection.ftcPose.pitch, detection.ftcPose.roll);
 //                return pose;
+                if(detection.id < 7) continue;
                 Pose2d aprilPose = PoseSupply.values()[detection.id].globalPose;
                 Pose2d cameraGlobal = new Pose2d(aprilPose.getX() + -pose.getX(), aprilPose.getY() + pose.getY(), pose.getRotation());
                 Pose2d robotGlobal = translateCamToCenter(cameraGlobal);
