@@ -58,7 +58,7 @@ public class LastLastJohnTeleOp extends OpMode {
 
         whiteRumble = new Gamepad.RumbleEffect.Builder()
                 .addStep(0.75, 0, 750)
-                .addStep(0, 0.75, 750)
+     -           .addStep(0, 0.75, 750)
                 .build();
     }
 
@@ -111,6 +111,8 @@ public class LastLastJohnTeleOp extends OpMode {
         robot.pixelSubsystem.flipHorizontal(gamepad2.dpad_left || gamepad2.dpad_right);
         robot.pixelSubsystem.dropLeft(gamepad2.left_bumper);
         robot.pixelSubsystem.dropRight(gamepad2.right_bumper);
+        robot.pixelSubsystem.setHangMode(gamepad2.circle);
+
 
         robot.pixelSubsystem.runPixelSystem();
 

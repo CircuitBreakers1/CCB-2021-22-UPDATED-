@@ -68,6 +68,7 @@ public class PixelSubsystem {
     private boolean frontStageOverride = false;
     private boolean fingerOverride = false;
     private boolean rumbleRequested = false;
+    private boolean hangMode = false;
 
     /** @noinspection FieldCanBeLocal*/ //Tuning Constants
     //TODO: Find actual values
@@ -110,7 +111,7 @@ public class PixelSubsystem {
     }
 
     enum LiftStates {
-        BASE, AUTO_RAISE, FLIP_OUT, VERTICAL_MANUAL, HORIZONTAL_MANUAL, MIN_RAISE, FLIP_IN, BASE_RETURN,
+        BASE, AUTO_RAISE, FLIP_OUT, VERTICAL_MANUAL, HORIZONTAL_MANUAL, MIN_RAISE, FLIP_IN, BASE_RETURN, HANG_MODE,
         FULL_MANUAL,
         PD_RAISE, PD_FLIP, PD_LOWER, PD_READY
     }
@@ -279,7 +280,11 @@ public class PixelSubsystem {
                 setFingers(CLOSED, CLOSED);
                 fingerOverride = false;
                 if(leftLift.getCurrentPosition() > minFlipHeight) {
-                    liftState = LiftStates.FLIP_OUT;
+                    if(!hangMode) {
+                        liftState = LiftStates.FLIP_OUT;
+                    } else {
+                        liftState = LiftStates.HANG_MODE;
+                    }
                     leftLift.setPower(0);
                 }
                 break;
@@ -317,6 +322,22 @@ public class PixelSubsystem {
                     leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
                     if(liftPower == 0) liftPower = 0.1;
                     leftLift.setPower(liftPower);
+                }
+                break;
+            case HANG_MODE:
+                setThroughPosition(ThruPositions.BASE);
+                if(teleOp) {
+                    leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                    if(liftPower == 0) liftPower = 0.1;
+                    leftLift.setPower(liftPower);
+                } else {
+                    if(liftSetpoint == 0) {
+                        liftSetpoint = leftLift.getCurrentPosition();
+                    }
+                    leftLift.setPower(getPIDOutput(liftSetpoint));
+                }
+                if(!hangMode) {
+                    liftState = LiftStates.MIN_RAISE;
                 }
                 break;
             case MIN_RAISE:
@@ -570,6 +591,15 @@ public class PixelSubsystem {
     public void enableFullManual() {
         liftState = LiftStates.FULL_MANUAL;
         liftSetpoint = 0;
+    }
+
+    public void setHangMode(boolean yes) {
+        if (yes) {
+            hangMode = !hangMode;
+            if (hangMode && liftState == LiftStates.BASE) {
+                liftState = LiftStates.MIN_RAISE;
+            }
+        }
     }
 
     /**
