@@ -8,11 +8,13 @@ import static org.firstinspires.ftc.teamcode.Subsystems.NewAutoSwitcher.ConfigSe
 import static org.firstinspires.ftc.teamcode.Subsystems.NewAutoSwitcher.ConfigSetting.START_LOCATION;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewAutoSwitcher.PlaceLocation;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewAutoSwitcher.PlaceLocation.LEFT;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.distance;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.frontOdo;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.holOdom;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftFront;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftLift;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftOdo;
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.rightFinger;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.rightOdo;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.shoot;
 import static org.firstinspires.ftc.teamcode.Subsystems.PixelSubsystem.FingerPositions.CLOSED;
@@ -27,6 +29,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Subsystems.ColorBlobDetector;
 import org.firstinspires.ftc.teamcode.Subsystems.NewAutoSwitcher;
 import org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023;
@@ -181,7 +184,7 @@ public class NewAuto extends LinearOpMode {
 
         waitForStart();
 
-        double timer = System.currentTimeMillis();
+//        double timer = System.currentTimeMillis();
 
         robot.cameraSubsystem.setColorBlobDetector(null);
         robot.pixelSubsystem.requestPD();
@@ -302,19 +305,22 @@ public class NewAuto extends LinearOpMode {
 
         final double LEFT_TO_RIGHT = placeMirrored == LEFT ? 0 : 2;
 
+        //Depth Control
+        double backdropDistance = distance.getDistance(DistanceUnit.INCH);
+        double dropX = holOdom.getPose().getX() + backdropDistance - 2.7;
 
 
         //Drop Pixel on Backdrop. Default points to LEFT edge of the drop zone.
         switch (mirroredGuess) {
             case LEFT:
-                autoSwitcher.moveSwitch(48, 41, 0, 0.5);
+                autoSwitcher.moveSwitch(dropX, 41, 0, 0.5);
                 break;
             case RIGHT:
-                autoSwitcher.moveSwitch(48, 27.5, 0, 0.5);
+                autoSwitcher.moveSwitch(dropX, 35.5, 0, 0.5);
                 break;
             case MIDDLE:
             default:
-                autoSwitcher.moveSwitch(48.25, 38.5, 0, 0.5);
+                autoSwitcher.moveSwitch(dropX, 38.5, 0, 0.5);
         }
         robot.pixelSubsystem.flipHorizontal(true);
         robot.pixelSubsystem.runPixelSystem();
@@ -375,19 +381,21 @@ public class NewAuto extends LinearOpMode {
                 if (robot.pixelSubsystem.pixelCount >= 2) {
                     break;
                 }
-                autoSwitcher.moveSwitch(-55.5, 10.75, 0, 1, true);
+                autoSwitcher.moveSwitch(-55.25, 10.75, 0, 1, true);
                 if (robot.pixelSubsystem.pixelCount >= 2) {
                     break;
                 }
-                autoSwitcher.moveSwitch(-56.75, 10.75, 0, 1, true);
+                autoSwitcher.moveSwitch(-56.75, 10.75, 0.05, 1, true);
             }
-            robot.pixelSubsystem.fingerOverrideBase(true);
+            robot.pixelSubsystem.setFingers(CLOSED, CLOSED);
             robot.pixelSubsystem.runPixelSystem();
             autoSwitcher.moveSwitch(40, 10, 0, 1);
 
             robot.pixelSubsystem.liftSet(1275);
             autoSwitcher.moveSwitch(40, 38, 0, 1);
-            autoSwitcher.moveSwitch(46, 38, 0, 1);
+            backdropDistance = distance.getDistance(DistanceUnit.INCH);
+            dropX = holOdom.getPose().getX() + backdropDistance - 2.7;
+            autoSwitcher.moveSwitch(dropX, 38, 0, 1);
 
             robot.pixelSubsystem.dropRight(true);
             robot.pixelSubsystem.runPixelSystem();
@@ -400,7 +408,7 @@ public class NewAuto extends LinearOpMode {
 
 
         }
-        autoSwitcher.moveSwitch(45, 30, 0, 1);
+//        autoSwitcher.moveSwitch(45, 30, 0, 1);
         switch (autoSwitcher.getParkLocation()) {
             case INSIDE:
                 autoSwitcher.moveSwitch(46, 15, 0, 1);
@@ -410,8 +418,8 @@ public class NewAuto extends LinearOpMode {
                 break;
         }
 
-        telemetry.addData("Runtime", "%.2f", (System.currentTimeMillis() - timer) / 1000);
-        telemetry.update();
+//        telemetry.addData("Runtime", "%.2f", (System.currentTimeMillis() - timer) / 1000);
+//        telemetry.update();
 
         while (opModeIsActive()) {
             robot.pixelSubsystem.runPixelSystem();

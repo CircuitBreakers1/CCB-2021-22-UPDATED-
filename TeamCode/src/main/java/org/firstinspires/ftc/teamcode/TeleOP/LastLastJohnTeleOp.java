@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode.TeleOP;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.distance;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.holOdom;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.shoot;
 
@@ -37,6 +38,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023;
 
 /**
@@ -123,6 +125,7 @@ public class LastLastJohnTeleOp extends OpMode {
         telemetry.addData("X", pose.getX());
         telemetry.addData("Y", pose.getY());
         telemetry.addData("Heading", Math.toDegrees(pose.getHeading()));
+        telemetry.addData("Distance", distance.getDistance(DistanceUnit.INCH));
         telemetry.addData("Pixels", robot.pixelSubsystem.pixelCount);
     }
 }

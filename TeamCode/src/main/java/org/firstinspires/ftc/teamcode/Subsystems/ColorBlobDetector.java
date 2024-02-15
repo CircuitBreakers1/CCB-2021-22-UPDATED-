@@ -16,6 +16,7 @@ import static org.firstinspires.ftc.teamcode.Tuning.ColorTuning.RED_SAT_LOWER;
 import static org.firstinspires.ftc.teamcode.Tuning.ColorTuning.RED_SAT_UPPER;
 import static org.firstinspires.ftc.teamcode.Tuning.ColorTuning.RED_VAL_LOWER;
 import static org.firstinspires.ftc.teamcode.Tuning.ColorTuning.RED_VAL_UPPER;
+import static org.opencv.imgproc.Imgproc.FILLED;
 import static org.opencv.imgproc.Imgproc.boundingRect;
 
 import android.graphics.Canvas;
@@ -108,6 +109,8 @@ public class ColorBlobDetector implements VisionProcessor {
     @Override
     public Object processFrame(Mat input, long captureTimeNanos) {
         contours.clear();
+
+        Imgproc.rectangle(input,new Point(0,0), new Point(input.width(),70),new Scalar(0,0,0), FILLED);
 
         processed = new Mat();
         gSize = new Size(gaussSize, gaussSize);

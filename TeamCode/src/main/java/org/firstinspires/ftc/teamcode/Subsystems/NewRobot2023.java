@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DigitalChannel;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
@@ -49,6 +50,7 @@ public class NewRobot2023 {
     public static IMU imu;
     public static NormalizedColorSensor colorSensor;
     public static DigitalChannel touch;
+    public static DistanceSensor distance;
 
     //Subsystems
     public HoloDrivetrainSubsystem holoDrivetrain;
@@ -120,6 +122,7 @@ public class NewRobot2023 {
 
             colorSensor = ahwMap.get(NormalizedColorSensor.class, "colorSensor");
             touch = ahwMap.get(DigitalChannel.class, "touch");
+            distance = ahwMap.get(DistanceSensor.class, "distance");
         }
 
         //Init Subsystems

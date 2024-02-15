@@ -132,7 +132,7 @@ public class NewMovementSubsystem {
         double timestamp = System.currentTimeMillis();
 
         double realPrecision = precise ? precision : 1;
-        while ((abs(xError) > realPrecision || abs(yError) > realPrecision || abs(turnController.getError(theta, heading)) > 0.11) && opMode.opModeIsActive()) {
+        while ((abs(xError) > realPrecision || abs(yError) > realPrecision || abs(turnController.getError(theta, heading)) > 0.05) && opMode.opModeIsActive()) {
             holOdom.updatePose();
             pixelSubsystem.runPixelSystem();
 

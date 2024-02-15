@@ -29,6 +29,7 @@
 
 package org.firstinspires.ftc.teamcode.TeleOP;
 
+import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.distance;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.frontOdo;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftFinger;
 import static org.firstinspires.ftc.teamcode.Subsystems.NewRobot2023.leftLift;
@@ -78,8 +79,8 @@ public class ColorSensorTest extends OpMode {
 
     @Override
     public void start() {
-        robot.pixelSubsystem.toggleIntake();
-        robot.pixelSubsystem.runPixelSystem();
+//        robot.pixelSubsystem.toggleIntake();
+//        robot.pixelSubsystem.runPixelSystem();
     }
 
     @Override
@@ -97,6 +98,7 @@ public class ColorSensorTest extends OpMode {
         telemetry1.addData("Color Distance", colorDist);
         telemetry1.addData("Detected?", detected);
         telemetry1.addData("Pixel Count", pixelCount);
+        telemetry1.addData("Distance", distance.getDistance(DistanceUnit.INCH));
         telemetry1.update();
     }
 }
